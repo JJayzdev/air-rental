@@ -1,0 +1,3 @@
+# Chạy lint-staged cho app Next.js (config nằm trong web/).
+# Husky chỉ kích hoạt file này sau khi `git init` + `npm install` trong web/.
+cd web && npx lint-staged

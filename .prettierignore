@@ -1,0 +1,7 @@
+dist
+node_modules
+original-build
+package-lock.json
+public
+# Bản Next.js tự quản lý ESLint/Prettier trong web/
+web

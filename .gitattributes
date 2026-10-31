@@ -1,0 +1,13 @@
+# Chuẩn hoá xuống dòng: giữ LF trong working tree trên mọi hệ điều hành,
+# để `format:check` (Prettier endOfLine=lf) và hash CSS không lệch giữa Windows/Linux.
+* text=auto eol=lf
+
+# Ảnh và font là binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
