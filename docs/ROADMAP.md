@@ -195,14 +195,14 @@ Không nhận `total` từ client trong bất kỳ trường hợp nào.
 
 ### GĐ 0 — Nền móng (3–5 ngày)
 
-**Trạng thái: xong phần code và nghiệm thu giao diện; deploy preview bỏ qua. Còn chờ `git init`
-để cài hook Husky.**
+**Trạng thái: xong. Repo đã `git init` (nhánh `main`, chưa có remote), hook Husky chạy khi
+commit; deploy preview bỏ qua theo quyết định.**
 
 - [x] Tạo app Next.js 15 + TypeScript strict, port `site.css` và 8 view hiện tại → `web/`
-- [x] ESLint, Prettier, `tsc --noEmit` (Husky + lint-staged đã cấu hình, chưa cài được hook)
+- [x] ESLint, Prettier, `tsc --noEmit`; Husky + lint-staged đã cài (`.husky/_`, `core.hooksPath`)
 - [x] Env schema (Zod), Sentry hook (`lib/observability.ts`), cấu trúc `features/`
 - [x] CI: lint + typecheck + build trên mỗi PR (`.github/workflows/ci.yml`)
-- [x] **Nghiệm thu giao diện**: 0 khác biệt qua 13 bước tương tác, ≤0,3% pixel (nhiễu animation)
+- [x] **Nghiệm thu giao diện**: 0 khác biệt qua 13 bước tương tác, ≤0,4% pixel (nhiễu animation)
 - [~] Deploy preview: **bỏ qua theo quyết định** — thay bằng build production chạy local
 
 ### GĐ 1 — Catalog thật (1 tuần)

@@ -115,10 +115,9 @@ web/
 - [x] Env schema (Zod), Sentry hook, cấu trúc `features/`
 - [x] CI lint + typecheck + build
 - [x] Kiểm chứng giao diện khớp bản Vite (số liệu bên dưới)
-- [ ] **Husky + lint-staged**: hook mẫu đã có ở `.husky/pre-commit` (chạy `cd web && npx lint-staged`),
-      nhưng chưa kích hoạt được vì thư mục chưa phải git repo. Sau `git init`, chạy
-      `npm install` trong `web/` — script `prepare: cd .. && husky .husky` sẽ tạo `.husky/_` ở gốc
-      repo và trỏ `core.hooksPath` vào đó.
+- [x] **Husky + lint-staged**: `.husky/pre-commit` chạy `cd web && npx lint-staged` (chỉ kiểm tra
+      app Next trong `web/`). Repo đã `git init` nhánh `main`; `prepare: cd .. && husky .husky`
+      đã tạo `.husky/_` ở gốc và trỏ `core.hooksPath` vào đó — hook chạy thật khi commit.
 - [~] **Deploy preview**: bỏ qua theo quyết định — GĐ 0 nghiệm thu bằng build production
   chạy local (`npm run build && npm start`) thay vì deploy.
 
@@ -294,8 +293,8 @@ Xem [`docs/ROADMAP.md`](docs/ROADMAP.md): công nghệ đích (Next.js + Supabas
 mô hình dữ liệu chống trùng lịch, 8 giai đoạn triển khai, chi phí và rủi ro.
 
 **Đang ở GĐ 0** — app Next.js đã dựng trong `web/`, giao diện khớp bản Vite, build production
-chạy được ở local. Deploy preview đã bỏ qua theo quyết định; việc còn lại là cài Husky
-(sau khi `git init`).
+chạy được ở local. Deploy preview đã bỏ qua theo quyết định; Husky đã cài và chạy khi commit.
+Repo đã `git init` (nhánh `main`), **chưa có remote** — chưa push.
 
 ## Ghi công & giấy phép
 

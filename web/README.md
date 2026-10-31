@@ -54,9 +54,9 @@ src/
   `localStorage` ngay lần render đầu. GĐ 1 sẽ tách server component + URL routing.
 - **CSS không sửa**: mọi thay đổi giao diện nên bắt đầu từ thư mục cha (`site.css`) rồi copy sang,
   để hai bản không lệch nhau trong thời gian song song.
-- **Husky chưa cài hook** vì thư mục cha chưa phải git repo. Hook mẫu đã có ở
-  `../.husky/pre-commit` (`cd web && npx lint-staged`). Sau `git init` ở gốc repo, chạy
-  `npm install` trong `web/` — `prepare` là `cd .. && husky .husky`, tạo `.husky/_` ở gốc repo và
-  trỏ `core.hooksPath` vào đó.
+- **Husky đã cài**: hook `../.husky/pre-commit` chạy `cd web && npx lint-staged` (chỉ kiểm tra
+  file trong `web/`). `prepare` là `cd .. && husky .husky` — đã tạo `../.husky/_` ở gốc repo và
+  trỏ `core.hooksPath` vào đó, nên hook chạy thật khi commit. Nếu clone repo mới, chạy
+  `npm install` trong `web/` một lần là hook được cài lại.
 - **Env**: `lib/env.ts` validate bằng Zod. Build/CI có thể đặt `SKIP_ENV_VALIDATION=true`
   (xem `.github/workflows/ci.yml`).
