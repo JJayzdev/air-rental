@@ -11,21 +11,26 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test src/features/account/profile-schema.test.ts src/features/account/address-schema.test.ts src/features/account/identity-image.test.ts src/features/booking/domain.test.ts src/features/booking/idempotency-key.test.ts src/features/booking/request-schema.test.ts src/features/cart/rental-cart.test.ts src/features/favorites/flash-path.test.ts src/features/products/catalog.test.ts src/lib/safe-internal-path.test.ts src/lib/supabase/cookie-updates.test.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "precommit": "lint-staged",
     "prepare": "cd .. && husky .husky"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.118.0",
     "@t3-oss/env-nextjs": "^0.13.11",
     "next": "^15.5.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "sharp": "^0.35.5",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
     "@next/eslint-plugin-next": "^16.4.3",
+    "@playwright/test": "^1.64.1",
     "@types/node": "^24.0.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",

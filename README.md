@@ -8,8 +8,10 @@ chọn thiết bị → chọn thời gian thuê → điền thông tin nhận m
 Đây là bản **source chạy được và chỉnh sửa được**. Giao diện (CSS, bố cục, mascot, breakpoint)
 giữ nguyên bản gốc; phần logic được viết lại bằng React và đã sửa các lỗi của bản publish.
 
-> **Trạng thái:** demo front-end. Không có backend, không có thanh toán thật,
-> dữ liệu nằm trong `localStorage` của trình duyệt.
+> **Trạng thái:** bản Vite và các màn demo Next.js vẫn lưu đơn demo trong `localStorage`. Next.js có
+> catalog SSR (GĐ 1), luồng đặt thuê GĐ 2 và tài khoản GĐ 3 qua Supabase local (Auth, tồn kho, đơn,
+> sổ địa chỉ, yêu thích và giấy tờ tùy chọn trong môi trường đã cấu hình). Thanh toán và email/SMS
+> xác nhận đơn chưa được cấu hình; sản phẩm hiện vẫn là dữ liệu mẫu nên chưa sẵn sàng pilot thương mại.
 
 ## Mục lục
 
@@ -41,20 +43,20 @@ npm run build     # ra dist/
 npm run preview   # xem thử bản build
 ```
 
-## Bản Next.js (GĐ 0)
+## Bản Next.js (GĐ 0–2 local preview)
 
-Repo đang có **hai app chạy song song**. Bản Vite giữ nguyên để đối chiếu giao diện; bản
-Next.js là đích của giai đoạn 0 và sẽ thay bản Vite khi sang giai đoạn 1.
+Repo có **hai app chạy song song**. Bản Vite giữ luồng demo; bản Next.js có catalog URL thật và luồng
+booking tích hợp Supabase khi cấu hình.
 
 ![Giao diện bản Next.js](docs/preview-next.jpg)
 
-|            | Bản Vite (thư mục gốc)  | Bản Next.js (`web/`)                         |
-| ---------- | ----------------------- | -------------------------------------------- |
-| Công nghệ  | React 19 + Vite 7 + JSX | Next.js 15 + React 19 + TypeScript strict    |
-| Điểm vào   | `index.html` → `src/`   | `web/src/app/`                               |
-| Cổng dev   | 5173                    | 3000                                         |
-| Điều hướng | state `view`            | state `view` (giống hệt, chưa có URL)        |
-| Style      | `src/styles/site.css`   | `web/src/app/globals.css` (bản sao y nguyên) |
+|            | Bản Vite (thư mục gốc)  | Bản Next.js (`web/`)                                            |
+| ---------- | ----------------------- | --------------------------------------------------------------- |
+| Công nghệ  | React 19 + Vite 7 + JSX | Next.js 15 + React 19 + TypeScript strict                       |
+| Điểm vào   | `index.html` → `src/`   | `web/src/app/`                                                  |
+| Cổng dev   | 5173                    | 3000                                                            |
+| Điều hướng | state `view`            | demo state `view`; catalog và booking có URL riêng             |
+| Style      | `src/styles/site.css`   | `web/src/app/globals.css` (base copy + CSS riêng cho catalog)   |
 
 ```bash
 cd web
@@ -82,6 +84,7 @@ web/
       layout.tsx            # <html lang="vi">, metadata, favicon
       page.tsx              # render ClientApp
       client-app.tsx        # dynamic(ssr: false) — GĐ 0 chạy hoàn toàn client-side
+      san-pham/             # catalog/detailed product pages, server rendered
       globals.css           # bản sao y nguyên site.css
     components/
       app-shell.tsx         # state toàn cục + điều hướng 8 màn
@@ -120,6 +123,36 @@ web/
       đã tạo `.husky/_` ở gốc và trỏ `core.hooksPath` vào đó — hook chạy thật khi commit.
 - [~] **Deploy preview**: bỏ qua theo quyết định — GĐ 0 nghiệm thu bằng build production
   chạy local (`npm run build && npm start`) thay vì deploy.
+
+### Trạng thái catalog GĐ 1
+
+- [x] URL catalog tìm kiếm/lọc/sắp xếp; chi tiết sản phẩm server-rendered.
+- [x] Metadata/canonical/Open Graph, JSON-LD Product, `sitemap.xml` và `robots.txt`.
+- [x] Supabase anon/RLS read adapter; local preview dùng 24 sản phẩm `SAMPLE`, lỗi backend đã cấu hình không fallback.
+- [~] Seed gồm 24 mẫu minh hoạ, giá/tiền cọc/số lượng đều giả lập; chưa phải danh sách hàng A.I.R sở hữu.
+- [~] Ba ảnh tham khảo CC BY-SA 4.0 có ghi công; 21 placeholder còn lại. Chưa upload Storage hay xác nhận ảnh thật.
+- [x] Chạy migrations, seed, Auth/RLS tests và booking trên Supabase local PG15; 92 pgTAP + 6 concurrency checks.
+- [ ] Xác nhận catalog fleet/giá thật và cấu hình backend live.
+- [x] Checkout multi-product, tài khoản, đơn khách hàng và staff ops đã tích hợp trên Next.js; thanh toán và thông báo đơn chưa cấu hình.
+
+### Trạng thái GĐ 2 — đặt thuê & tồn kho
+
+- [x] Booking nhiều sản phẩm trong một transaction, giữ máy theo toàn bộ khoảng thuê và buffer.
+- [x] Idempotency, giá snapshot từ DB, cấp phát unit nguyên tử, chuyển trạng thái bởi staff.
+- [x] 92 pgTAP + 6 bài concurrency + `scripts/check-gd2-browser.mjs` exit 0 trên Supabase local.
+- [ ] Pilot với fleet/giá thật, email/SMS xác nhận đơn và thanh toán online (GĐ 4).
+
+Chi tiết: [`docs/GD2-REVIEW.md`](docs/GD2-REVIEW.md), [`docs/GD2-IMPLEMENTATION.md`](docs/GD2-IMPLEMENTATION.md).
+
+### Trạng thái GĐ 3 — tài khoản
+
+- [x] Hồ sơ liên hệ, sổ địa chỉ (một địa chỉ mặc định), đơn của tôi và yêu thích đồng bộ.
+- [x] OTP điện thoại opt-in (`AIR_ENABLE_PHONE_OTP`), session refresh qua middleware, đăng nhập email magic link.
+- [x] Yêu cầu/tải/duyệt giấy tờ định danh tùy chọn, gate `AIR_ENABLE_IDENTITY_DOCUMENTS`, mặc định tắt.
+- [x] Guard `/admin`, `/quan-ly-don`, `/quan-ly-giay-to` theo role ở server component.
+- [ ] Chạy lại 48 pgTAP tài khoản và xác minh OTP với SMS provider thật.
+
+Chi tiết: [`docs/GD3-ACCOUNTS.md`](docs/GD3-ACCOUNTS.md).
 
 Kiểm chứng parity (cùng cửa sổ 1000×700, `localStorage` rỗng):
 
@@ -277,23 +310,24 @@ Sửa ở `src/pages/HomePage.jsx` nếu muốn đổi.
 
 - **Không có backend.** Đơn thuê chỉ nằm trên máy người đặt, không có ai xác nhận.
   Tồn kho là số cố định (`available`), không chặn trùng lịch theo ngày.
-- **Không có URL riêng cho từng màn** — không share/deep-link được, SEO kém. Bản Next.js cũng
-  giữ nguyên hạn chế này ở GĐ 0; URL routing nằm trong GĐ 1.
+- **Các màn demo vẫn không có URL riêng** — bản Vite và state-routing Next chưa deep-link được;
+  riêng catalog Next đã có URL riêng.
 - **Ảnh hotlink Unsplash** — phụ thuộc mạng ngoài, cần thay bằng ảnh thật.
 - **Tương phản chưa đạt AA** ở vài nhãn nhỏ: badge "Còn hàng" (2.97),
   bottom-nav 9px (3.55), timestamp chat 8px (2.81).
 - **Chat là rule-based**, không gọi API/LLM.
 - Bundle bản Vite: 262 kB JS (81 kB gzip) + 29,5 kB CSS (7,3 kB gzip).
   Bản Next: 104 kB First Load JS.
-- **Bản Next chưa có URL riêng/deploy** — chạy local ở cổng 3000; deploy bỏ qua ở GĐ 0.
+- **Bản Next chưa deploy** — chạy local ở cổng 3000; deploy bỏ qua ở GĐ 0.
 
 ## Lộ trình
 
 Xem [`docs/ROADMAP.md`](docs/ROADMAP.md): công nghệ đích (Next.js + Supabase), cấu trúc feature-based,
 mô hình dữ liệu chống trùng lịch, 8 giai đoạn triển khai, chi phí và rủi ro.
 
-**Đang ở GĐ 0** — app Next.js đã dựng trong `web/`, giao diện khớp bản Vite, build production
-chạy được ở local. Deploy preview đã bỏ qua theo quyết định; Husky đã cài và chạy khi commit.
+**Đang ở GĐ 3** — Next.js có catalog SSR (GĐ 1), đặt thuê & tồn kho (GĐ 2) và tài khoản (GĐ 3) trên
+Supabase local. Sản phẩm vẫn là dữ liệu mẫu; OTP/SMS thật, thanh toán và thông báo đơn chưa cấu hình.
+Deploy preview đã bỏ qua theo quyết định; Husky đã cài và chạy khi commit.
 Repo đã `git init` (nhánh `main`), **chưa có remote** — chưa push.
 
 ## Ghi công & giấy phép

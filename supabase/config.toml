@@ -1,0 +1,27 @@
+project_id = "air-rental"
+
+[api]
+port = 55321
+
+[db]
+port = 55322
+shadow_port = 55320
+major_version = 15
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[studio]
+port = 55323
+
+[local_smtp]
+port = 55324
+
+[auth]
+site_url = "http://localhost:3011"
+additional_redirect_urls = ["http://localhost:3011/auth/callback", "http://localhost:3000/auth/callback"]
+
+[analytics]
+enabled = false
+
