@@ -157,20 +157,20 @@ select throws_ok($$select public.delete_identity_document_request((select id fro
   'P0001', 'Pending identity document was not found', 'another customer cannot cancel or delete this request');
 select lives_ok($$select public.submit_identity_document((select id from account_identity_request_two))$$,
   'second customer can submit their own pending request');
-with removed as (
-  delete from storage.objects where bucket_id = 'identity-documents'
-    and name = (select user_id::text || '/' || id::text from account_identity_request_two)
-  returning 1
-) select is((select count(*)::integer from removed), 0, 'owner cannot remove an object while it is under review');
+select throws_ok($$delete from storage.objects where bucket_id = 'identity-documents'
+    and name = (select user_id::text || '/' || id::text from account_identity_request_two)$$,
+  '42501', 'Direct deletion from storage tables is not allowed. Use the Storage API instead.',
+  'clients cannot remove a private object while it is under review');
 select lives_ok($$select public.delete_identity_document_request((select id from account_identity_request_two))$$,
   'owner can cancel a pending review before deleting their document');
 select is((select status from public.identity_document_requests where id = (select id from account_identity_request_two)),
   'cancelled', 'owner deletion closes the pending review state');
-with removed as (
-  delete from storage.objects where bucket_id = 'identity-documents'
-    and name = (select user_id::text || '/' || id::text from account_identity_request_two)
-  returning 1
-) select is((select count(*)::integer from removed), 1, 'owner can delete the exact object after cancelling its review');
+set local role postgres;
+select is((select count(*)::integer from storage.objects
+  where bucket_id = 'identity-documents'
+    and name = (select user_id::text || '/' || id::text from account_identity_request_two)),
+  1, 'cancelling review leaves the object for the trusted Storage API cleanup');
+set local role authenticated;
 select set_config('request.jwt.claim.sub', '81000000-0000-0000-0000-000000000003', true);
 select throws_ok($$select public.review_identity_document((select id from account_identity_request_two), 'approved')$$,
   'P0001', 'Pending identity document was not found', 'cancelled document cannot be reviewed');
