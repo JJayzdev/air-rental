@@ -1,7 +1,7 @@
 # GĐ 3 — Tài khoản, yêu thích và giấy tờ tùy chọn
 
-**Trạng thái:** xong phần code và unit test local. 48 pgTAP của tài khoản đã viết nhưng **chưa chạy
-lại** vì Docker Desktop tắt; chưa xác minh OTP với SMS provider thật.
+**Trạng thái:** xong phần code, đã chạy nghiệm thu local đầy đủ ngày 01/11/2026. Chỉ còn xác minh
+OTP với SMS provider thật (local dùng magic link email).
 
 ## Phạm vi đã làm
 
@@ -25,6 +25,9 @@ lại** vì Docker Desktop tắt; chưa xác minh OTP với SMS provider thật.
   bản ghi DB mới hoạt động. Không bắt buộc để đặt thuê.
 - **Fixture SMS đã khôi phục.** `supabase/config.toml` trở về bản trước GĐ 3 (không còn `test_otp`
   và Twilio giả) sau khi chạy thử OTP local.
+- **Xóa giấy tờ đi qua Storage API.** Storage API hiện chặn mọi lệnh xóa trực tiếp `storage.objects`
+  (trigger bảo vệ, SQLSTATE 42501); pgTAP được cập nhật theo hành vi thật này và ứng dụng xóa object
+  bằng service role qua Storage API, không xóa bằng SQL.
 
 ## Kiểm thử
 
@@ -33,8 +36,11 @@ lại** vì Docker Desktop tắt; chưa xác minh OTP với SMS provider thật.
 | `cd web && npm test` | 29/29 pass (11 file, gồm 2 test flash-path favorites) |
 | `cd web && npm run lint` | sạch |
 | `cd web && npm run typecheck` | sạch |
-| `supabase test db` | **chưa chạy** — cần Docker; tổng 140 assertion (34 + 9 + 49 + 48) |
-| `scripts/check-booking-concurrency.mjs` | **chưa chạy** — cần Docker |
+| `cd web && npm run build` | thành công với env Supabase local, có route `/yeu-thich` |
+| `npx supabase db reset` + `supabase test db` | **140/140 pass** (34 + 9 + 49 + 48) |
+| `node scripts/check-booking-concurrency.mjs` | **6/6 pass** |
+| `node scripts/check-gd2-browser.mjs` | **pass** toàn bộ luồng, gồm kiểm tra tràn ngang ở 390px |
+| Smoke favorites (Playwright, chạy tay) | **pass**: đăng nhập → lưu ở chi tiết → thấy trong `/yeu-thich` → bỏ |
 
 ## Cách bật local
 

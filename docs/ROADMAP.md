@@ -262,15 +262,15 @@ cửa sổ 63 ngày, chưa phải lịch tháng dạng lưới. UI không dùng 
 
 ### GĐ 3 — Tài khoản (1 tuần)
 
-**Trạng thái: xong phần code, kiểm thử local đang chờ Docker.** 48 pgTAP assertions cho tài khoản
-đã viết nhưng chưa chạy lại; 29 unit test Next.js pass, lint và typecheck sạch.
+**Trạng thái: xong phần code; đã nghiệm thu local ngày 01/11/2026.** 140 pgTAP, 6 bài concurrency,
+browser E2E và smoke favorites đều pass; 29 unit test, lint và typecheck sạch.
 
 - [x] OTP số điện thoại (opt-in `AIR_ENABLE_PHONE_OTP`), session cookie refresh qua middleware.
 - [x] Hồ sơ, sổ địa chỉ, đơn của tôi, yêu thích đồng bộ qua `user_favorites` + RLS.
 - [x] Upload CCCD/giấy tờ tùy chọn cho đơn (gate `AIR_ENABLE_IDENTITY_DOCUMENTS`, mặc định tắt).
 - [x] Guard trang `/admin`, `/quan-ly-don`, `/quan-ly-giay-to` theo role ở server component.
 - [ ] Xác minh OTP với SMS provider thật (local đang dùng fixture, đã khôi phục config).
-- [ ] Chạy `supabase test db` (140 assertions) và concurrency checks khi Docker bật lại.
+- [x] Chạy `supabase test db` (140/140) và 6 concurrency checks khi Docker bật lại.
 
 Xem [`docs/GD3-ACCOUNTS.md`](GD3-ACCOUNTS.md).
 
