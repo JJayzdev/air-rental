@@ -2912,7 +2912,9 @@ footer {
   }
   .rental-site-nav {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 8px 16px;
     order: 2;
     margin-left: 0;
   }
