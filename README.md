@@ -150,7 +150,8 @@ Chi tiết: [`docs/GD2-REVIEW.md`](docs/GD2-REVIEW.md), [`docs/GD2-IMPLEMENTATIO
 - [x] OTP điện thoại opt-in (`AIR_ENABLE_PHONE_OTP`), session refresh qua middleware, đăng nhập email magic link.
 - [x] Yêu cầu/tải/duyệt giấy tờ định danh tùy chọn, gate `AIR_ENABLE_IDENTITY_DOCUMENTS`, mặc định tắt.
 - [x] Guard `/admin`, `/quan-ly-don`, `/quan-ly-giay-to` theo role ở server component.
-- [ ] Chạy lại 48 pgTAP tài khoản và xác minh OTP với SMS provider thật.
+- [x] 140 pgTAP, 6 bài concurrency, browser E2E và smoke favorites pass ngày 01/11/2026.
+- [ ] Xác minh OTP với SMS provider thật.
 
 Chi tiết: [`docs/GD3-ACCOUNTS.md`](docs/GD3-ACCOUNTS.md).
 
