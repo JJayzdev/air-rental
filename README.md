@@ -9,9 +9,10 @@ chọn thiết bị → chọn thời gian thuê → điền thông tin nhận m
 giữ nguyên bản gốc; phần logic được viết lại bằng React và đã sửa các lỗi của bản publish.
 
 > **Trạng thái:** bản Vite và các màn demo Next.js vẫn lưu đơn demo trong `localStorage`. Next.js có
-> catalog SSR (GĐ 1), luồng đặt thuê GĐ 2 và tài khoản GĐ 3 qua Supabase local (Auth, tồn kho, đơn,
-> sổ địa chỉ, yêu thích và giấy tờ tùy chọn trong môi trường đã cấu hình). Thanh toán và email/SMS
-> xác nhận đơn chưa được cấu hình; sản phẩm hiện vẫn là dữ liệu mẫu nên chưa sẵn sàng pilot thương mại.
+> catalog SSR (GĐ 1), luồng đặt thuê GĐ 2, tài khoản GĐ 3 và thanh toán chuyển khoản GĐ 4 qua Supabase
+> local (Auth, tồn kho, đơn, sổ địa chỉ, yêu thích, giấy tờ tùy chọn, sổ giao dịch và hoàn cọc). Webhook
+> SePay mới chạy với ngân hàng giả lập trên local; email/SMS xác nhận đơn chưa được cấu hình; sản phẩm
+> hiện vẫn là dữ liệu mẫu nên chưa sẵn sàng pilot thương mại.
 
 ## Mục lục
 
@@ -133,7 +134,8 @@ web/
 - [~] Ba ảnh tham khảo CC BY-SA 4.0 có ghi công; 21 placeholder còn lại. Chưa upload Storage hay xác nhận ảnh thật.
 - [x] Chạy migrations, seed, Auth/RLS tests và booking trên Supabase local PG15; 92 pgTAP + 6 concurrency checks.
 - [ ] Xác nhận catalog fleet/giá thật và cấu hình backend live.
-- [x] Checkout multi-product, tài khoản, đơn khách hàng và staff ops đã tích hợp trên Next.js; thanh toán và thông báo đơn chưa cấu hình.
+- [x] Checkout multi-product, tài khoản, đơn khách hàng và staff ops đã tích hợp trên Next.js; thanh toán
+      chuyển khoản ở GĐ 4, thông báo đơn chưa cấu hình.
 
 ### Trạng thái GĐ 2 — đặt thuê & tồn kho
 
@@ -154,6 +156,18 @@ Chi tiết: [`docs/GD2-REVIEW.md`](docs/GD2-REVIEW.md), [`docs/GD2-IMPLEMENTATIO
 - [ ] Xác minh OTP với SMS provider thật.
 
 Chi tiết: [`docs/GD3-ACCOUNTS.md`](docs/GD3-ACCOUNTS.md).
+
+### Trạng thái GĐ 4 — thanh toán & cọc
+
+- [x] `payment_state` tách khỏi trạng thái đơn, sổ giao dịch `payments` append-only, RLS chỉ đọc.
+- [x] Webhook SePay `POST /api/webhooks/sepay` xác thực `Authorization: Apikey`, idempotent theo
+      `(provider, external_id)`; replay trả lại giao dịch cũ, không tạo dòng mới.
+- [x] Hoàn cọc khi đơn `completed`: trigger tạo khoản `pending`, staff xác nhận đã chuyển tiền.
+- [x] Hướng dẫn chuyển khoản, badge trạng thái thanh toán và hoá đơn in/PDF tại `/don-thue/[id]/hoa-don`.
+- [x] 171 pgTAP, 6 webhook HTTP checks, browser E2E cũ và kiểm tra thanh toán/hoàn cọc đều pass ngày 01/11/2026.
+- [ ] Kết nối SePay/ngân hàng thật và MoMo/VNPay; hoá đơn hiện là bản in trình duyệt, không phải hoá đơn VAT.
+
+Chi tiết: [`docs/GD4-PAYMENTS.md`](docs/GD4-PAYMENTS.md).
 
 Kiểm chứng parity (cùng cửa sổ 1000×700, `localStorage` rỗng):
 
@@ -326,8 +340,9 @@ Sửa ở `src/pages/HomePage.jsx` nếu muốn đổi.
 Xem [`docs/ROADMAP.md`](docs/ROADMAP.md): công nghệ đích (Next.js + Supabase), cấu trúc feature-based,
 mô hình dữ liệu chống trùng lịch, 8 giai đoạn triển khai, chi phí và rủi ro.
 
-**Đang ở GĐ 3** — Next.js có catalog SSR (GĐ 1), đặt thuê & tồn kho (GĐ 2) và tài khoản (GĐ 3) trên
-Supabase local. Sản phẩm vẫn là dữ liệu mẫu; OTP/SMS thật, thanh toán và thông báo đơn chưa cấu hình.
+**Đang ở GĐ 4** — Next.js có catalog SSR (GĐ 1), đặt thuê & tồn kho (GĐ 2), tài khoản (GĐ 3) và
+thanh toán chuyển khoản + hoàn cọc (GĐ 4) trên Supabase local. Sản phẩm vẫn là dữ liệu mẫu; tài khoản
+ngân hàng và OTP/SMS thật, MoMo/VNPay và thông báo đơn chưa cấu hình.
 Deploy preview đã bỏ qua theo quyết định; Husky đã cài và chạy khi commit.
 Repo đã `git init` (nhánh `main`), **chưa có remote** — chưa push.
 

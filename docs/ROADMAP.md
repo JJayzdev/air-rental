@@ -4,8 +4,10 @@ Tài liệu này mô tả đích đến của dự án: công nghệ, cấu trú
 các giai đoạn triển khai. Repo có hai app: bản demo React + Vite ở thư mục gốc và Next.js + TypeScript
 trong `web/`. Demo Vite vẫn dùng localStorage; Next.js có catalog SSR và luồng đặt thuê Supabase local.
 Migrations, seed, Auth/RLS và booking đã được kiểm tra trên Supabase local đầy đủ (PostgreSQL 15,
-Auth, PostgREST và Mailpit). Dữ liệu sản phẩm vẫn là mẫu; chưa có pilot thương mại, thanh toán hoặc
-thông báo xác nhận đơn. Đây vẫn là **nền tảng đang phát triển**, không phải hệ thống vận hành.
+Auth, PostgREST và Mailpit). Thanh toán chuyển khoản có webhook SePay idempotent và hoàn cọc, nhưng
+mới chạy với tài khoản ngân hàng giả lập trên local. Dữ liệu sản phẩm vẫn là mẫu; chưa có pilot
+thương mại và thông báo xác nhận đơn. Đây vẫn là **nền tảng đang phát triển**, không phải hệ thống
+vận hành.
 
 ---
 
@@ -276,11 +278,15 @@ Xem [`docs/GD3-ACCOUNTS.md`](GD3-ACCOUNTS.md).
 
 ### GĐ 4 — Thanh toán & cọc (1–1.5 tuần)
 
-- Chuyển khoản + SePay webhook (xác thực chữ ký, idempotency key).
-- MoMo/VNPay nếu cần thanh toán tức thì.
-- Cọc 30% (hoặc theo `category`), hoàn cọc khi đơn `completed`.
-- Hoá đơn PDF, lịch sử giao dịch.
-- **Nghiệm thu**: webhook replay không tạo thanh toán trùng.
+- [x] Chuyển khoản + SePay webhook (`Authorization: Apikey`, bảng `payment_webhook_events` giữ cả
+      payload không khớp đơn, idempotency theo `(provider, external_id)`).
+- [ ] MoMo/VNPay — chưa làm; chỉ chuyển khoản ngân hàng ở giai đoạn này.
+- [x] Cọc theo `orders.deposit_vnd` (đã chốt ở GĐ 2, ghi đè quy tắc "30% hoặc theo category" trong
+      roadmap) và hoàn cọc khi đơn `completed` qua `complete_deposit_refund`.
+- [x] Hoá đơn in/PDF bằng bản in trình duyệt, lịch sử giao dịch trên trang đơn và trang hoá đơn.
+- [x] **Nghiệm thu**: webhook replay không tạo thanh toán trùng (31 pgTAP + 6 kiểm tra HTTP thật).
+
+Xem [`docs/GD4-PAYMENTS.md`](GD4-PAYMENTS.md).
 
 ### GĐ 5 — Admin (1.5 tuần)
 
