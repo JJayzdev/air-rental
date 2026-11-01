@@ -1,8 +1,11 @@
 # A.I.R — Kiến trúc & lộ trình phát triển hoàn chỉnh
 
 Tài liệu này mô tả đích đến của dự án: công nghệ, cấu trúc thư mục, mô hình dữ liệu và
-các giai đoạn triển khai. Hiện trạng (React 19 + Vite, 2.126 dòng, không backend) là
-**điểm xuất phát**, không phải đích.
+các giai đoạn triển khai. Repo có hai app: bản demo React + Vite ở thư mục gốc và Next.js + TypeScript
+trong `web/`. Demo Vite vẫn dùng localStorage; Next.js có catalog SSR và luồng đặt thuê Supabase local.
+Migrations, seed, Auth/RLS và booking đã được kiểm tra trên Supabase local đầy đủ (PostgreSQL 15,
+Auth, PostgREST và Mailpit). Dữ liệu sản phẩm vẫn là mẫu; chưa có pilot thương mại, thanh toán hoặc
+thông báo xác nhận đơn. Đây vẫn là **nền tảng đang phát triển**, không phải hệ thống vận hành.
 
 ---
 
@@ -132,7 +135,7 @@ air/
 | `product_units` | **Từng máy vật lý** (serial)  | `status`: available / rented / maintenance / retired  |
 | `price_tiers`   | Giảm giá theo số ngày         | 1–2 ngày, 3–6 ngày −10%, 7+ ngày −20%                 |
 | `orders`        | Đơn thuê                      | mã, user, khoảng ngày, tiền, trạng thái               |
-| `order_items`   | Dòng đơn — **1 dòng = 1 máy** | giữ `unit_id` + `period daterange`                    |
+| `order_items`   | Dòng đơn — **1 dòng = 1 máy** | giữ `unit_id` + khoảng thuê `daterange`               |
 | `payments`      | Giao dịch                     | provider, `txn_ref`, số tiền, raw `jsonb`, trạng thái |
 | `deposits`      | Cọc & hoàn cọc                | tách riêng để đối soát                                |
 | `profiles`      | Hồ sơ khách                   | tên, SĐT, địa chỉ, `role`                             |
@@ -143,30 +146,33 @@ air/
 ### 3.2 Chống trùng lịch ở tầng database
 
 Đây là điểm quan trọng nhất. Không kiểm tra bằng `if` trong ứng dụng — hai request
-đồng thời sẽ cùng pass. Dùng ràng buộc loại trừ của Postgres:
+đồng thời sẽ cùng pass. Mỗi máy vật lý có thể có nhiều reservation chưa release nếu các khoảng ngày
+không chồng lấn; exclusion constraint chỉ chặn những khoảng chồng lấn trên cùng máy. Dòng reservation
+được tách khỏi `order_items` để lịch sử vẫn giữ sau hủy/hết hạn. Migration đã được chạy và kiểm thử
+trên Supabase local đầy đủ (PostgreSQL 15); chưa chạy trên môi trường live:
 
 ```sql
 create extension if not exists btree_gist;
 
 -- mỗi dòng order_items là MỘT máy vật lý
-create table order_items (
+create table reservations (
   id          uuid primary key default gen_random_uuid(),
-  order_id    uuid not null references orders(id) on delete cascade,
+  order_item_id uuid not null references order_items(id),
   unit_id     uuid not null references product_units(id),
-  price_per_day int not null check (price_per_day > 0),
-  period      daterange not null,          -- [ngày nhận, ngày trả)
+  blocked_period daterange not null,
+  released_at timestamptz,
   constraint no_double_booking exclude using gist (
     unit_id with =,
-    period  with &&
-  )
+    blocked_period with &&
+  ) where (released_at is null)
 );
 ```
 
 - Máy có serial (laptop, camera) → mỗi máy là 1 unit, ràng buộc trên `unit_id`.
 - Phụ kiện không serial (AirPods) → bảng `stock_counters` + `select … for update`
-  khi tạo đơn, hoặc cũng cấp serial để đơn giản hoá.
-- Luôn chừa **1 ngày buffer** giữa hai lượt thuê (vệ sinh, sạc, kiểm tra) —
-  cộng vào `period` khi tính.
+  khi tạo đơn, hoặc cũng cấp serial để đơn giản hoá. MVP foundation dùng serial unit cho mọi loại.
+- Ngày thuê là inclusive `[ngày nhận, ngày trả]` khi tính giá; `blocked_period` là
+  `[ngày nhận, ngày trả + 2 ngày)` để chừa **một ngày buffer** sau ngày trả.
 
 ### 3.3 Vòng đời đơn
 
@@ -183,13 +189,37 @@ Tách **trạng thái đơn** khỏi **trạng thái thanh toán** (`unpaid` / `
 
 ### 3.4 Giá — luôn tính lại ở server
 
-Client gửi lên: `{ items: [{unitId, days}], coupon?, method }`.
-Server tính lại `subtotal` từ `price_tiers` + DB, cộng ship, cộng cọc, rồi mới tạo đơn.
-Không nhận `total` từ client trong bất kỳ trường hợp nào.
+Client gửi lên `{ productId, quantity, start, end, fulfillment, customer, idempotencyKey }`.
+Không nhận `unitId`, giá, tổng tiền hoặc số ngày tính sẵn từ client. Database tính lại `subtotal`
+từ catalog + `price_tiers`, chọn unit và lưu snapshot giá trước khi tạo reservation. Shipping,
+coupon và payment chưa thuộc foundation hiện tại.
 
 ---
 
-## 4. Giai đoạn triển khai
+## 4. Thứ tự MVP vận hành
+
+Các giai đoạn cũ bên dưới chia theo năng lực sản phẩm. Với MVP đặt thuê thật, triển khai theo thứ
+tự phụ thuộc dưới đây để có thể kiểm tra an toàn tồn kho trước khi nối giao diện:
+
+1. **Booking domain + database foundation** — ngày thuê inclusive, giá server-side, unit vật lý,
+   reservation có buffer, trạng thái và RLS. _Đã kiểm tra local._
+2. **Đăng nhập và server boundary** — Supabase Auth, session cookie, server-only client và phân quyền.
+   Booking RPC chỉ cho tài khoản đã đăng nhập. _Đã kiểm tra local với Auth thật._
+3. **Catalog thật** — catalog hiện là dữ liệu mẫu, đọc công khai an toàn và có lịch khả dụng; chưa có
+   kiểm kê fleet thật.
+4. **Checkout + staff ops tối thiểu** — RPC multi-line cấp phát mọi sản phẩm trong cùng transaction;
+   checkout gửi product/quantity/dates/contact/idempotency key, hiển thị đơn theo tài khoản. Màn staff
+   xem đơn, xác nhận, hủy, bàn giao, nhận trả và xem máy đã cấp phát. _Luồng local đã được kiểm tra._
+5. **Kiểm chứng và pilot không thanh toán online** — Supabase local integration tests cho tranh chấp,
+   hủy, hết hạn, RLS/role; chạy pilot có staff xử lý đơn và đối soát thủ công trước khi bật payment.
+6. **Thanh toán và thông báo** — email/SMS, SePay/webhook và đối soát sau pilot.
+7. **Admin nâng cao, SEO, hardening và ra mắt** — dashboard phân tích, quản lý catalog/kho nâng cao,
+   nội dung và hoàn thiện ra mắt sau khi luồng vận hành đã ổn.
+
+Các migration và pgTAP/concurrency tests đã chạy trên Supabase local PG15. Việc này chưa xác minh
+catalog fleet thật, email/SMS xác nhận, thanh toán, project live hoặc pilot vận hành.
+
+## 5. Giai đoạn triển khai theo năng lực
 
 Ước lượng cho **1 dev full-time**. Đội 2 người chia đôi được phần lớn giai đoạn 3–5.
 
@@ -205,31 +235,44 @@ commit; deploy preview bỏ qua theo quyết định.**
 - [x] **Nghiệm thu giao diện**: 0 khác biệt qua 13 bước tương tác, ≤0,4% pixel (nhiễu animation)
 - [~] Deploy preview: **bỏ qua theo quyết định** — thay bằng build production chạy local
 
-### GĐ 1 — Catalog thật (1 tuần)
+### GĐ 1 — Catalog thật (1 tuần; thực hiện sau server/auth foundation)
 
-- Schema Supabase cho `categories`, `products`, `product_units`, `price_tiers`, RLS đọc công khai.
-- Seed 20–30 sản phẩm thật + ảnh tự chụp/đặt mua.
-- Trang danh mục: filter/sort qua **URL searchParams** (`?danh-muc=laptop&sap-xep=gia-tang`).
-- Trang chi tiết SSR, `generateMetadata`, Open Graph, JSON-LD `Product`.
-- `sitemap.ts`, `robots.ts`, canonical.
-- Upload ảnh lên Storage, `next/image`, nén mascot 1.37 MB → WebP.
+- [x] Mở rộng schema Supabase cho catalog, specifications và ảnh; policies anon chỉ đọc sản phẩm active.
+- [x] Seed 24 sản phẩm `SAMPLE`, 48 unit bảo trì và price tiers; giá/kho chưa phải dữ liệu A.I.R thật.
+- [x] Catalog SSR: filter/search/sort qua URL, trang chi tiết, metadata, Open Graph, JSON-LD, sitemap, robots, canonical.
+- [x] 3 ảnh tham khảo CC BY-SA 4.0 có ghi công; 21 placeholder có nhãn. Mascot Next chuyển WebP.
+- [x] Chạy migrations, seed, Auth/RLS pgTAP và concurrency checks trên Supabase local PG15; đọc catalog qua PostgREST cục bộ.
+- [ ] Kiểm tra trên project live sau khi cấu hình credentials.
+- [ ] Xác nhận danh sách máy, cấu hình theo từng chiếc, giá/cọc và ảnh fleet trước khi bỏ nhãn mẫu.
+- [ ] Upload ảnh được xác nhận lên Storage; hiện ảnh để local, chưa upload.
 
 ### GĐ 2 — Đặt thuê & tồn kho (1.5 tuần) ← **trái tim của hệ thống**
 
-- API kiểm tra trống theo khoảng ngày (dùng exclusion constraint ở §3.2).
-- Lịch chọn ngày trên UI, disable ngày đã kín.
-- Giỏ hàng (Zustand + persist) → checkout.
-- Server Action tạo đơn: validate Zod, tính giá lại, giữ chỗ nguyên tử, sinh mã `AIR-YYMMDD-XXXX`.
-- Trang xác nhận + tra cứu đơn bằng mã (không cần đăng nhập).
-- Email xác nhận (Resend) + Zalo/SMS.
-- **Nghiệm thu**: 2 tab đặt cùng 1 máy cùng ngày → tab thứ hai bị chặn ở tầng DB.
+- [x] API kiểm tra cả khoảng thuê, buffer và trạng thái giữ máy; không trả lộ unit/customer.
+- [x] Checkout multi-product: Server Action/Zod, giá DB, cấp phát nguyên tử, idempotency và session Auth.
+- [x] Đơn của tôi, chi tiết theo UUID/RLS, hủy đơn; staff xác nhận, hủy, bàn giao, nhận trả, kết thúc.
+- [x] Supabase local PG15: 92 pgTAP assertions và 6 bài concurrency độc lập.
+- [x] Kiểm tra trình duyệt, gồm khôi phục khi mất phản hồi tạo đơn — `scripts/check-gd2-browser.mjs` exit 0.
+- [ ] Nạp danh mục fleet/giá thật và chạy pilot có staff đối soát thủ công.
+- [ ] Email/SMS xác nhận đơn chờ nhà cung cấp; email magic link chỉ dùng đăng nhập. Thanh toán online ở bước sau pilot.
+
+Giỏ UUID hiện lưu bằng localStorage có schema validation; chọn ngày dùng danh sách ngày khả dụng trong
+cửa sổ 63 ngày, chưa phải lịch tháng dạng lưới. UI không dùng Zustand. Xem
+[`docs/GD2-IMPLEMENTATION.md`](GD2-IMPLEMENTATION.md) và [`docs/GD2-LOCAL.md`](GD2-LOCAL.md).
 
 ### GĐ 3 — Tài khoản (1 tuần)
 
-- OTP số điện thoại, session cookie qua middleware.
-- Hồ sơ, sổ địa chỉ, đơn của tôi, yêu thích đồng bộ.
-- Upload CCCD cho đơn giá trị cao (yêu cầu thực tế của ngành cho thuê máy ảnh/laptop).
-- Middleware bảo vệ `/admin`, phân quyền `customer` / `staff` / `admin`.
+**Trạng thái: xong phần code, kiểm thử local đang chờ Docker.** 48 pgTAP assertions cho tài khoản
+đã viết nhưng chưa chạy lại; 29 unit test Next.js pass, lint và typecheck sạch.
+
+- [x] OTP số điện thoại (opt-in `AIR_ENABLE_PHONE_OTP`), session cookie refresh qua middleware.
+- [x] Hồ sơ, sổ địa chỉ, đơn của tôi, yêu thích đồng bộ qua `user_favorites` + RLS.
+- [x] Upload CCCD/giấy tờ tùy chọn cho đơn (gate `AIR_ENABLE_IDENTITY_DOCUMENTS`, mặc định tắt).
+- [x] Guard trang `/admin`, `/quan-ly-don`, `/quan-ly-giay-to` theo role ở server component.
+- [ ] Xác minh OTP với SMS provider thật (local đang dùng fixture, đã khôi phục config).
+- [ ] Chạy `supabase test db` (140 assertions) và concurrency checks khi Docker bật lại.
+
+Xem [`docs/GD3-ACCOUNTS.md`](GD3-ACCOUNTS.md).
 
 ### GĐ 4 — Thanh toán & cọc (1–1.5 tuần)
 
@@ -270,7 +313,7 @@ commit; deploy preview bỏ qua theo quyết định.**
 
 ---
 
-## 5. Chi phí vận hành dự kiến
+## 6. Chi phí vận hành dự kiến
 
 | Khoản                 | Hàng tháng                  |
 | --------------------- | --------------------------- |
@@ -284,7 +327,7 @@ commit; deploy preview bỏ qua theo quyết định.**
 
 ---
 
-## 6. Rủi ro & cách chặn
+## 7. Rủi ro & cách chặn
 
 | Rủi ro                            | Cách chặn                                                             |
 | --------------------------------- | --------------------------------------------------------------------- |
@@ -299,7 +342,7 @@ commit; deploy preview bỏ qua theo quyết định.**
 
 ---
 
-## 7. Nguyên tắc giữ nguyên
+## 8. Nguyên tắc giữ nguyên
 
 1. **Không viết lại UI.** `site.css` và markup hiện tại đã đúng thiết kế — chỉ di chuyển.
 2. **Không thêm abstraction trước khi cần.** 2.1k dòng chưa cần Redux, chưa cần monorepo.

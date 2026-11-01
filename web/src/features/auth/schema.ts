@@ -12,5 +12,14 @@ export const otpSchema = z.object({
   code: z.string().length(6, 'Mã OTP gồm 6 chữ số'),
 })
 
+export const phoneOtpRequestSchema = z
+  .object({
+    phone: z
+      .string()
+      .trim()
+      .regex(/^(0|\+84)(3|5|7|8|9)[0-9]{8}$/),
+  })
+  .strict()
+
 export type LoginInput = z.infer<typeof loginSchema>
 export type OtpInput = z.infer<typeof otpSchema>
