@@ -1,4 +1,5 @@
 import ProductCard from '@/components/ui/ProductCard'
+import Link from 'next/link'
 import { ArrowRight, Check, Calendar, Search } from '@/components/ui/Icons'
 import Mascot from '@/components/ui/Mascot'
 import { CATEGORIES, HERO } from '@/data/products'
@@ -42,6 +43,9 @@ export default function HomeView({
               <button className="primary" onClick={() => onNavigate('products')}>
                 Khám phá thiết bị <ArrowRight />
               </button>
+              <Link className="secondary" href="/san-pham">
+                Xem toàn bộ thiết bị <ArrowRight />
+              </Link>
               <button className="secondary" onClick={() => onNavigate('home', { anchor: 'how' })}>
                 Cách thức thuê
               </button>

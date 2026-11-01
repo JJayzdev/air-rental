@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Link from 'next/link'
 import { BrandMark, Search, User, Cart } from '../ui/Icons'
 import type { NavOptions, User as AppUser, View } from '@/types'
 
@@ -50,7 +51,7 @@ export default function Header({ cartCount, user, onNavigate, onSearch }: Header
 
         <nav className="desktop-nav" aria-label="Điều hướng chính">
           <button onClick={() => onNavigate('home')}>Trang chủ</button>
-          <button onClick={() => onNavigate('products')}>Sản phẩm</button>
+          <Link href="/san-pham">Sản phẩm</Link>
           <button onClick={() => onNavigate('home', { anchor: 'how' })}>Cách thức thuê</button>
           <button onClick={() => onNavigate('home', { anchor: 'about' })}>Về chúng tôi</button>
         </nav>
