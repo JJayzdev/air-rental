@@ -4,6 +4,8 @@ import { z } from 'zod'
 import { cancelOwnBooking } from '@/features/booking/actions'
 import { getRentalOrder } from '@/features/orders/server-data'
 import { ORDER_STATE_LABELS } from '@/features/orders/state-labels'
+import { PaymentPanel } from '@/features/payments/payment-panel'
+import { bankTransferInfo, paymentsEnabled } from '@/features/payments/sepay'
 import { requireVerifiedUser } from '@/lib/supabase/auth'
 import { money } from '@/lib/format'
 import type { Metadata } from 'next'
@@ -87,6 +89,7 @@ export default async function RentalOrderDetailPage({
         <p>{order.deliveryAddress}</p>
         <p>{order.fulfillment === 'pickup' ? 'Nhận tại cửa hàng' : 'Giao hàng'}</p>
       </section>
+      <PaymentPanel order={order} bank={bankTransferInfo()} paymentsEnabled={paymentsEnabled()} />
       <section className="rental-panel rental-order-history">
         <h2>Lịch sử đơn</h2>
         <ol>
@@ -109,7 +112,8 @@ export default async function RentalOrderDetailPage({
         </form>
       )}
       <p className="rental-notice">
-        Yêu cầu đã lưu. Email/SMS tự động và thanh toán trực tuyến chưa được cấu hình.
+        Yêu cầu đã lưu. Email/SMS tự động chưa được cấu hình; thanh toán được đối chiếu qua chuyển
+        khoản ngân hàng.
       </p>
     </main>
   )

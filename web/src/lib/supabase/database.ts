@@ -18,6 +18,10 @@ export type OrderState =
   | 'expired'
   | 'overdue'
 
+export type OrderPaymentState = 'unpaid' | 'deposit_paid' | 'paid' | 'refund_pending' | 'refunded'
+
+export type PaymentKind = 'payment' | 'deposit_refund'
+
 export type IdentityDocumentStatus =
   'requested' | 'pending_review' | 'approved' | 'rejected' | 'cancelled'
 
@@ -45,6 +49,21 @@ export type IdentityDocumentRequestRow = {
   updated_at: string
   reviewed_at: string | null
   reviewed_by: string | null
+}
+
+export type PaymentRow = {
+  id: string
+  order_id: string
+  provider: 'sepay' | 'manual'
+  external_id: string | null
+  direction: 'in' | 'out'
+  kind: PaymentKind
+  amount_vnd: number
+  status: 'pending' | 'succeeded' | 'cancelled'
+  transfer_content: string | null
+  payload: Json
+  created_at: string
+  updated_at: string
 }
 
 export interface Database {
@@ -85,6 +104,7 @@ export interface Database {
         delivery_address: string
         subtotal_vnd: number
         deposit_vnd: number
+        payment_state: OrderPaymentState
         created_at: string
         expires_at: string
       }>
@@ -108,6 +128,17 @@ export interface Database {
         created_at: string
       }>
       user_favorites: Table<{ user_id: string; product_id: string; created_at: string }>
+      payments: Table<PaymentRow>
+      payment_webhook_events: Table<{
+        id: number
+        provider: 'sepay'
+        external_id: string
+        payload: Json
+        outcome: 'applied' | 'ignored' | 'duplicate'
+        order_id: string | null
+        payment_id: string | null
+        received_at: string
+      }>
       identity_document_requests: Table<IdentityDocumentRequestRow>
       identity_document_events: Table<{
         id: number
@@ -199,11 +230,22 @@ export interface Database {
         Returns: IdentityDocumentRequestRow[]
       }
       identity_documents_enabled: { Args: Record<PropertyKey, never>; Returns: boolean }
+      apply_sepay_payment: {
+        Args: {
+          p_external_id: string
+          p_amount_vnd: number
+          p_content: string
+          p_payload: Json
+        }
+        Returns: Json
+      }
+      complete_deposit_refund: { Args: { p_payment_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: 'customer' | 'staff' | 'admin'
       fulfillment_method: 'pickup' | 'delivery'
       order_state: OrderState
+      payment_state: OrderPaymentState
     }
     CompositeTypes: Record<string, never>
   }

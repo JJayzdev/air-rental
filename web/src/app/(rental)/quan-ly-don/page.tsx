@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import { releaseExpiredBookings, transitionBooking } from '@/features/booking/actions'
 import { listAssignedUnitsForOrders, listRentalOrders } from '@/features/orders/server-data'
 import { ORDER_STATE_LABELS } from '@/features/orders/state-labels'
+import { completeDepositRefund } from '@/features/payments/actions'
+import { PAYMENT_STATE_LABELS } from '@/features/payments/state-labels'
 import { getVerifiedAppRole } from '@/lib/supabase/auth'
 import { money } from '@/lib/format'
 import type { OrderState } from '@/lib/supabase/database'
@@ -28,7 +30,13 @@ const NEXT_STATES: Partial<Record<OrderState, OrderState[]>> = {
 export default async function StaffOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; updated?: string; expired?: string; identity?: string }>
+  searchParams: Promise<{
+    error?: string
+    updated?: string
+    expired?: string
+    identity?: string
+    refund?: string
+  }>
 }) {
   const { user, role, supabase } = await getVerifiedAppRole()
   if (!user) redirect('/dang-nhap?next=%2Fquan-ly-don')
@@ -75,6 +83,16 @@ export default async function StaffOrdersPage({
           Chưa gửi được yêu cầu. Kiểm tra xem khách đã có yêu cầu đang mở.
         </p>
       )}
+      {params.refund === 'paid' && (
+        <p className="rental-message" role="status">
+          Đã ghi nhận hoàn cọc cho khách.
+        </p>
+      )}
+      {(params.refund === 'failed' || params.refund === 'invalid') && (
+        <p className="rental-error" role="alert">
+          Không hoàn cọc được. Khoản hoàn có thể đã được xử lý hoặc không còn chờ.
+        </p>
+      )}
       {identityDocsEnabled && (
         <p className="rental-notice">
           Chỉ yêu cầu giấy tờ cho đơn cụ thể khi cần. Việc này không bắt buộc để đặt thuê.
@@ -96,6 +114,9 @@ export default async function StaffOrdersPage({
                   <b>{order.code}</b>
                 </Link>
                 <span className="rental-status">{ORDER_STATE_LABELS[order.state]}</span>
+                <span className={`rental-payment-badge is-${order.paymentState}`}>
+                  {PAYMENT_STATE_LABELS[order.paymentState]}
+                </span>
               </header>
               <p>
                 {order.customerName} · {order.customerPhone}
@@ -137,6 +158,20 @@ export default async function StaffOrdersPage({
               <p>
                 Tiền thuê {money(order.subtotalVnd)} · Cọc {money(order.depositVnd)}
               </p>
+              {(() => {
+                const pendingRefund = order.payments.find(
+                  (payment) => payment.kind === 'deposit_refund' && payment.status === 'pending',
+                )
+                return pendingRefund ? (
+                  <form action={completeDepositRefund} className="rental-refund-form">
+                    <input type="hidden" name="paymentId" value={pendingRefund.id} />
+                    <span>Hoàn cọc {money(pendingRefund.amountVnd)} cho khách</span>
+                    <button className="secondary" type="submit">
+                      Xác nhận đã hoàn cọc
+                    </button>
+                  </form>
+                ) : null
+              })()}
               {identityDocsEnabled && (
                 <form
                   action={requestIdentityDocumentForOrder}

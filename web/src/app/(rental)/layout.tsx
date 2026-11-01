@@ -45,7 +45,7 @@ export default async function RentalLayout({ children }: { children: React.React
       </header>
       {children}
       <footer className="rental-footer">
-        <div className="shell">A.I.R — Đặt thuê chưa bao gồm thanh toán trực tuyến.</div>
+        <div className="shell">A.I.R — Thiết bị công nghệ cho thuê.</div>
       </footer>
     </>
   )

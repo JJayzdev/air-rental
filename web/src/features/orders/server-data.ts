@@ -1,6 +1,6 @@
 import 'server-only'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database, OrderState } from '@/lib/supabase/database'
+import type { Database, OrderPaymentState, OrderState, PaymentKind } from '@/lib/supabase/database'
 
 export interface RentalOrderItemView {
   id: string
@@ -13,11 +13,22 @@ export interface RentalOrderItemView {
   lineTotalVnd: number
 }
 
+export interface RentalOrderPaymentView {
+  id: string
+  kind: PaymentKind
+  direction: 'in' | 'out'
+  provider: 'sepay' | 'manual'
+  amountVnd: number
+  status: 'pending' | 'succeeded' | 'cancelled'
+  createdAt: string
+}
+
 export interface RentalOrderView {
   id: string
   userId: string
   code: string
   state: OrderState
+  paymentState: OrderPaymentState
   fulfillment: 'pickup' | 'delivery'
   customerName: string
   customerPhone: string
@@ -27,6 +38,7 @@ export interface RentalOrderView {
   createdAt: string
   expiresAt: string
   items: RentalOrderItemView[]
+  payments: RentalOrderPaymentView[]
   events: Array<{ state: OrderState; createdAt: string }>
 }
 
@@ -49,9 +61,13 @@ type OrderRow = Pick<
   | 'delivery_address'
   | 'subtotal_vnd'
   | 'deposit_vnd'
+  | 'payment_state'
   | 'created_at'
   | 'expires_at'
 >
+
+const ORDER_COLUMNS =
+  'id,user_id,code,state,payment_state,fulfillment,customer_name,customer_phone,delivery_address,subtotal_vnd,deposit_vnd,created_at,expires_at'
 
 export async function listRentalOrders(
   supabase: ServerDbClient,
@@ -59,9 +75,7 @@ export async function listRentalOrders(
 ): Promise<RentalOrderView[]> {
   let query = supabase
     .from('orders')
-    .select(
-      'id,user_id,code,state,fulfillment,customer_name,customer_phone,delivery_address,subtotal_vnd,deposit_vnd,created_at,expires_at',
-    )
+    .select(ORDER_COLUMNS)
     .order('created_at', { ascending: false })
     .limit(50)
   if (ownerId) query = query.eq('user_id', ownerId)
@@ -77,9 +91,7 @@ export async function getRentalOrder(
 ): Promise<RentalOrderView | null> {
   const { data: row, error } = await supabase
     .from('orders')
-    .select(
-      'id,user_id,code,state,fulfillment,customer_name,customer_phone,delivery_address,subtotal_vnd,deposit_vnd,created_at,expires_at',
-    )
+    .select(ORDER_COLUMNS)
     .eq('id', id)
     .maybeSingle()
   if (error) throw new Error('Không tải được thông tin đơn thuê. Vui lòng thử lại.')
@@ -148,11 +160,19 @@ async function mapOrders(supabase: ServerDbClient, rows: OrderRow[]): Promise<Re
     .in('order_id', ids)
     .order('created_at', { ascending: true })
   if (eventsError || !events) throw new Error('Không tải được lịch sử đơn thuê. Vui lòng thử lại.')
+  const { data: payments, error: paymentsError } = await supabase
+    .from('payments')
+    .select('id,order_id,kind,direction,provider,amount_vnd,status,created_at')
+    .in('order_id', ids)
+    .order('created_at', { ascending: true })
+  if (paymentsError || !payments)
+    throw new Error('Không tải được lịch sử giao dịch. Vui lòng thử lại.')
   return rows.map((row) => ({
     id: row.id,
     userId: row.user_id,
     code: row.code,
     state: row.state,
+    paymentState: row.payment_state,
     fulfillment: row.fulfillment,
     customerName: row.customer_name,
     customerPhone: row.customer_phone,
@@ -166,6 +186,17 @@ async function mapOrders(supabase: ServerDbClient, rows: OrderRow[]): Promise<Re
       .map((event) => ({
         state: event.to_state,
         createdAt: event.created_at,
+      })),
+    payments: payments
+      .filter((payment) => payment.order_id === row.id)
+      .map((payment) => ({
+        id: payment.id,
+        kind: payment.kind,
+        direction: payment.direction,
+        provider: payment.provider,
+        amountVnd: Number(payment.amount_vnd),
+        status: payment.status,
+        createdAt: payment.created_at,
       })),
     items: (items ?? [])
       .filter((item) => item.order_id === row.id)

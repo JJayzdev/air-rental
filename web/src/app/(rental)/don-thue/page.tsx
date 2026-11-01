@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { requireVerifiedUser } from '@/lib/supabase/auth'
 import { listRentalOrders } from '@/features/orders/server-data'
 import { ORDER_STATE_LABELS } from '@/features/orders/state-labels'
+import { PAYMENT_STATE_LABELS } from '@/features/payments/state-labels'
 import { money } from '@/lib/format'
 import type { Metadata } from 'next'
 
@@ -36,6 +37,9 @@ export default async function MyRentalOrdersPage() {
               <span>
                 <b>{order.code}</b>
                 <span className="rental-status">{ORDER_STATE_LABELS[order.state]}</span>
+                <span className={`rental-payment-badge is-${order.paymentState}`}>
+                  {PAYMENT_STATE_LABELS[order.paymentState]}
+                </span>
               </span>
               <span>
                 {order.items.length} máy · {money(order.subtotalVnd)}
