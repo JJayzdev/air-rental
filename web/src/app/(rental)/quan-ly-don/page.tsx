@@ -156,7 +156,12 @@ export default async function StaffOrdersPage({
                 })}
               </ul>
               <p>
-                Tiền thuê {money(order.subtotalVnd)} · Cọc {money(order.depositVnd)}
+                Tiền thuê {money(order.subtotalVnd)}
+                {order.discountVnd > 0 &&
+                  ` · Giảm ${money(order.discountVnd)} (${order.discountCode})`}
+                {order.deliveryFeeVnd > 0 &&
+                  ` · Giao ${money(order.deliveryFeeVnd)} (${order.deliveryZoneName})`}
+                {` · Tổng thuê ${money(order.totalVnd)} · Cọc ${money(order.depositVnd)}`}
               </p>
               {(() => {
                 const pendingRefund = order.payments.find(

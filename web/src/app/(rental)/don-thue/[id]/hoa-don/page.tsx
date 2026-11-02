@@ -32,7 +32,7 @@ export default async function RentalInvoicePage({ params }: { params: Promise<{ 
   const refunded = order.payments
     .filter((payment) => payment.direction === 'out' && payment.status === 'succeeded')
     .reduce((sum, payment) => sum + payment.amountVnd, 0)
-  const total = order.subtotalVnd + order.depositVnd
+  const total = order.totalVnd + order.depositVnd
 
   return (
     <main className="shell rental-page rental-invoice">
@@ -65,6 +65,9 @@ export default async function RentalInvoicePage({ params }: { params: Promise<{ 
           <p>{order.customerPhone}</p>
           <p>{order.deliveryAddress}</p>
           <p>{order.fulfillment === 'pickup' ? 'Nhận tại cửa hàng' : 'Giao hàng'}</p>
+          {order.fulfillment === 'delivery' && order.deliveryZoneName && (
+            <p>Khu vực giao: {order.deliveryZoneName}</p>
+          )}
         </section>
 
         <table className="rental-invoice-table">
@@ -95,6 +98,22 @@ export default async function RentalInvoicePage({ params }: { params: Promise<{ 
           <div>
             <dt>Tiền thuê</dt>
             <dd>{money(order.subtotalVnd)}</dd>
+          </div>
+          {order.discountVnd > 0 && (
+            <div>
+              <dt>Giảm giá ({order.discountCode})</dt>
+              <dd>−{money(order.discountVnd)}</dd>
+            </div>
+          )}
+          {order.deliveryFeeVnd > 0 && (
+            <div>
+              <dt>Phí giao ({order.deliveryZoneName})</dt>
+              <dd>{money(order.deliveryFeeVnd)}</dd>
+            </div>
+          )}
+          <div>
+            <dt>Tổng tiền thuê</dt>
+            <dd>{money(order.totalVnd)}</dd>
           </div>
           <div>
             <dt>Tiền cọc</dt>

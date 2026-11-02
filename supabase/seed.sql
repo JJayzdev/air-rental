@@ -85,3 +85,36 @@ where p.is_sample
 on conflict (product_id, min_days) do update set
   max_days = excluded.max_days,
   discount_percent = excluded.discount_percent;
+
+-- Delivery pricing fixtures. These are illustrative rates, not a real courier contract.
+insert into public.delivery_zones(id, name, fee_vnd, free_from_vnd, notes, sort_order)
+values
+  ('20000000-0000-4000-8000-000000000001', 'Nội thành Hà Nội', 30000, 2000000,
+    'Giao trong ngày cho các quận nội thành.', 1),
+  ('20000000-0000-4000-8000-000000000002', 'Nội thành TP. Hồ Chí Minh', 40000, 3000000,
+    'Giao trong ngày cho các quận nội thành.', 2),
+  ('20000000-0000-4000-8000-000000000003', 'Ngoại thành / tỉnh lân cận', 60000, 5000000,
+    'Có thể giao chậm hơn một ngày.', 3)
+on conflict (id) do update set
+  name = excluded.name,
+  fee_vnd = excluded.fee_vnd,
+  free_from_vnd = excluded.free_from_vnd,
+  notes = excluded.notes,
+  sort_order = excluded.sort_order,
+  active = true;
+
+-- Discount code fixtures. used_count is intentionally left alone so a reset starts clean.
+insert into public.discount_codes(id, code, description, kind, value, min_subtotal_vnd, max_uses)
+values
+  ('21000000-0000-4000-8000-000000000001', 'WELCOME10',
+    'Giảm 10% cho đơn thuê từ 500.000 ₫.', 'percent', 10, 500000, 500),
+  ('21000000-0000-4000-8000-000000000002', 'AIR50K',
+    'Giảm 50.000 ₫ cho đơn thuê từ 1.000.000 ₫.', 'fixed', 50000, 1000000, null)
+on conflict (id) do update set
+  code = excluded.code,
+  description = excluded.description,
+  kind = excluded.kind,
+  value = excluded.value,
+  min_subtotal_vnd = excluded.min_subtotal_vnd,
+  max_uses = excluded.max_uses,
+  active = true;

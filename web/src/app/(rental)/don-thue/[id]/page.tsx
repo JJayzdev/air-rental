@@ -76,9 +76,29 @@ export default async function RentalOrderDetailPage({
             <dt>Tiền thuê</dt>
             <dd>{money(order.subtotalVnd)}</dd>
           </div>
+          {order.discountVnd > 0 && (
+            <div>
+              <dt>Giảm giá ({order.discountCode})</dt>
+              <dd>−{money(order.discountVnd)}</dd>
+            </div>
+          )}
+          {order.deliveryFeeVnd > 0 && (
+            <div>
+              <dt>Phí giao ({order.deliveryZoneName})</dt>
+              <dd>{money(order.deliveryFeeVnd)}</dd>
+            </div>
+          )}
+          <div>
+            <dt>Tổng tiền thuê</dt>
+            <dd>{money(order.totalVnd)}</dd>
+          </div>
           <div>
             <dt>Tiền cọc</dt>
             <dd>{money(order.depositVnd)}</dd>
+          </div>
+          <div>
+            <dt>Tổng cộng</dt>
+            <dd>{money(order.totalVnd + order.depositVnd)}</dd>
           </div>
         </dl>
       </section>
@@ -88,6 +108,9 @@ export default async function RentalOrderDetailPage({
         <p>{order.customerPhone}</p>
         <p>{order.deliveryAddress}</p>
         <p>{order.fulfillment === 'pickup' ? 'Nhận tại cửa hàng' : 'Giao hàng'}</p>
+        {order.fulfillment === 'delivery' && order.deliveryZoneName && (
+          <p>Khu vực giao: {order.deliveryZoneName}</p>
+        )}
       </section>
       <PaymentPanel order={order} bank={bankTransferInfo()} paymentsEnabled={paymentsEnabled()} />
       <section className="rental-panel rental-order-history">

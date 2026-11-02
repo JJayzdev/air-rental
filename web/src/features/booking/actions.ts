@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { multiBookingRequestSchema, rentalCalendarSchema } from './request-schema.ts'
+import { deliveryErrorMessage, discountErrorMessage } from '@/features/pricing/pricing.ts'
 import { getVerifiedAppRole, getVerifiedUser } from '@/lib/supabase/auth'
 import { createSupabaseServerClient, supabaseIsConfigured } from '@/lib/supabase/server'
 import { calendarDay } from './domain.ts'
@@ -55,6 +56,8 @@ export async function createRentalBooking(
     ...asRecord(details),
     idempotencyKey: formData.get('idempotencyKey'),
     fulfillment: formData.get('fulfillment'),
+    discountCode: formData.get('discountCode') ?? '',
+    deliveryZoneId: formData.get('deliveryZoneId') ?? '',
     customer: {
       name: formData.get('customerName'),
       phone: formData.get('customerPhone'),
@@ -77,6 +80,8 @@ export async function createRentalBooking(
       p_customer_name: parsed.data.customer.name,
       p_customer_phone: parsed.data.customer.phone,
       p_delivery_address: parsed.data.customer.address,
+      p_discount_code: parsed.data.discountCode,
+      p_delivery_zone_id: parsed.data.deliveryZoneId,
     })
     if (error || !data?.[0]?.order_id) {
       if (!error || status === 0 || status >= 500) {
@@ -101,6 +106,16 @@ export async function createRentalBooking(
       }
       if (message.includes('not available for rental')) {
         return { error: 'Một số sản phẩm chưa nhận đặt thuê.' }
+      }
+      if (message.includes('Discount code') || message.includes('discount minimum')) {
+        return { error: discountErrorMessage(message) }
+      }
+      if (
+        message.includes('Delivery requires') ||
+        message.includes('Delivery zone') ||
+        message.includes('Pickup orders')
+      ) {
+        return { error: deliveryErrorMessage(message) }
       }
       return { error: 'Chưa tạo được đơn thuê. Vui lòng thử lại.' }
     }

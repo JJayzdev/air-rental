@@ -3,6 +3,8 @@
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 import {
+  adminDeliveryZoneSchema,
+  adminDiscountCodeSchema,
   adminProductSchema,
   adminUnitSchema,
   adminUnitStateSchema,
@@ -154,4 +156,78 @@ export async function closeMaintenance(formData: FormData): Promise<never> {
   if (!error) refreshCatalog('/admin/bao-tri')
   if (error) redirect('/admin/bao-tri?maintenance=failed')
   redirect('/admin/bao-tri?maintenance=closed')
+}
+
+export async function saveAdminDiscountCode(formData: FormData): Promise<never> {
+  const parsed = adminDiscountCodeSchema.safeParse({
+    discountId: valueOf(formData, 'discountId'),
+    code: valueOf(formData, 'code'),
+    description: valueOf(formData, 'description'),
+    kind: valueOf(formData, 'kind'),
+    value: valueOf(formData, 'value'),
+    minSubtotalVnd: valueOf(formData, 'minSubtotalVnd'),
+    maxUses: valueOf(formData, 'maxUses'),
+    startsOn: valueOf(formData, 'startsOn'),
+    endsOn: valueOf(formData, 'endsOn'),
+    active: formData.get('active') !== null,
+  })
+  const { supabase, user, role } = await requireRole(['admin'], '/admin/ma-giam-gia')
+  if (!user || !supabase) redirect('/dang-nhap?next=%2Fadmin%2Fma-giam-gia')
+  if (!role) redirect('/admin?denied=admin')
+  if (!parsed.success) redirect('/admin/ma-giam-gia?discount=invalid')
+
+  const payload = {
+    code: parsed.data.code,
+    description: parsed.data.description,
+    kind: parsed.data.kind,
+    value: parsed.data.value,
+    min_subtotal_vnd: parsed.data.minSubtotalVnd,
+    max_uses: parsed.data.maxUses,
+    starts_on: parsed.data.startsOn,
+    ends_on: parsed.data.endsOn,
+    active: parsed.data.active,
+    updated_at: new Date().toISOString(),
+  }
+  const { error } = parsed.data.discountId
+    ? await supabase.from('discount_codes').update(payload).eq('id', parsed.data.discountId)
+    : await supabase.from('discount_codes').insert(payload)
+  revalidatePath('/admin')
+  revalidatePath('/admin/ma-giam-gia')
+  revalidatePath('/checkout')
+  if (error) redirect('/admin/ma-giam-gia?discount=failed')
+  redirect('/admin/ma-giam-gia?discount=saved')
+}
+
+export async function saveAdminDeliveryZone(formData: FormData): Promise<never> {
+  const parsed = adminDeliveryZoneSchema.safeParse({
+    zoneId: valueOf(formData, 'zoneId'),
+    name: valueOf(formData, 'name'),
+    feeVnd: valueOf(formData, 'feeVnd'),
+    freeFromVnd: valueOf(formData, 'freeFromVnd'),
+    notes: valueOf(formData, 'notes'),
+    sortOrder: valueOf(formData, 'sortOrder'),
+    active: formData.get('active') !== null,
+  })
+  const { supabase, user, role } = await requireRole(['admin'], '/admin/khu-vuc-giao')
+  if (!user || !supabase) redirect('/dang-nhap?next=%2Fadmin%2Fkhu-vuc-giao')
+  if (!role) redirect('/admin?denied=admin')
+  if (!parsed.success) redirect('/admin/khu-vuc-giao?zone=invalid')
+
+  const payload = {
+    name: parsed.data.name,
+    fee_vnd: parsed.data.feeVnd,
+    free_from_vnd: parsed.data.freeFromVnd,
+    notes: parsed.data.notes,
+    sort_order: parsed.data.sortOrder,
+    active: parsed.data.active,
+    updated_at: new Date().toISOString(),
+  }
+  const { error } = parsed.data.zoneId
+    ? await supabase.from('delivery_zones').update(payload).eq('id', parsed.data.zoneId)
+    : await supabase.from('delivery_zones').insert(payload)
+  revalidatePath('/admin')
+  revalidatePath('/admin/khu-vuc-giao')
+  revalidatePath('/checkout')
+  if (error) redirect('/admin/khu-vuc-giao?zone=failed')
+  redirect('/admin/khu-vuc-giao?zone=saved')
 }

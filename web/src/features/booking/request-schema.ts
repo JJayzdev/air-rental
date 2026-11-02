@@ -28,6 +28,17 @@ export const multiBookingRequestSchema = z
     items: z.array(rentalCartLineSchema).min(1).max(20),
     dates: rentalDates,
     fulfillment: z.enum(['pickup', 'delivery']),
+    discountCode: z
+      .string()
+      .trim()
+      .max(32)
+      .default('')
+      .transform((value) => value.toUpperCase())
+      .refine((value) => value === '' || /^[A-Z0-9][A-Z0-9_-]{2,31}$/.test(value)),
+    deliveryZoneId: z
+      .union([z.literal(''), z.string().uuid()])
+      .nullish()
+      .transform((value) => value || null),
     customer: z
       .object({
         name: z.string().trim().min(2).max(120),
@@ -43,6 +54,20 @@ export const multiBookingRequestSchema = z
   .superRefine((value, context) => {
     if (value.items.reduce((sum, item) => sum + item.quantity, 0) > 20) {
       context.addIssue({ code: 'custom', path: ['items'], message: 'Cart exceeds 20 units' })
+    }
+    if (value.fulfillment === 'delivery' && !value.deliveryZoneId) {
+      context.addIssue({
+        code: 'custom',
+        path: ['deliveryZoneId'],
+        message: 'Delivery requires a zone',
+      })
+    }
+    if (value.fulfillment === 'pickup' && value.deliveryZoneId) {
+      context.addIssue({
+        code: 'custom',
+        path: ['deliveryZoneId'],
+        message: 'Pickup cannot have a delivery zone',
+      })
     }
     try {
       if (calendarDay(value.dates.end) < calendarDay(value.dates.start)) {

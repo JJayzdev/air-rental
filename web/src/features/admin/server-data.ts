@@ -61,6 +61,30 @@ export interface AdminCategoryView {
   name: string
 }
 
+export interface AdminDiscountCodeView {
+  id: string
+  code: string
+  description: string
+  kind: 'percent' | 'fixed'
+  value: number
+  minSubtotalVnd: number
+  maxUses: number | null
+  usedCount: number
+  startsOn: string | null
+  endsOn: string | null
+  active: boolean
+}
+
+export interface AdminDeliveryZoneView {
+  id: string
+  name: string
+  feeVnd: number
+  freeFromVnd: number | null
+  notes: string
+  sortOrder: number
+  active: boolean
+}
+
 type ServerDbClient = SupabaseClient<Database>
 
 export async function getAdminDashboard(supabase: ServerDbClient): Promise<AdminDashboardRow> {
@@ -198,6 +222,52 @@ export async function listAdminMaintenance(
       completedOn: record.completed_on,
     }
   })
+}
+
+export async function listAdminDiscountCodes(
+  supabase: ServerDbClient,
+): Promise<AdminDiscountCodeView[]> {
+  const { data, error } = await supabase
+    .from('discount_codes')
+    .select(
+      'id,code,description,kind,value,min_subtotal_vnd,max_uses,used_count,starts_on,ends_on,active',
+    )
+    .order('active', { ascending: false })
+    .order('code', { ascending: true })
+  if (error || !data) throw new Error('Không tải được mã giảm giá. Vui lòng thử lại.')
+  return data.map((row) => ({
+    id: row.id,
+    code: row.code,
+    description: row.description,
+    kind: row.kind,
+    value: Number(row.value),
+    minSubtotalVnd: Number(row.min_subtotal_vnd),
+    maxUses: row.max_uses === null ? null : Number(row.max_uses),
+    usedCount: Number(row.used_count),
+    startsOn: row.starts_on,
+    endsOn: row.ends_on,
+    active: row.active,
+  }))
+}
+
+export async function listAdminDeliveryZones(
+  supabase: ServerDbClient,
+): Promise<AdminDeliveryZoneView[]> {
+  const { data, error } = await supabase
+    .from('delivery_zones')
+    .select('id,name,fee_vnd,free_from_vnd,notes,sort_order,active')
+    .order('sort_order', { ascending: true })
+    .order('name', { ascending: true })
+  if (error || !data) throw new Error('Không tải được khu vực giao hàng. Vui lòng thử lại.')
+  return data.map((row) => ({
+    id: row.id,
+    name: row.name,
+    feeVnd: Number(row.fee_vnd),
+    freeFromVnd: row.free_from_vnd === null ? null : Number(row.free_from_vnd),
+    notes: row.notes,
+    sortOrder: Number(row.sort_order),
+    active: row.active,
+  }))
 }
 
 export async function listAdminAuditEvents(

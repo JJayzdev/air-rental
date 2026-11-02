@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { RentalCartPanel } from '@/features/cart/rental-cart-panel'
 import { requireVerifiedUser } from '@/lib/supabase/auth'
 import { getCatalog } from '@/features/products/catalog-server'
+import { listActiveDeliveryZones } from '@/features/pricing/server-data'
 import { supabaseIsConfigured } from '@/lib/supabase/server'
 import type { Metadata } from 'next'
 
@@ -23,11 +24,11 @@ export default async function CheckoutPage() {
   }
   const { supabase, user } = await requireVerifiedUser('/checkout')
   const catalog = await getCatalog()
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('full_name,phone')
-    .eq('id', user.id)
-    .maybeSingle()
+  const [profileResult, deliveryZones] = await Promise.all([
+    supabase.from('profiles').select('full_name,phone').eq('id', user.id).maybeSingle(),
+    listActiveDeliveryZones(supabase),
+  ])
+  const { data: profile, error: profileError } = profileResult
   if (profileError) throw new Error('Không tải được thông tin liên hệ đã lưu. Vui lòng thử lại.')
   return (
     <main className="shell rental-page">
@@ -45,6 +46,7 @@ export default async function CheckoutPage() {
       <RentalCartPanel
         products={catalog.products}
         checkout
+        deliveryZones={deliveryZones}
         contactPrefill={{
           name: profile?.full_name ?? '',
           phone: profile?.phone ?? '',

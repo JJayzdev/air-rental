@@ -34,6 +34,11 @@ export interface RentalOrderView {
   customerPhone: string
   deliveryAddress: string
   subtotalVnd: number
+  discountCode: string
+  discountVnd: number
+  deliveryZoneName: string
+  deliveryFeeVnd: number
+  totalVnd: number
   depositVnd: number
   createdAt: string
   expiresAt: string
@@ -60,6 +65,11 @@ type OrderRow = Pick<
   | 'customer_phone'
   | 'delivery_address'
   | 'subtotal_vnd'
+  | 'discount_code'
+  | 'discount_vnd'
+  | 'delivery_zone_name'
+  | 'delivery_fee_vnd'
+  | 'total_vnd'
   | 'deposit_vnd'
   | 'payment_state'
   | 'created_at'
@@ -67,7 +77,7 @@ type OrderRow = Pick<
 >
 
 const ORDER_COLUMNS =
-  'id,user_id,code,state,payment_state,fulfillment,customer_name,customer_phone,delivery_address,subtotal_vnd,deposit_vnd,created_at,expires_at'
+  'id,user_id,code,state,payment_state,fulfillment,customer_name,customer_phone,delivery_address,subtotal_vnd,discount_code,discount_vnd,delivery_zone_name,delivery_fee_vnd,total_vnd,deposit_vnd,created_at,expires_at'
 
 export async function listRentalOrders(
   supabase: ServerDbClient,
@@ -178,6 +188,11 @@ async function mapOrders(supabase: ServerDbClient, rows: OrderRow[]): Promise<Re
     customerPhone: row.customer_phone,
     deliveryAddress: row.delivery_address,
     subtotalVnd: Number(row.subtotal_vnd),
+    discountCode: row.discount_code,
+    discountVnd: Number(row.discount_vnd),
+    deliveryZoneName: row.delivery_zone_name,
+    deliveryFeeVnd: Number(row.delivery_fee_vnd),
+    totalVnd: Number(row.total_vnd),
     depositVnd: Number(row.deposit_vnd),
     createdAt: row.created_at,
     expiresAt: row.expires_at,

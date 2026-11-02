@@ -2655,6 +2655,24 @@ footer {
   color: var(--muted);
   line-height: 1.5;
 }
+.rental-discount-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.rental-discount-row input {
+  flex: 1 1 180px;
+  min-width: 0;
+  text-transform: uppercase;
+}
+.rental-discount-row button {
+  flex: 0 0 auto;
+}
+.rental-discount-row button.secondary {
+  color: var(--navy);
+  background: #eef3fb;
+}
 .rental-cart-next {
   display: flex;
   flex-wrap: wrap;
@@ -3153,6 +3171,14 @@ footer {
 }
 .rental-admin-form > button {
   justify-self: start;
+}
+.rental-admin-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rental-admin-check input {
+  width: auto;
 }
 .rental-admin-list {
   display: grid;

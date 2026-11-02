@@ -24,6 +24,36 @@ export type PaymentKind = 'payment' | 'deposit_refund'
 
 export type MaintenanceReason = 'scheduled' | 'repair' | 'inspection'
 
+export type DiscountKind = 'percent' | 'fixed'
+
+export type DiscountCodeRow = {
+  id: string
+  code: string
+  description: string
+  kind: DiscountKind
+  value: number
+  min_subtotal_vnd: number
+  max_uses: number | null
+  used_count: number
+  starts_on: string | null
+  ends_on: string | null
+  active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type DeliveryZoneRow = {
+  id: string
+  name: string
+  fee_vnd: number
+  free_from_vnd: number | null
+  notes: string
+  sort_order: number
+  active: boolean
+  created_at: string
+  updated_at: string
+}
+
 export type UnitMaintenanceRow = {
   id: string
   unit_id: string
@@ -124,6 +154,8 @@ export interface Database {
         ready_on: string
       }>
       unit_maintenance: Table<UnitMaintenanceRow>
+      discount_codes: Table<DiscountCodeRow>
+      delivery_zones: Table<DeliveryZoneRow>
       orders: Table<{
         id: string
         code: string
@@ -134,6 +166,13 @@ export interface Database {
         customer_phone: string
         delivery_address: string
         subtotal_vnd: number
+        discount_code_id: string | null
+        discount_code: string
+        discount_vnd: number
+        delivery_zone_id: string | null
+        delivery_zone_name: string
+        delivery_fee_vnd: number
+        total_vnd: number
         deposit_vnd: number
         payment_state: OrderPaymentState
         created_at: string
@@ -196,12 +235,17 @@ export interface Database {
           p_customer_name: string
           p_customer_phone: string
           p_delivery_address: string
+          p_discount_code?: string
+          p_delivery_zone_id?: string | null
         }
         Returns: {
           order_id: string
           order_code: string
           subtotal_vnd: number
+          discount_vnd: number
+          delivery_fee_vnd: number
           deposit_vnd: number
+          total_vnd: number
           rental_days: number
         }[]
       }
@@ -216,14 +260,23 @@ export interface Database {
           p_customer_name: string
           p_customer_phone: string
           p_delivery_address: string
+          p_discount_code?: string
+          p_delivery_zone_id?: string | null
         }
         Returns: {
           order_id: string
           order_code: string
           subtotal_vnd: number
+          discount_vnd: number
+          delivery_fee_vnd: number
           deposit_vnd: number
+          total_vnd: number
           rental_days: number
         }[]
+      }
+      preview_booking_discount: {
+        Args: { p_items: Json; p_start: string; p_end: string; p_discount_code: string }
+        Returns: { subtotal_vnd: number; discount_vnd: number; description: string }[]
       }
       cancel_booking: { Args: { p_order_id: string }; Returns: undefined }
       expire_pending_bookings: { Args: Record<PropertyKey, never>; Returns: number }
@@ -292,6 +345,7 @@ export interface Database {
       order_state: OrderState
       payment_state: OrderPaymentState
       maintenance_reason: MaintenanceReason
+      discount_kind: DiscountKind
     }
     CompositeTypes: Record<string, never>
   }

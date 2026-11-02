@@ -104,6 +104,12 @@ export default async function AdminDashboardPage({
         <Link className="secondary" href="/admin/bao-tri">
           Bảo trì
         </Link>
+        <Link className="secondary" href="/admin/ma-giam-gia">
+          Mã giảm giá
+        </Link>
+        <Link className="secondary" href="/admin/khu-vuc-giao">
+          Khu vực giao hàng
+        </Link>
         <Link className="secondary" href="/admin/nhat-ky">
           Nhật ký hoạt động
         </Link>

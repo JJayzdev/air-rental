@@ -9,6 +9,9 @@ import {
   createRentalBooking,
   type BookingActionState,
 } from '@/features/booking/actions'
+import { previewRentalDiscount } from '@/features/pricing/actions'
+import { deliveryFeeFor } from '@/features/pricing/pricing.ts'
+import type { AppliedDiscount, DeliveryZoneView } from '@/features/pricing/types.ts'
 import { rentalDays } from '@/features/booking/domain.ts'
 import {
   clearBookingKey,
@@ -27,13 +30,18 @@ import {
 
 const INITIAL_ACTION: BookingActionState = {}
 
+type PricedDiscount = AppliedDiscount & { pricingKey: string }
+type DiscountFailure = { pricingKey: string; message: string }
+
 export function RentalCartPanel({
   products,
   checkout = false,
+  deliveryZones = [],
   contactPrefill = { name: '', phone: '', address: '' },
 }: {
   products: CatalogProduct[]
   checkout?: boolean
+  deliveryZones?: DeliveryZoneView[]
   contactPrefill?: { name: string; phone: string; address: string }
 }) {
   const router = useRouter()
@@ -50,6 +58,12 @@ export function RentalCartPanel({
   const [idempotencyKey, setIdempotencyKey] = useState('')
   const [attemptStorageReady, setAttemptStorageReady] = useState(false)
   const [actionState, action, submitting] = useActionState(createRentalBooking, INITIAL_ACTION)
+  const [fulfillment, setFulfillment] = useState<'pickup' | 'delivery'>('pickup')
+  const [deliveryZoneId, setDeliveryZoneId] = useState('')
+  const [discountCode, setDiscountCode] = useState('')
+  const [appliedDiscount, setAppliedDiscount] = useState<PricedDiscount | null>(null)
+  const [discountError, setDiscountError] = useState<DiscountFailure | null>(null)
+  const [pendingDiscount, startDiscountTransition] = useTransition()
 
   useEffect(() => {
     let active = true
@@ -122,6 +136,17 @@ export function RentalCartPanel({
   const estimatedDeposit = validItems.reduce((sum, item) => {
     return sum + (productsById.get(item.productId)?.depositVnd ?? 0) * item.quantity
   }, 0)
+  const pricingFingerprint = `${itemFingerprint}:${cart.start ?? ''}:${cart.end ?? ''}`
+  // A preview is only valid for the exact cart and dates it was priced for, so a stale
+  // discount is ignored instead of being cleared from an effect.
+  const activeDiscount = appliedDiscount?.pricingKey === pricingFingerprint ? appliedDiscount : null
+  const activeDiscountError =
+    discountError?.pricingKey === pricingFingerprint ? discountError.message : ''
+  const selectedZone = deliveryZones.find((zone) => zone.id === deliveryZoneId) ?? null
+  const subtotalAfterDiscount = Math.max(estimatedSubtotal - (activeDiscount?.discountVnd ?? 0), 0)
+  const estimatedDeliveryFee =
+    fulfillment === 'delivery' ? deliveryFeeFor(selectedZone, subtotalAfterDiscount) : 0
+  const estimatedTotal = subtotalAfterDiscount + estimatedDeliveryFee
 
   useEffect(() => {
     if (!hydrated || validItems.length === 0) return
@@ -194,6 +219,51 @@ export function RentalCartPanel({
     setCart((current) => update(current))
   }
 
+  function applyDiscountCode() {
+    const code = discountCode.trim().toUpperCase()
+    if (!code) {
+      setAppliedDiscount(null)
+      setDiscountError(null)
+      return
+    }
+    if (!cart.start || !cart.end) {
+      setDiscountError({
+        pricingKey: pricingFingerprint,
+        message: 'Chọn ngày thuê trước khi áp dụng mã giảm giá.',
+      })
+      return
+    }
+    if (validItems.length === 0) {
+      setDiscountError({
+        pricingKey: pricingFingerprint,
+        message: 'Giỏ thuê chưa có thiết bị có thể đặt.',
+      })
+      return
+    }
+    setDiscountError(null)
+    const pricingKey = pricingFingerprint
+    startDiscountTransition(async () => {
+      const result = await previewRentalDiscount({
+        code,
+        items: validItems,
+        dates: { start: cart.start as string, end: cart.end as string },
+      })
+      if (result.error) {
+        setAppliedDiscount(null)
+        setDiscountError({ pricingKey, message: result.error })
+        return
+      }
+      setAppliedDiscount({
+        pricingKey,
+        code: result.code ?? code,
+        subtotalVnd: result.subtotalVnd ?? 0,
+        discountVnd: result.discountVnd ?? 0,
+        description: result.description ?? '',
+      })
+      setDiscountCode(result.code ?? code)
+    })
+  }
+
   const hasAllProducts =
     hydrated && cart.items.length > 0 && unknownItemCount === 0 && validItems.length > 0
   const currentStartDates = calendarItemsKey === itemFingerprint ? startDates : []
@@ -202,6 +272,7 @@ export function RentalCartPanel({
     hasAllProducts &&
     attemptStorageReady &&
     !storageError &&
+    (fulfillment === 'pickup' || Boolean(deliveryZoneId)) &&
     Boolean(cart.start && cart.end && currentEndDates.includes(cart.end))
 
   if (!hydrated)
@@ -330,13 +401,29 @@ export function RentalCartPanel({
               <dt>Ước tính tiền thuê</dt>
               <dd>{money(estimatedSubtotal)}</dd>
             </div>
+            {activeDiscount && activeDiscount.discountVnd > 0 && (
+              <div>
+                <dt>Giảm giá ({activeDiscount.code})</dt>
+                <dd>−{money(activeDiscount.discountVnd)}</dd>
+              </div>
+            )}
+            {fulfillment === 'delivery' && selectedZone && (
+              <div>
+                <dt>Phí giao ({selectedZone.name})</dt>
+                <dd>{money(estimatedDeliveryFee)}</dd>
+              </div>
+            )}
+            <div>
+              <dt>Tổng tạm tính</dt>
+              <dd data-testid="rental-estimate-total">{money(estimatedTotal)}</dd>
+            </div>
             <div>
               <dt>Ước tính tiền cọc</dt>
               <dd>{money(estimatedDeposit)}</dd>
             </div>
             <small>
-              Ước tính chưa áp dụng giảm giá theo kỳ hoặc phí giao hàng. Hệ thống tính lại từ bảng
-              giá khi giữ thiết bị.
+              Ước tính theo giá niêm yết. Hệ thống tính lại giảm giá theo kỳ thuê, mã giảm giá và
+              phí giao khi giữ thiết bị.
             </small>
           </dl>
         )}
@@ -353,9 +440,15 @@ export function RentalCartPanel({
               value={JSON.stringify({
                 items: validItems,
                 dates: { start: cart.start, end: cart.end },
-                fulfillment: 'pickup',
+                fulfillment,
                 customer: { name: '', phone: '', address: '' },
               })}
+            />
+            <input type="hidden" name="discountCode" value={activeDiscount?.code ?? ''} />
+            <input
+              type="hidden"
+              name="deliveryZoneId"
+              value={fulfillment === 'delivery' ? deliveryZoneId : ''}
             />
             <label htmlFor="rental-name">Họ và tên</label>
             <input
@@ -377,11 +470,97 @@ export function RentalCartPanel({
               defaultValue={contactPrefill.phone}
             />
             <label htmlFor="rental-fulfillment">Nhận thiết bị</label>
-            <select id="rental-fulfillment" name="fulfillment" defaultValue="pickup">
+            <select
+              id="rental-fulfillment"
+              name="fulfillment"
+              value={fulfillment}
+              onChange={(event) =>
+                setFulfillment(event.target.value === 'delivery' ? 'delivery' : 'pickup')
+              }
+            >
               <option value="pickup">Nhận tại cửa hàng</option>
               <option value="delivery">Giao hàng</option>
             </select>
-            <label htmlFor="rental-address">Địa chỉ giao hoặc ghi chú nhận máy</label>
+            {fulfillment === 'delivery' && (
+              <>
+                <label htmlFor="rental-zone">Khu vực giao</label>
+                <select
+                  id="rental-zone"
+                  value={deliveryZoneId}
+                  onChange={(event) => setDeliveryZoneId(event.target.value)}
+                  required
+                  data-testid="rental-zone"
+                >
+                  <option value="">Chọn khu vực giao hàng</option>
+                  {deliveryZones.map((zone) => (
+                    <option key={zone.id} value={zone.id}>
+                      {zone.name} —{' '}
+                      {zone.freeFromVnd !== null
+                        ? `miễn phí từ ${money(zone.freeFromVnd)}`
+                        : money(zone.feeVnd)}
+                    </option>
+                  ))}
+                </select>
+                {selectedZone && (
+                  <small>
+                    Phí giao {money(estimatedDeliveryFee)}
+                    {selectedZone.freeFromVnd !== null &&
+                      ` · miễn phí khi tiền thuê sau giảm đạt ${money(selectedZone.freeFromVnd)}`}
+                    .
+                  </small>
+                )}
+              </>
+            )}
+            <label htmlFor="rental-discount">Mã giảm giá (không bắt buộc)</label>
+            <div className="rental-discount-row">
+              <input
+                id="rental-discount"
+                value={discountCode}
+                onChange={(event) => {
+                  setDiscountCode(event.target.value)
+                  setDiscountError(null)
+                }}
+                maxLength={32}
+                placeholder="WELCOME10"
+                autoComplete="off"
+                data-testid="rental-discount"
+              />
+              <button
+                type="button"
+                className="secondary"
+                onClick={applyDiscountCode}
+                disabled={pendingDiscount || !discountCode.trim()}
+              >
+                {pendingDiscount ? 'Đang kiểm tra…' : 'Áp dụng'}
+              </button>
+              {activeDiscount && (
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() => {
+                    setAppliedDiscount(null)
+                    setDiscountCode('')
+                    setDiscountError(null)
+                  }}
+                >
+                  Bỏ mã
+                </button>
+              )}
+            </div>
+            {activeDiscountError && (
+              <p className="rental-error" role="alert">
+                {activeDiscountError}
+              </p>
+            )}
+            {activeDiscount && activeDiscount.discountVnd > 0 && (
+              <p className="rental-message" role="status">
+                Đã áp dụng {activeDiscount.code}: giảm {money(activeDiscount.discountVnd)}.
+                {activeDiscount.description ? ` ${activeDiscount.description}` : ''}
+              </p>
+            )}
+            <label htmlFor="rental-address">
+              {fulfillment === 'delivery' ? 'Địa chỉ giao hàng' : 'Ghi chú nhận máy'}
+            </label>
             <textarea
               id="rental-address"
               name="customerAddress"

@@ -20,7 +20,7 @@ export function PaymentPanel({ order, bank, paymentsEnabled }: PaymentPanelProps
   const collected = order.payments
     .filter((payment) => payment.direction === 'in' && payment.status === 'succeeded')
     .reduce((sum, payment) => sum + payment.amountVnd, 0)
-  const total = order.subtotalVnd + order.depositVnd
+  const total = order.totalVnd + order.depositVnd
   const remaining = Math.max(total - collected, 0)
   const depositDue = Math.max(order.depositVnd - collected, 0)
   const amountDueNow = depositDue > 0 ? depositDue : remaining

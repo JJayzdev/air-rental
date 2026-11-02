@@ -52,6 +52,9 @@ export default async function HandoverSheetPage({ params }: { params: Promise<{ 
           <p>{order.customerName}</p>
           <p>{order.customerPhone}</p>
           <p>{order.fulfillment === 'delivery' ? order.deliveryAddress : 'Nhận tại cửa hàng'}</p>
+          {order.fulfillment === 'delivery' && order.deliveryZoneName && (
+            <p>Khu vực giao: {order.deliveryZoneName}</p>
+          )}
         </section>
 
         <table className="rental-invoice-table">
