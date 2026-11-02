@@ -184,6 +184,11 @@ export default async function StaffOrdersPage({
                 </form>
               )}
               <div className="rental-transition-actions">
+                {order.state !== 'pending' && order.state !== 'cancelled' && (
+                  <Link className="secondary" href={`/quan-ly-don/${order.id}/phieu-ban-giao`}>
+                    Phiếu bàn giao
+                  </Link>
+                )}
                 {NEXT_STATES[order.state]
                   ?.filter(
                     (next) =>

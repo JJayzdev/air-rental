@@ -41,7 +41,7 @@ export async function fetchSupabaseCatalog(
   try {
     response = await fetcher(url, {
       headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}`, Accept: 'application/json' },
-      next: { revalidate: 300 },
+      next: { revalidate: 300, tags: ['catalog'] },
     })
   } catch {
     throw new CatalogSourceError('Supabase catalog request failed. Check the backend connection.')

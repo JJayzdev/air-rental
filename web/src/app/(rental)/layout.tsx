@@ -30,6 +30,7 @@ export default async function RentalLayout({ children }: { children: React.React
             {(role === 'staff' || role === 'admin') && (
               <Link href="/quan-ly-giay-to">Giấy tờ cần xem</Link>
             )}
+            {(role === 'staff' || role === 'admin') && <Link href="/admin">Quản trị</Link>}
             <Link href="/">Bản demo</Link>
           </nav>
           {user ? (

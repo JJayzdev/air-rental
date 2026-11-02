@@ -22,6 +22,33 @@ export type OrderPaymentState = 'unpaid' | 'deposit_paid' | 'paid' | 'refund_pen
 
 export type PaymentKind = 'payment' | 'deposit_refund'
 
+export type MaintenanceReason = 'scheduled' | 'repair' | 'inspection'
+
+export type UnitMaintenanceRow = {
+  id: string
+  unit_id: string
+  reason: MaintenanceReason
+  notes: string
+  started_on: string
+  expected_end_on: string
+  completed_on: string | null
+  created_by: string | null
+  created_at: string
+}
+
+export type AdminDashboardRow = {
+  pending_orders: number
+  confirmed_orders: number
+  active_rentals: number
+  overdue_orders: number
+  refunds_pending: number
+  month_revenue_vnd: number
+  month_refunds_vnd: number
+  available_units: number
+  maintenance_units: number
+  pending_identity_documents: number
+}
+
 export type IdentityDocumentStatus =
   'requested' | 'pending_review' | 'approved' | 'rejected' | 'cancelled'
 
@@ -81,6 +108,9 @@ export interface Database {
         id: string
         slug: string
         name: string
+        description: string
+        category_id: string
+        image_urls: string[]
         state: 'draft' | 'active' | 'archived'
         is_sample: boolean
         price_per_day_vnd: number
@@ -93,6 +123,7 @@ export interface Database {
         state: 'available' | 'maintenance' | 'retired'
         ready_on: string
       }>
+      unit_maintenance: Table<UnitMaintenanceRow>
       orders: Table<{
         id: string
         code: string
@@ -240,12 +271,27 @@ export interface Database {
         Returns: Json
       }
       complete_deposit_refund: { Args: { p_payment_id: string }; Returns: undefined }
+      admin_dashboard: { Args: Record<PropertyKey, never>; Returns: AdminDashboardRow[] }
+      open_unit_maintenance: {
+        Args: {
+          p_unit_id: string
+          p_reason: MaintenanceReason
+          p_expected_end_on: string
+          p_notes?: string
+        }
+        Returns: UnitMaintenanceRow[]
+      }
+      close_unit_maintenance: {
+        Args: { p_maintenance_id: string; p_completed_on?: string | null }
+        Returns: UnitMaintenanceRow[]
+      }
     }
     Enums: {
       app_role: 'customer' | 'staff' | 'admin'
       fulfillment_method: 'pickup' | 'delivery'
       order_state: OrderState
       payment_state: OrderPaymentState
+      maintenance_reason: MaintenanceReason
     }
     CompositeTypes: Record<string, never>
   }
