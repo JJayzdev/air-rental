@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  adminDeliveryZoneSchema,
+  adminDiscountCodeSchema,
   adminProductSchema,
   adminUnitSchema,
   adminUnitStateSchema,
@@ -101,4 +103,66 @@ test('closing maintenance accepts an empty or explicit completion date', () => {
     closeMaintenanceSchema.safeParse({ ...base, completedOn: '06/11/2026' }).success,
     false,
   )
+})
+
+const discount = {
+  discountId: '',
+  code: 'welcome10',
+  description: 'Giam 10% cho don tu 500.000 VND',
+  kind: 'percent',
+  value: '10',
+  minSubtotalVnd: '500000',
+  maxUses: '500',
+  startsOn: '',
+  endsOn: '',
+  active: true,
+}
+
+test('discount schema normalises codes and enforces percent or fixed limits', () => {
+  const parsed = adminDiscountCodeSchema.parse(discount)
+  assert.equal(parsed.code, 'WELCOME10')
+  assert.equal(parsed.discountId, null)
+  assert.equal(parsed.value, 10)
+  assert.equal(parsed.maxUses, 500)
+  assert.equal(parsed.startsOn, null)
+  assert.equal(adminDiscountCodeSchema.safeParse({ ...discount, value: '101' }).success, false)
+  assert.equal(adminDiscountCodeSchema.safeParse({ ...discount, value: '0' }).success, false)
+  assert.equal(
+    adminDiscountCodeSchema.safeParse({ ...discount, kind: 'fixed', value: '999' }).success,
+    false,
+  )
+  assert.equal(
+    adminDiscountCodeSchema.safeParse({ ...discount, kind: 'fixed', value: '50000' }).success,
+    true,
+  )
+  assert.equal(
+    adminDiscountCodeSchema.safeParse({
+      ...discount,
+      startsOn: '2026-11-10',
+      endsOn: '2026-11-01',
+    }).success,
+    false,
+  )
+})
+
+const zone = {
+  zoneId: '',
+  name: 'Noi thanh Ha Noi',
+  feeVnd: '30000',
+  freeFromVnd: '2000000',
+  notes: '',
+  sortOrder: '1',
+  active: true,
+}
+
+test('delivery zone schema converts fees and allows no free threshold', () => {
+  const parsed = adminDeliveryZoneSchema.parse(zone)
+  assert.equal(parsed.zoneId, null)
+  assert.equal(parsed.feeVnd, 30000)
+  assert.equal(parsed.freeFromVnd, 2000000)
+  assert.equal(parsed.sortOrder, 1)
+  assert.equal(adminDeliveryZoneSchema.parse({ ...zone, freeFromVnd: '' }).freeFromVnd, null)
+  assert.equal(adminDeliveryZoneSchema.safeParse({ ...zone, feeVnd: '-1' }).success, false)
+  assert.equal(adminDeliveryZoneSchema.safeParse({ ...zone, name: 'A' }).success, false)
+  assert.equal(adminDeliveryZoneSchema.safeParse({ ...zone, sortOrder: '10000' }).success, false)
 })

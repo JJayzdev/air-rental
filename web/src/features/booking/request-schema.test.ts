@@ -54,3 +54,30 @@ test('multi-product schema rejects impossible dates, reversed ranges, and carts 
     false,
   )
 })
+
+test('discount codes are normalised and invalid formats are rejected', () => {
+  assert.equal(multiBookingRequestSchema.parse(base).discountCode, '')
+  assert.equal(
+    multiBookingRequestSchema.parse({ ...base, discountCode: ' welcome10 ' }).discountCode,
+    'WELCOME10',
+  )
+  assert.equal(multiBookingRequestSchema.safeParse({ ...base, discountCode: 'a' }).success, false)
+  assert.equal(
+    multiBookingRequestSchema.safeParse({ ...base, discountCode: 'bad code' }).success,
+    false,
+  )
+})
+
+test('delivery needs a zone while pickup cannot carry one', () => {
+  const zoneId = '20000000-0000-4000-8000-000000000001'
+  const delivery = { ...base, fulfillment: 'delivery' as const }
+  assert.equal(multiBookingRequestSchema.safeParse(delivery).success, false)
+  assert.equal(
+    multiBookingRequestSchema.safeParse({ ...delivery, deliveryZoneId: zoneId }).success,
+    true,
+  )
+  assert.equal(
+    multiBookingRequestSchema.safeParse({ ...base, deliveryZoneId: zoneId }).success,
+    false,
+  )
+})

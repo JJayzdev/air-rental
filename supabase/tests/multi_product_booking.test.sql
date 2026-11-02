@@ -140,7 +140,8 @@ select * from public.create_multi_product_booking(
   jsonb_build_array(
     jsonb_build_object('productId', '51000000-0000-0000-0000-000000000001', 'quantity', 1),
     jsonb_build_object('productId', '51000000-0000-0000-0000-000000000002', 'quantity', 1)
-  ), '2099-07-15', '2099-07-15', 'delivery', 'Customer Two', '0912345679', 'Other test address'
+  ), '2099-07-15', '2099-07-15', 'delivery', 'Customer Two', '0912345679', 'Other test address',
+  '', '20000000-0000-4000-8000-000000000001'
 );
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '53000000-0000-0000-0000-000000000001', true);
