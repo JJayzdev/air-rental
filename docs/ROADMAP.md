@@ -5,7 +5,8 @@ các giai đoạn triển khai. Repo có hai app: bản demo React + Vite ở th
 trong `web/`. Demo Vite vẫn dùng localStorage; Next.js có catalog SSR và luồng đặt thuê Supabase local.
 Migrations, seed, Auth/RLS và booking đã được kiểm tra trên Supabase local đầy đủ (PostgreSQL 15,
 Auth, PostgREST và Mailpit). Thanh toán chuyển khoản có webhook SePay idempotent và hoàn cọc, nhưng
-mới chạy với tài khoản ngân hàng giả lập trên local. Dữ liệu sản phẩm vẫn là mẫu; chưa có pilot
+mới chạy với tài khoản ngân hàng giả lập trên local. Khu vực quản trị GĐ 5 đợt A đã có dashboard, kho,
+bảo trì và phiếu bàn giao; mã giảm giá/phí giao còn ở đợt B. Dữ liệu sản phẩm vẫn là mẫu; chưa có pilot
 thương mại và thông báo xác nhận đơn. Đây vẫn là **nền tảng đang phát triển**, không phải hệ thống
 vận hành.
 
@@ -290,11 +291,14 @@ Xem [`docs/GD4-PAYMENTS.md`](GD4-PAYMENTS.md).
 
 ### GĐ 5 — Admin (1.5 tuần)
 
-- Dashboard: đơn chờ xác nhận, máy đang cho thuê, doanh thu tháng.
-- Quản lý đơn theo vòng đời §3.3, in phiếu bàn giao.
-- Quản lý sản phẩm + máy vật lý + lịch bảo trì.
-- Mã giảm giá, phí giao theo khu vực, lịch giao.
-- Nhật ký thao tác (`order_events`).
+Đợt A xong ngày 02/11/2026 — xem [`docs/GD5-ADMIN.md`](GD5-ADMIN.md). Đợt B (mã giảm giá, phí giao)
+chưa làm.
+
+- [x] Dashboard: đơn chờ xác nhận, máy đang cho thuê, doanh thu tháng.
+- [x] Quản lý đơn theo vòng đời §3.3, in phiếu bàn giao.
+- [x] Quản lý sản phẩm + máy vật lý + lịch bảo trì.
+- [ ] Mã giảm giá, phí giao theo khu vực, lịch giao.
+- [x] Nhật ký thao tác (`order_events`).
 
 ### GĐ 6 — Chat AI & nội dung (3–5 ngày)
 
