@@ -51,7 +51,12 @@ export default function Header({ cartCount, user, onNavigate, onSearch }: Header
 
         <nav className="desktop-nav" aria-label="Điều hướng chính">
           <button onClick={() => onNavigate('home')}>Trang chủ</button>
+          <Link href="/" aria-label="Giới thiệu đồ án">
+            Giới thiệu
+          </Link>
           <Link href="/san-pham">Sản phẩm</Link>
+          <Link href="/huong-dan">Hướng dẫn</Link>
+          <Link href="/chinh-sach">Kịch bản</Link>
           <button onClick={() => onNavigate('home', { anchor: 'how' })}>Cách thức thuê</button>
           <button onClick={() => onNavigate('home', { anchor: 'about' })}>Về chúng tôi</button>
         </nav>

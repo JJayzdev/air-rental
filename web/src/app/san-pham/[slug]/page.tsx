@@ -149,7 +149,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
               ))}
             </dl>
             <div className="catalog-boundary-note">
-              Chưa hỗ trợ đặt thuê trực tuyến. Thông tin giá chỉ để tham khảo.
+              {product.isSample
+                ? 'Sản phẩm mẫu chỉ để xem; không thể đặt thuê. Giá và cọc là số liệu minh họa.'
+                : 'Sản phẩm này có trong backend catalog. Bước đặt thuê cần tài khoản và unit fixture khả dụng trên Supabase local; không tạo giao dịch hay giao nhận thật.'}
             </div>
             <div className="detail-actions">
               <Link className="secondary" href="/san-pham">

@@ -5,6 +5,8 @@ export const env = createEnv({
   server: {
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     SENTRY_DSN: z.string().url().optional(),
+    AIR_ENABLE_ERROR_ALERTS: z.string().optional(),
+    OPS_ALERT_WEBHOOK_URL: z.string().optional(),
     SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
     AIR_ENABLE_PAYMENTS: z.string().optional(),
     SEPAY_WEBHOOK_SECRET: z.string().min(1).optional(),
@@ -21,6 +23,8 @@ export const env = createEnv({
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
     SENTRY_DSN: process.env.SENTRY_DSN,
+    AIR_ENABLE_ERROR_ALERTS: process.env.AIR_ENABLE_ERROR_ALERTS,
+    OPS_ALERT_WEBHOOK_URL: process.env.OPS_ALERT_WEBHOOK_URL,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     AIR_ENABLE_PAYMENTS: process.env.AIR_ENABLE_PAYMENTS,
     SEPAY_WEBHOOK_SECRET: process.env.SEPAY_WEBHOOK_SECRET,

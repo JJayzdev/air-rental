@@ -3,9 +3,9 @@ import './globals.css'
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
-  title: 'A.I.R — Thuê thiết bị công nghệ',
+  title: 'A.I.R — đồ án mô phỏng cho thuê thiết bị',
   description:
-    'Thuê laptop, điện thoại, máy ảnh, tablet và phụ kiện công nghệ theo ngày. Linh hoạt, tiết kiệm, giao nhanh nội thành.',
+    'Prototype học tập mô phỏng catalog và luồng thuê thiết bị công nghệ bằng dữ liệu giả lập.',
   icons: { icon: '/favicon.svg' },
 }
 

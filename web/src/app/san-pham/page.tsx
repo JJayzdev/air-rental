@@ -17,13 +17,13 @@ export async function generateMetadata(): Promise<Metadata> {
   const catalog = await getCatalog()
   const hasSampleProducts = catalog.products.some((product) => product.isSample)
   return {
-    title: 'Thiết bị cho thuê | A.I.R',
-    description: 'Khám phá danh mục laptop, điện thoại, máy ảnh, tablet và phụ kiện công nghệ.',
+    title: 'Catalog minh họa | A.I.R',
+    description: 'Khám phá catalog học tập và dữ liệu minh họa của đồ án A.I.R.',
     alternates: { canonical: '/san-pham' },
     robots: hasSampleProducts ? { index: false, follow: true } : undefined,
     openGraph: {
-      title: 'Danh mục thiết bị | A.I.R',
-      description: 'Khám phá danh mục thiết bị công nghệ A.I.R.',
+      title: 'Catalog đồ án | A.I.R',
+      description: 'Catalog dữ liệu minh họa của đồ án A.I.R.',
       url: '/san-pham',
       images: [{ url: '/images/catalog-placeholder.svg', alt: 'Ảnh catalog A.I.R' }],
       type: 'website',
@@ -63,7 +63,7 @@ export default async function CatalogPage({
         </nav>
         <div className="page-heading">
           <div>
-            <span className="eyebrow">Kho thiết bị</span>
+            <span className="eyebrow">Catalog đồ án</span>
             <h1>Khám phá sản phẩm</h1>
             <p>{products.length} thiết bị phù hợp với lựa chọn của bạn</p>
           </div>
@@ -90,11 +90,12 @@ export default async function CatalogPage({
             <strong>
               {catalog.mode === 'local-sample'
                 ? 'Chế độ xem trước • dữ liệu mẫu'
-                : 'Có dữ liệu sản phẩm mẫu'}
+                : 'Có sản phẩm mẫu trong catalog'}
             </strong>
             <span>
-              Tên và thông số tham khảo lấy từ nhà sản xuất. Giá, tiền cọc và số lượng là dữ liệu
-              mẫu; chưa có xác nhận các thiết bị này sẵn sàng cho thuê.
+              {catalog.mode === 'local-sample'
+                ? 'Catalog này là nội dung tham khảo; giá, cọc và số lượng không đại diện hàng có thật. Sample không thể đặt thuê.'
+                : 'Các sản phẩm có nhãn MẪU không thể đặt. Sản phẩm backend không phải bằng chứng quyền sở hữu hay giao nhận; checkout chỉ dùng fixture local trong bài tập.'}
             </span>
           </aside>
         )}

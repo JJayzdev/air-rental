@@ -43,6 +43,9 @@ export default async function CheckoutPage() {
       <p className="rental-notice">
         Yêu cầu thuê sẽ giữ thiết bị trong 30 phút để chờ xác nhận. Chưa thu tiền trực tuyến.
       </p>
+      <p className="rental-policy-note">
+        Thông tin VAT chưa xác nhận; xem <Link href="/chinh-sach">chính sách dự thảo</Link>.
+      </p>
       <RentalCartPanel
         products={catalog.products}
         checkout

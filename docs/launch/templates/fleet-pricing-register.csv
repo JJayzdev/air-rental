@@ -1,0 +1,2 @@
+product_slug,product_name,category,asset_tag,serial_reference,condition,ready_on,daily_price_vnd,deposit_vnd,inspection_reference,photo_reference,demo_status,verified_by,verified_on,notes
+demo-laptop-not-real,Laptop giả lập phục vụ bài tập,demo,DEMO-UNIT-001,DEMO-SERIAL-001,MÔ PHỎNG - KHÔNG CÓ THIẾT BỊ,,350000,500000,DEMO-INSPECTION-NOT-PERFORMED,DEMO-PHOTO-NOT-A-DEVICE,FICTIONAL - NOT REAL STOCK,,,HOÀN TOÀN HƯ CẤU; giá giả lập VND; worksheet tay; không nạp DB; không sẵn sàng cho thuê

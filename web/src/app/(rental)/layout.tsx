@@ -3,6 +3,8 @@ import { BrandMark } from '@/components/ui/Icons'
 import { signOut } from '@/features/auth/actions'
 import { getVerifiedAppRole } from '@/lib/supabase/auth'
 import type { Metadata } from 'next'
+import ChatAssistant from '@/components/chat/ChatAssistant'
+import { getChatConfiguration } from '@/lib/chat-config'
 
 export const metadata: Metadata = { robots: { index: false, follow: false } }
 
@@ -21,7 +23,8 @@ export default async function RentalLayout({ children }: { children: React.React
             </span>
           </Link>
           <nav className="desktop-nav rental-site-nav" aria-label="Điều hướng đặt thuê">
-            <Link href="/san-pham">Thiết bị</Link>
+            <Link href="/san-pham">Catalog</Link>
+            <Link href="/huong-dan">Hướng dẫn</Link>
             <Link href="/gio-thue">Giỏ thuê</Link>
             {user && <Link href="/tai-khoan">Tài khoản</Link>}
             {user && <Link href="/don-thue">Đơn của tôi</Link>}
@@ -31,7 +34,8 @@ export default async function RentalLayout({ children }: { children: React.React
               <Link href="/quan-ly-giay-to">Giấy tờ cần xem</Link>
             )}
             {(role === 'staff' || role === 'admin') && <Link href="/admin">Quản trị</Link>}
-            <Link href="/">Bản demo</Link>
+            <Link href="/">Giới thiệu đồ án</Link>
+            <Link href="/demo">Prototype cũ</Link>
           </nav>
           {user ? (
             <form action={signOut} className="rental-signout">
@@ -45,8 +49,17 @@ export default async function RentalLayout({ children }: { children: React.React
         </div>
       </header>
       {children}
+      <ChatAssistant {...getChatConfiguration()} />
       <footer className="rental-footer">
-        <div className="shell">A.I.R — Thiết bị công nghệ cho thuê.</div>
+        <div className="shell rental-footer-inner">
+          <span>A.I.R — Prototype đồ án · Dữ liệu và luồng thuê giả lập.</span>
+          <nav aria-label="Thông tin và điều hướng">
+            <Link href="/san-pham">Danh mục</Link>
+            <Link href="/gio-thue">Giỏ thuê</Link>
+            <Link href="/">Giới thiệu đồ án</Link>
+            <Link href="/chinh-sach">Kịch bản mô phỏng</Link>
+          </nav>
+        </div>
       </footer>
     </>
   )

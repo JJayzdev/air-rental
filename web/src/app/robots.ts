@@ -16,6 +16,8 @@ export default function robots(): MetadataRoute.Robots {
           '/tai-khoan',
           '/don-thue',
           '/quan-ly-don',
+          '/demo',
+          '/chinh-sach',
         ],
       },
     ],

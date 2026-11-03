@@ -5,6 +5,7 @@ import {
   sePayAuthorizationMatches,
 } from '@/features/payments/sepay'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
+import { captureException, sendOperationalAlert } from '@/lib/observability'
 import type { Json } from '@/lib/supabase/database'
 
 export const runtime = 'nodejs'
@@ -59,7 +60,11 @@ export async function POST(request: Request) {
     p_payload: parsed.transfer.payload as Json,
   })
   if (error) {
-    console.error('SePay webhook could not be applied:', error.message)
+    const event = captureException(error, {
+      operation: 'sepay-webhook',
+      outcome: 'database-error',
+    })
+    await sendOperationalAlert(event)
     return NextResponse.json({ ok: false, error: 'apply-failed' }, { status: 500 })
   }
 

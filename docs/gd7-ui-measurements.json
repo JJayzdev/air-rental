@@ -1,0 +1,149 @@
+{
+  "measuredAt": "2026-11-02T09:49:07.757Z",
+  "environment": "Local production build; CDP simulated network/CPU, not deployed or real-user 4G",
+  "profile": {
+    "latencyMs": 150,
+    "downloadBps": 1600000,
+    "uploadBps": 750000,
+    "cpuSlowdown": 4,
+    "viewport": "390x844",
+    "browserCache": "disabled"
+  },
+  "contrast": {
+    "/:user-timestamp": {
+      "ratio": 5.879424314936907,
+      "fontPx": 12,
+      "color": "rgb(82, 98, 122)",
+      "background": [
+        246,
+        249,
+        255
+      ]
+    },
+    "/:bot-timestamp": {
+      "ratio": 5.879424314936907,
+      "fontPx": 12,
+      "color": "rgb(82, 98, 122)",
+      "background": [
+        246,
+        249,
+        255
+      ]
+    },
+    "available": {
+      "ratio": 7.0071104427256925,
+      "fontPx": 10,
+      "color": "rgb(21, 95, 66)",
+      "background": [
+        232,
+        249,
+        241
+      ]
+    },
+    "bottom-nav.active": {
+      "ratio": 4.66556581438755,
+      "fontPx": 12,
+      "color": "rgb(23, 105, 255)",
+      "background": [
+        255,
+        255,
+        255
+      ]
+    },
+    "bottom-nav:not(.active)": {
+      "ratio": 6.200417335618319,
+      "fontPx": 12,
+      "color": "rgb(82, 98, 122)",
+      "background": [
+        255,
+        255,
+        255
+      ]
+    },
+    "/san-pham:user-timestamp": {
+      "ratio": 5.879424314936907,
+      "fontPx": 12,
+      "color": "rgb(82, 98, 122)",
+      "background": [
+        246,
+        249,
+        255
+      ]
+    },
+    "/san-pham:bot-timestamp": {
+      "ratio": 5.879424314936907,
+      "fontPx": 12,
+      "color": "rgb(82, 98, 122)",
+      "background": [
+        246,
+        249,
+        255
+      ]
+    }
+  },
+  "performance": [
+    {
+      "route": "/",
+      "run": 1,
+      "lcpMs": 2100,
+      "jsGzipBytes": 120972,
+      "scriptCount": 8
+    },
+    {
+      "route": "/",
+      "run": 2,
+      "lcpMs": 2116,
+      "jsGzipBytes": 120972,
+      "scriptCount": 8
+    },
+    {
+      "route": "/",
+      "run": 3,
+      "lcpMs": 2144,
+      "jsGzipBytes": 120972,
+      "scriptCount": 8
+    },
+    {
+      "route": "/san-pham",
+      "run": 1,
+      "lcpMs": 1340,
+      "jsGzipBytes": 116588,
+      "scriptCount": 11
+    },
+    {
+      "route": "/san-pham",
+      "run": 2,
+      "lcpMs": 1380,
+      "jsGzipBytes": 116588,
+      "scriptCount": 11
+    },
+    {
+      "route": "/san-pham",
+      "run": 3,
+      "lcpMs": 1368,
+      "jsGzipBytes": 116588,
+      "scriptCount": 11
+    },
+    {
+      "route": "/huong-dan",
+      "run": 1,
+      "lcpMs": 1108,
+      "jsGzipBytes": 106701,
+      "scriptCount": 6
+    },
+    {
+      "route": "/huong-dan",
+      "run": 2,
+      "lcpMs": 1104,
+      "jsGzipBytes": 106701,
+      "scriptCount": 6
+    },
+    {
+      "route": "/huong-dan",
+      "run": 3,
+      "lcpMs": 1324,
+      "jsGzipBytes": 106701,
+      "scriptCount": 6
+    }
+  ]
+}

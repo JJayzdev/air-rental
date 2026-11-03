@@ -1,6 +1,7 @@
 import 'server-only'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database, OrderPaymentState, OrderState, PaymentKind } from '@/lib/supabase/database'
+import { clampStaffOrderPage, staffOrderRange, STAFF_ORDER_PAGE_SIZE } from './pagination.ts'
 
 export interface RentalOrderItemView {
   id: string
@@ -93,6 +94,36 @@ export async function listRentalOrders(
   if (error) throw new Error('Không tải được danh sách đơn thuê. Vui lòng thử lại.')
   if (!rows?.length) return []
   return mapOrders(supabase, rows)
+}
+
+export { STAFF_ORDER_PAGE_SIZE } from './pagination.ts'
+
+export async function listStaffRentalOrders(
+  supabase: ServerDbClient,
+  options: { page: number; state?: OrderState },
+): Promise<{ orders: RentalOrderView[]; page: number; pageSize: number; totalCount: number }> {
+  const page = Number.isSafeInteger(options.page) && options.page > 0 ? options.page : 1
+  let countQuery = supabase.from('orders').select('id', { count: 'exact', head: true })
+  if (options.state) countQuery = countQuery.eq('state', options.state)
+  const { count, error: countError } = await countQuery
+  if (countError) throw new Error('Không tải được danh sách đơn thuê. Vui lòng thử lại.')
+  const totalCount = count ?? 0
+  const effectivePage = clampStaffOrderPage(page, totalCount)
+  const [from, to] = staffOrderRange(effectivePage)
+  let query = supabase
+    .from('orders')
+    .select(ORDER_COLUMNS)
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
+  if (options.state) query = query.eq('state', options.state)
+  const { data: rows, error } = await query.range(from, to)
+  if (error) throw new Error('Không tải được danh sách đơn thuê. Vui lòng thử lại.')
+  return {
+    orders: rows?.length ? await mapOrders(supabase, rows) : [],
+    page: effectivePage,
+    pageSize: STAFF_ORDER_PAGE_SIZE,
+    totalCount,
+  }
 }
 
 export async function getRentalOrder(

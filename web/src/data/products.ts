@@ -9,8 +9,24 @@ export const CATEGORIES: Category[] = [
   { id: 'Phụ kiện', label: 'Phụ kiện', icon: '⌁' },
 ]
 
-const unsplash = (id: string) =>
-  `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=900&q=85`
+const unsplashAtWidth = (id: string, width: number, quality: number) =>
+  `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${width}&q=${quality}`
+const unsplash = (id: string) => unsplashAtWidth(id, 900, 85)
+
+const HERO_IMAGE_ID = '1565630916779-e303be97b6f5'
+const heroImageSrcSet = [
+  { width: 480, quality: 75 },
+  { width: 900, quality: 85 },
+]
+  .map(({ width, quality }) => `${unsplashAtWidth(HERO_IMAGE_ID, width, quality)} ${width}w`)
+  .join(', ')
+
+export const HERO_IMAGE = {
+  src: unsplash(HERO_IMAGE_ID),
+  srcSet: heroImageSrcSet,
+  sizes:
+    '(max-width: 560px) calc(100vw - 50px), (max-width: 900px) min(630px, calc(100vw - 54px)), 500px',
+}
 
 export const PRODUCTS: Product[] = [
   {
@@ -73,7 +89,7 @@ export const findProduct = (id: number): Product | undefined =>
   PRODUCTS.find((product) => product.id === id)
 
 export const HERO = {
-  image: unsplash('1565630916779-e303be97b6f5'),
+  image: HERO_IMAGE.src,
   phone: unsplash('1711967299865-c88350fddb70'),
   camera: unsplash('1516035069371-29a1b244cc32'),
 }

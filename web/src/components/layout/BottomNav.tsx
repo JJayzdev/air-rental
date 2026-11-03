@@ -23,7 +23,12 @@ export default function BottomNav({ view, onNavigate }: BottomNavProps) {
   return (
     <nav className="bottom-nav" aria-label="Điều hướng nhanh">
       {ITEMS.map(({ id, label, icon: Icon }) => (
-        <button key={id} className={active(id) ? 'active' : ''} onClick={() => onNavigate(id)}>
+        <button
+          key={id}
+          className={active(id) ? 'active' : ''}
+          aria-current={active(id) ? 'page' : undefined}
+          onClick={() => onNavigate(id)}
+        >
           <Icon />
           <span>{label}</span>
         </button>

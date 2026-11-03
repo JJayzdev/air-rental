@@ -1,7 +1,11 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { releaseExpiredBookings, transitionBooking } from '@/features/booking/actions'
-import { listAssignedUnitsForOrders, listRentalOrders } from '@/features/orders/server-data'
+import {
+  listAssignedUnitsForOrders,
+  listStaffRentalOrders,
+  STAFF_ORDER_PAGE_SIZE,
+} from '@/features/orders/server-data'
 import { ORDER_STATE_LABELS } from '@/features/orders/state-labels'
 import { completeDepositRefund } from '@/features/payments/actions'
 import { PAYMENT_STATE_LABELS } from '@/features/payments/state-labels'
@@ -36,25 +40,46 @@ export default async function StaffOrdersPage({
     expired?: string
     identity?: string
     refund?: string
+    page?: string
+    state?: string
   }>
 }) {
   const { user, role, supabase } = await getVerifiedAppRole()
   if (!user) redirect('/dang-nhap?next=%2Fquan-ly-don')
   if (role !== 'staff' && role !== 'admin') redirect('/don-thue')
-  const orders = await listRentalOrders(supabase)
+  const params = await searchParams
+  const requestedPage = Number(params.page ?? '1')
+  const page = Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1
+  const state = isOrderState(params.state) ? params.state : undefined
+  const orderPage = await listStaffRentalOrders(supabase, { page, state })
+  const { orders } = orderPage
   const assignedUnits = await listAssignedUnitsForOrders(
     supabase,
     orders.map((order) => order.id),
   )
   const identityDocsEnabled = identityDocumentsEnabled()
   const now = getServerNow()
-  const params = await searchParams
+  const pageCount = Math.max(1, Math.ceil(orderPage.totalCount / STAFF_ORDER_PAGE_SIZE))
   return (
     <main className="shell rental-page">
       <div className="rental-heading">
         <p className="eyebrow">Nhân viên</p>
         <h1>Quản lý đơn thuê</h1>
       </div>
+      <form className="rental-panel" method="get" aria-label="Lọc đơn thuê">
+        <label htmlFor="order-state-filter">Lọc theo trạng thái</label>
+        <select id="order-state-filter" name="state" defaultValue={state ?? ''}>
+          <option value="">Tất cả trạng thái</option>
+          {Object.entries(ORDER_STATE_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <button className="secondary" type="submit">
+          Lọc đơn
+        </button>
+      </form>
       {params.error && (
         <p className="rental-error" role="alert">
           Không thể cập nhật trạng thái. Kiểm tra hạn giữ máy, lịch thuê và tình trạng thiết bị.
@@ -103,8 +128,10 @@ export default async function StaffOrdersPage({
           Giải phóng yêu cầu hết hạn
         </button>
       </form>
-      {orders.length === 0 ? (
-        <p className="rental-panel">Chưa có đơn thuê.</p>
+      {orderPage.totalCount === 0 ? (
+        <p className="rental-panel">
+          {state ? 'Không có đơn ở trạng thái này.' : 'Chưa có đơn thuê.'}
+        </p>
       ) : (
         <div className="rental-order-list" data-testid="staff-orders">
           {orders.map((order) => (
@@ -220,10 +247,37 @@ export default async function StaffOrdersPage({
           ))}
         </div>
       )}
+      {orderPage.totalCount > 0 && (
+        <nav className="rental-order-pagination" aria-label="Trang danh sách đơn">
+          <span>
+            Trang {orderPage.page} / {pageCount} · {orderPage.totalCount} đơn
+          </span>
+          {orderPage.page > 1 && (
+            <Link href={ordersPageHref(orderPage.page - 1, state)} rel="prev">
+              Trang trước
+            </Link>
+          )}
+          {orderPage.page < pageCount && (
+            <Link href={ordersPageHref(orderPage.page + 1, state)} rel="next">
+              Trang sau
+            </Link>
+          )}
+        </nav>
+      )}
     </main>
   )
 }
 
 function getServerNow() {
   return Date.now()
+}
+
+function isOrderState(value: string | undefined): value is OrderState {
+  return Boolean(value && Object.hasOwn(ORDER_STATE_LABELS, value))
+}
+
+function ordersPageHref(page: number, state: OrderState | undefined) {
+  const query = new URLSearchParams({ page: String(page) })
+  if (state) query.set('state', state)
+  return `/quan-ly-don?${query.toString()}`
 }

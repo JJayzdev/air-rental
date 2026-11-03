@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { BrandMark } from '@/components/ui/Icons'
+import ChatAssistant from '@/components/chat/ChatAssistant'
+import { getChatConfiguration } from '@/lib/chat-config'
 
 export default function CatalogLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -15,16 +17,19 @@ export default function CatalogLayout({ children }: { children: React.ReactNode 
             </span>
           </Link>
           <nav className="desktop-nav catalog-site-nav" aria-label="Điều hướng chính">
-            <Link href="/">Trang chủ</Link>
+            <Link href="/">Giới thiệu đồ án</Link>
             <Link href="/san-pham" aria-current="page">
-              Sản phẩm
+              Catalog
             </Link>
+            <Link href="/huong-dan">Hướng dẫn</Link>
             <Link href="/gio-thue">Giỏ thuê</Link>
-            <Link href="/">Mở bản demo</Link>
+            <Link href="/demo">Prototype cũ</Link>
+            <Link href="/chinh-sach">Kịch bản</Link>
           </nav>
         </div>
       </header>
       {children}
+      <ChatAssistant {...getChatConfiguration()} />
       <footer className="catalog-site-footer">
         <div className="shell footer-grid catalog-footer-grid">
           <div>
@@ -35,21 +40,24 @@ export default function CatalogLayout({ children }: { children: React.ReactNode 
               <strong>A.I.R</strong>
             </div>
             <p>
-              Giá và số lượng mẫu chỉ để tham khảo. Chỉ sản phẩm đã xác nhận có hàng mới nhận đặt
-              thuê.
+              Catalog và giá là nội dung học tập. Bài checkout chỉ dùng fixture local, không giao
+              dịch hoặc giao nhận thật.
             </p>
           </div>
           <div>
             <b>Khám phá</b>
             <Link href="/san-pham">Tất cả sản phẩm</Link>
-            <Link href="/">Mở bản demo</Link>
+            <Link href="/huong-dan">Hướng dẫn thuê</Link>
+            <Link href="/demo">Prototype local</Link>
           </div>
           <div>
             <b>Thông tin</b>
             <p>Thông số và ảnh tham khảo có liên kết nguồn trên từng sản phẩm.</p>
           </div>
         </div>
-        <div className="shell copyright">© 2025 A.I.R — Prototype UI/UX phi thương mại.</div>
+        <div className="shell copyright">
+          A.I.R — Prototype UI/UX phi thương mại · Dữ liệu minh họa
+        </div>
       </footer>
     </>
   )

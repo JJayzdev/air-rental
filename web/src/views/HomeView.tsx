@@ -2,7 +2,7 @@ import ProductCard from '@/components/ui/ProductCard'
 import Link from 'next/link'
 import { ArrowRight, Check, Calendar, Search } from '@/components/ui/Icons'
 import Mascot from '@/components/ui/Mascot'
-import { CATEGORIES, HERO } from '@/data/products'
+import { CATEGORIES, HERO, HERO_IMAGE } from '@/data/products'
 import type { NavOptions, Product, View } from '@/types'
 
 interface HomeViewProps {
@@ -31,17 +31,17 @@ export default function HomeView({
         <div className="orb orb-b" />
         <div className="shell hero-grid">
           <div className="hero-copy">
-            <span className="eyebrow">Thuê thông minh • Sống linh hoạt</span>
+            <span className="eyebrow">Prototype giao diện • Dữ liệu giả lập</span>
             <h1>
-              Công nghệ trong tầm tay, <em>thuê dễ dàng.</em>
+              Trải nghiệm một luồng thuê thiết bị, <em>trong phạm vi đồ án.</em>
             </h1>
             <p>
-              Thuê thiết bị công nghệ linh hoạt, tiết kiệm và nhanh chóng. Không cần mua, vẫn luôn
-              được trải nghiệm mới nhất.
+              Bản prototype này minh họa giao diện và tương tác lưu trong trình duyệt. Sản phẩm, số
+              liệu, khách hàng và đơn ở đây là dữ liệu mẫu; không có giao dịch hoặc thiết bị thật.
             </p>
             <div className="hero-actions">
               <button className="primary" onClick={() => onNavigate('products')}>
-                Khám phá thiết bị <ArrowRight />
+                Xem sản phẩm giả lập <ArrowRight />
               </button>
               <Link className="secondary" href="/san-pham">
                 Xem toàn bộ thiết bị <ArrowRight />
@@ -50,20 +50,22 @@ export default function HomeView({
                 Cách thức thuê
               </button>
             </div>
-            <div className="trust">
-              <span>
-                <b>4.9/5</b> từ 1.200+ khách hàng
-              </span>
-              <span>
-                <b>24h</b> giao nhanh nội thành
-              </span>
-            </div>
+            <p className="catalog-sample-note" role="note">
+              Các số liệu và giá trong prototype chỉ minh họa cách trình bày; không phải đánh giá,
+              lượng khách, thời hạn giao hay báo giá thật.
+            </p>
           </div>
 
           <div className="hero-visual">
             <div className="hero-card">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img alt="Laptop hiện đại" src={HERO.image} />
+              <img
+                alt="Laptop hiện đại"
+                src={HERO.image}
+                srcSet={HERO_IMAGE.srcSet}
+                sizes={HERO_IMAGE.sizes}
+                fetchPriority="high"
+              />
               <span className="price-chip">
                 Chỉ từ <b>350K/ngày</b>
               </span>
@@ -93,8 +95,8 @@ export default function HomeView({
       <section className="section shell">
         <div className="section-head">
           <div>
-            <span className="eyebrow">Lựa chọn nổi bật</span>
-            <h2>Thiết bị được thuê nhiều nhất</h2>
+            <span className="eyebrow">Catalog minh họa</span>
+            <h2>Sản phẩm mẫu trong prototype</h2>
           </div>
           <button onClick={() => onNavigate('products')}>
             Xem tất cả <ArrowRight />
@@ -120,29 +122,29 @@ export default function HomeView({
           <div className="benefit">
             <span>✓</span>
             <div>
-              <h3>Thiết bị chất lượng</h3>
-              <p>Kiểm tra 12 bước trước khi giao</p>
+              <h3>Dữ liệu catalog</h3>
+              <p>Thẻ sản phẩm và thông số minh họa</p>
             </div>
           </div>
           <div className="benefit">
             <span>↻</span>
             <div>
-              <h3>Linh hoạt thời gian</h3>
-              <p>Thuê từ 1 ngày, gia hạn dễ dàng</p>
+              <h3>Chọn lịch trong UI</h3>
+              <p>Điều khiển trình diễn trong prototype</p>
             </div>
           </div>
           <div className="benefit">
             <span>♢</span>
             <div>
-              <h3>Chi phí tối ưu</h3>
-              <p>Tiết kiệm đến 70% so với mua</p>
+              <h3>Giá minh họa</h3>
+              <p>Không phải báo giá hoặc khoản thanh toán</p>
             </div>
           </div>
           <div className="benefit">
             <span>◉</span>
             <div>
-              <h3>Hỗ trợ tận tâm</h3>
-              <p>Đồng hành kỹ thuật 7 ngày/tuần</p>
+              <h3>FAQ local</h3>
+              <p>Trợ lý rule-based trong phạm vi demo</p>
             </div>
           </div>
         </div>
@@ -151,8 +153,8 @@ export default function HomeView({
       <section id="how" className="section shell how">
         <div className="section-head">
           <div>
-            <span className="eyebrow">Nhanh chóng &amp; minh bạch</span>
-            <h2>Thuê thiết bị chỉ với 3 bước</h2>
+            <span className="eyebrow">Kịch bản giao diện</span>
+            <h2>Luồng thuê được mô phỏng qua 3 bước</h2>
           </div>
         </div>
 
@@ -170,29 +172,29 @@ export default function HomeView({
             <div className="step-icon">
               <Calendar size={28} />
             </div>
-            <h3>Đặt thuê online</h3>
-            <p>Điền thông tin, địa chỉ và hình thức nhận.</p>
+            <h3>Màn hình checkout</h3>
+            <p>Prototype cũ lưu dữ liệu giả lập trong trình duyệt.</p>
           </div>
           <div className="step">
             <span>03</span>
             <div className="step-icon">
               <Check size={28} />
             </div>
-            <h3>Nhận &amp; trải nghiệm</h3>
-            <p>Nhận thiết bị đã kiểm định và bắt đầu sử dụng.</p>
+            <h3>Xem kết quả demo</h3>
+            <p>Đơn prototype không tạo giao nhận hoặc giao dịch.</p>
           </div>
         </div>
       </section>
 
       <section id="about" className="support shell">
         <div>
-          <span className="eyebrow">A.I.R luôn bên bạn</span>
-          <h2>Cần tư vấn thiết bị phù hợp?</h2>
+          <span className="eyebrow">Bài tập tương tác</span>
+          <h2>Thử FAQ local trong prototype</h2>
           <p>
-            Đội ngũ hỗ trợ và trợ lý A.I.R sẵn sàng giải đáp về sản phẩm, giá và quy trình thuê.
+            Câu trả lời được tạo tại trình duyệt từ các quy tắc mẫu; không có nhân viên hỗ trợ thật.
           </p>
           <button className="primary" onClick={() => onOpenChat('consult')}>
-            Chat với A.I.R
+            Mở FAQ local
           </button>
         </div>
         <Mascot />
