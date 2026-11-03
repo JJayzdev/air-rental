@@ -37,7 +37,13 @@ const CHAT_PROMPTS = {
   consult: 'Tư vấn thiết bị phù hợp giúp mình',
 } as const
 
-export default function AppShell() {
+export default function AppShell({
+  llmEnabled = false,
+  offlineFaq = false,
+}: {
+  llmEnabled?: boolean
+  offlineFaq?: boolean
+}) {
   const [view, setView] = useState<View>('home')
   const [activeId, setActiveId] = useState(PRODUCTS[0].id)
   const [category, setCategory] = useState<CategoryFilter>('all')
@@ -334,13 +340,9 @@ export default function AppShell() {
         open={chatOpen}
         onClose={() => setChatOpen(false)}
         seed={chatSeed}
-        products={PRODUCTS}
-        orders={orders}
         onNavigate={go}
-        onProduct={(id) => {
-          setActiveId(id)
-          go('detail')
-        }}
+        llmEnabled={llmEnabled}
+        offlineFaq={offlineFaq}
       />
 
       <Toast message={toast} />

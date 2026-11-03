@@ -27,6 +27,12 @@ const AppShell = dynamic(() => import('@/components/app-shell'), {
   ),
 })
 
-export default function ClientApp() {
-  return <AppShell />
+export default function ClientApp({
+  llmEnabled = false,
+  offlineFaq = false,
+}: {
+  llmEnabled?: boolean
+  offlineFaq?: boolean
+}) {
+  return <AppShell llmEnabled={llmEnabled} offlineFaq={offlineFaq} />
 }

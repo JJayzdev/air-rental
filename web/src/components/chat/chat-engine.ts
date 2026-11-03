@@ -2,8 +2,7 @@
 // Mọi "trí tuệ" của bot nằm ở đây, tách khỏi phần giao diện để sau này
 // thay bằng API/LLM mà không phải sửa ChatWidget.
 
-import { money } from '@/lib/format'
-import type { ChatReply, Order, Product } from '@/types'
+import type { ChatReply, Order } from '@/types'
 
 export const GREETING = 'Xin chào! Mình là A.I.R. Bạn cần mình hỗ trợ thuê thiết bị nào?'
 
@@ -14,66 +13,80 @@ export const SUGGESTIONS = [
   'Kiểm tra đơn thuê',
 ]
 
-interface ReplyContext {
-  products?: Product[]
-  orders?: Order[]
+const FAQ_FALLBACK =
+  'Mình chưa hiểu rõ câu hỏi. Bạn có thể hỏi về thiết bị, giá thuê, giao nhận, đặt cọc, hoàn trả hoặc cách đặt thuê nhé.'
+export const isKnownFaq = (text: string) => buildReply(text).text !== FAQ_FALLBACK
+
+/** Local-only FAQ used by the no-backend demo; it never reads accounts or catalog data. */
+export const buildDemoReply = (text: string): ChatReply => {
+  const t = text.toLowerCase()
+  if (/(giá|bao nhiêu|tính tiền|chi phí|cọc)/.test(t)) {
+    return {
+      text: 'Giá và tiền cọc trong bản demo là số liệu minh họa, không phải báo giá hoặc khoản cần thanh toán.',
+    }
+  }
+  if (/(đơn|kiểm tra|trạng thái)/.test(t)) {
+    return {
+      text: 'Trang đơn thuê cần Supabase local và tài khoản test. Catalog mẫu mặc định không tạo được đơn.',
+      action: { label: 'Mở luồng đơn thuê', view: 'orders' },
+    }
+  }
+  if (/(cách|quy trình|đặt thuê|book)/.test(t)) {
+    return {
+      text: 'Catalog mẫu chỉ để xem và không thể đặt thuê. Bài checkout cần sản phẩm test không phải sample, một unit khả dụng và tài khoản trong Supabase local.',
+      action: { label: 'Xem catalog mẫu', view: 'products' },
+    }
+  }
+  if (/(dữ liệu|mẫu|sample|thật)/.test(t)) {
+    return {
+      text: 'Dữ liệu trong prototype là giả lập. Không có thiết bị, khách hàng hay giao dịch thật được xác nhận. Xem hướng dẫn demo để biết giới hạn.',
+    }
+  }
+  return {
+    text: 'Mình đang ở chế độ FAQ local. Hãy hỏi về dữ liệu mẫu, giá minh họa, catalog hoặc giới hạn checkout.',
+  }
 }
 
 /** Sinh câu trả lời cho một tin nhắn. */
-export const buildReply = (
-  text: string,
-  { products = [], orders = [] }: ReplyContext = {},
-): ChatReply => {
+export const buildReply = (text: string, _context: { orders?: Order[] } = {}): ChatReply => {
   const t = text.toLowerCase()
-
-  if (/(laptop|học tập|sinh viên|đồ hoạ|đồ họa|văn phòng)/.test(t)) {
-    return {
-      text: 'Cho học tập, mình đề xuất MacBook Air M3 vì pin lâu và Dell XPS 13 vì gọn nhẹ. Bạn có thể xem chi tiết ngay:',
-      products: products.filter((p) => p.name === 'MacBook Air M3' || p.name === 'Dell XPS 13'),
-    }
-  }
 
   if (/(giá|bao nhiêu|tính tiền|chi phí)/.test(t)) {
     return {
-      text: 'Giá thuê = giá/ngày × số ngày × số lượng. Thuê tối thiểu 1 ngày, càng nhiều ngày càng tiết kiệm. Giao hàng nội thành 50.000 ₫, nhận tại cửa hàng miễn phí.',
-      action: { label: 'Xem bảng giá thiết bị', view: 'products' },
+      text: 'Giá trong catalog là dữ liệu minh họa. Chỉ bài fixture Supabase local mới có thể tính thử checkout; không có báo giá hoặc khoản thanh toán thật.',
+      action: { label: 'Xem catalog đồ án', view: 'products' },
     }
   }
 
   if (/(cách|quy trình|3 bước|đặt thuê)/.test(t)) {
     return {
-      text: 'Chỉ 3 bước: (1) chọn thiết bị và thời gian thuê, (2) điền thông tin nhận máy, (3) nhận thiết bị đã kiểm định và trải nghiệm. Không cần đặt cọc trước với đơn demo.',
-      action: { label: 'Chọn thiết bị ngay', view: 'products' },
+      text: 'Catalog sample không thể đặt thuê. Bài checkout cần tài khoản local, sản phẩm test không phải sample và unit khả dụng.',
+      action: { label: 'Xem catalog mẫu', view: 'products' },
     }
   }
 
   if (/(đơn|kiểm tra|trạng thái)/.test(t)) {
-    const latest = orders[0]
     return {
-      text: latest
-        ? `Đơn gần nhất của bạn là ${latest.code}, trạng thái “${latest.status}”, tổng ${money(latest.total)}.`
-        : 'Bạn chưa có đơn thuê nào. Mình có thể gợi ý thiết bị phù hợp nếu bạn cho biết nhu cầu.',
-      action: latest
-        ? { label: 'Xem đơn thuê', view: 'orders' }
-        : { label: 'Khám phá thiết bị', view: 'products' },
+      text: 'Trang đơn chỉ đọc đơn fixture thuộc tài khoản Supabase local đã đăng nhập.',
+      action: { label: 'Mở trang đơn test', view: 'orders' },
     }
   }
 
   if (/(cọc|đặt cọc|thanh toán)/.test(t)) {
     return {
-      text: 'Với đơn demo, bạn không cần đặt cọc và không phát sinh giao dịch thật. Khi chạy thật, A.I.R thường thu cọc 30% giá trị thiết bị và hoàn lại khi trả máy đúng hạn.',
+      text: 'Khoản cọc và thanh toán trong demo là dữ liệu fixture. Không chuyển tiền thật; trạng thái mock không phải chứng từ ngân hàng.',
     }
   }
 
   if (/(giao|nhận|ship|vận chuyển)/.test(t)) {
     return {
-      text: 'Giao hàng nội thành trong 24h, phí 50.000 ₫. Bạn cũng có thể chọn nhận tại cửa hàng để miễn phí và nhận máy sớm hơn.',
+      text: 'Vùng giao hàng và phí trong bài checkout lấy từ fixture local, không tạo lịch giao nhận thật.',
     }
   }
 
   if (/(hoàn|trả|hỏng|bảo hành|sự cố)/.test(t)) {
     return {
-      text: 'Thiết bị được kiểm tra 12 bước trước khi giao. Nếu có sự cố kỹ thuật, đội ngũ hỗ trợ 7 ngày/tuần sẽ đổi máy hoặc xử lý trong 24h.',
+      text: 'Bài tập có phiếu diễn tập giao nhận và xử lý sự cố. A.I.R trong đồ án không có kênh hỗ trợ hay bàn giao thiết bị thật.',
     }
   }
 
@@ -84,6 +97,6 @@ export const buildReply = (
   }
 
   return {
-    text: 'Mình chưa hiểu rõ câu hỏi. Bạn có thể hỏi về thiết bị, giá thuê, giao nhận, đặt cọc, hoàn trả hoặc cách đặt thuê nhé.',
+    text: FAQ_FALLBACK,
   }
 }

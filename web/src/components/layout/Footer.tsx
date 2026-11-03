@@ -1,4 +1,5 @@
 import { BrandMark } from '../ui/Icons'
+import Link from 'next/link'
 import type { NavOptions, View } from '@/types'
 
 interface FooterProps {
@@ -18,32 +19,34 @@ export default function Footer({ onNavigate, onOpenChat }: FooterProps) {
             <strong>A.I.R</strong>
           </div>
           <p>
-            Công nghệ trong tầm tay.
+            Prototype UI/UX cho đồ án học tập.
             <br />
-            Thuê thông minh, sống linh hoạt.
+            Dữ liệu trong bản này là giả lập.
           </p>
         </div>
 
         <div>
           <b>Khám phá</b>
           <button onClick={() => onNavigate('products')}>Sản phẩm</button>
+          <Link href="/huong-dan">Hướng dẫn</Link>
           <button onClick={() => onNavigate('orders')}>Đơn thuê</button>
         </div>
 
         <div>
-          <b>Hỗ trợ</b>
-          <button onClick={() => onOpenChat('support')}>Trung tâm trợ giúp</button>
-          <button onClick={() => onOpenChat('contact')}>Liên hệ A.I.R</button>
+          <b>FAQ local</b>
+          <button onClick={() => onOpenChat('support')}>Hỏi về dữ liệu mẫu</button>
+          <button onClick={() => onOpenChat('consult')}>Hỏi về giới hạn demo</button>
         </div>
 
         <div>
-          <b>Hotline</b>
-          <strong>1900 6868</strong>
-          <p>08:00–21:00, Thứ 2–CN</p>
+          <b>Thông tin đồ án</b>
+          <Link href="/">Giới thiệu</Link>
+          <Link href="/chinh-sach">Kịch bản mô phỏng</Link>
+          <Link href="/demo">Prototype local</Link>
         </div>
       </div>
 
-      <div className="shell copyright">© 2025 A.I.R — Prototype UI/UX phi thương mại.</div>
+      <div className="shell copyright">A.I.R — Prototype UI/UX phi thương mại · Không có giao dịch thật</div>
     </footer>
   )
 }

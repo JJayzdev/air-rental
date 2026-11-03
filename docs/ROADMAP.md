@@ -1,12 +1,18 @@
 # A.I.R — Kiến trúc & lộ trình phát triển hoàn chỉnh
 
+> **Điều chỉnh phạm vi ngày 02/11/2026:** người thực hiện xác nhận đây là **đồ án học tập, không
+> kinh doanh**. Hồ sơ hiện hành nằm tại [hồ sơ đồ án](launch/README.md). GĐ0–GĐ7 được trình bày
+> và đánh giá theo bằng chứng local; GĐ8 tạm bỏ qua. Những đầu việc ra mắt thương mại, pháp nhân,
+> VAT, fleet thật và tích hợp trả phí bên dưới được giữ làm lịch sử định hướng, không còn là
+> điều kiện hoàn thành đồ án. Không đánh dấu các tích hợp chưa kiểm chứng là đã hoàn thành.
+
 Tài liệu này mô tả đích đến của dự án: công nghệ, cấu trúc thư mục, mô hình dữ liệu và
 các giai đoạn triển khai. Repo có hai app: bản demo React + Vite ở thư mục gốc và Next.js + TypeScript
 trong `web/`. Demo Vite vẫn dùng localStorage; Next.js có catalog SSR và luồng đặt thuê Supabase local.
 Migrations, seed, Auth/RLS và booking đã được kiểm tra trên Supabase local đầy đủ (PostgreSQL 15,
 Auth, PostgREST và Mailpit). Thanh toán chuyển khoản có webhook SePay idempotent và hoàn cọc, nhưng
-mới chạy với tài khoản ngân hàng giả lập trên local. Khu vực quản trị GĐ 5 đợt A đã có dashboard, kho,
-bảo trì và phiếu bàn giao; mã giảm giá/phí giao còn ở đợt B. Dữ liệu sản phẩm vẫn là mẫu; chưa có pilot
+mới chạy với tài khoản ngân hàng giả lập trên local. Khu vực quản trị GĐ 5 đã có dashboard, kho,
+bảo trì, phiếu bàn giao, mã giảm giá và phí giao theo khu vực. Dữ liệu sản phẩm vẫn là mẫu; chưa có pilot
 thương mại và thông báo xác nhận đơn. Đây vẫn là **nền tảng đang phát triển**, không phải hệ thống
 vận hành.
 
@@ -291,29 +297,62 @@ Xem [`docs/GD4-PAYMENTS.md`](GD4-PAYMENTS.md).
 
 ### GĐ 5 — Admin (1.5 tuần)
 
-Đợt A xong ngày 02/11/2026 — xem [`docs/GD5-ADMIN.md`](GD5-ADMIN.md). Đợt B (mã giảm giá, phí giao)
-chưa làm.
+Cả hai đợt xong ngày 02/11/2026 — đợt A xem [`docs/GD5-ADMIN.md`](GD5-ADMIN.md), đợt B xem
+[`docs/GD5-PRICING.md`](GD5-PRICING.md).
 
 - [x] Dashboard: đơn chờ xác nhận, máy đang cho thuê, doanh thu tháng.
 - [x] Quản lý đơn theo vòng đời §3.3, in phiếu bàn giao.
 - [x] Quản lý sản phẩm + máy vật lý + lịch bảo trì.
-- [ ] Mã giảm giá, phí giao theo khu vực, lịch giao.
+- [x] Mã giảm giá, phí giao theo khu vực, tổng tiền sau giảm + phí; lịch giao theo ngày thuê và ghi
+      chú khu vực.
 - [x] Nhật ký thao tác (`order_events`).
 
 ### GĐ 6 — Chat AI & nội dung (3–5 ngày)
 
-- Giữ rule-based cho câu hỏi thường gặp (nhanh, miễn phí).
-- Thêm LLM tool-calling: `searchProducts`, `checkAvailability`, `getOrderStatus`.
-- Rate limit theo IP + user, giới hạn token, log hội thoại.
-- Blog/SEO content: hướng dẫn thuê, so sánh máy — kênh khách hàng chính của ngành này.
+**Trạng thái: triển khai và kiểm tra local ngày 02/11/2026.** Luna triển khai, Sol 6.1 review độc lập,
+parent nghiệm thu bằng build production và trình duyệt. Xem [GD6-REVIEW.md](GD6-REVIEW.md) và
+[GD6-LOCAL.md](GD6-LOCAL.md).
+
+- [x] FAQ và phân loại câu hỏi xác định chạy trước LLM; chat hiện trên catalog và luồng đặt thuê.
+- [x] `searchProducts`, `checkAvailability`, `getOrderStatus` đọc dữ liệu server; tra đơn lọc chủ tài
+      khoản kể cả khi người dùng là staff. Chat có thẻ sản phẩm và form kiểm tra khoảng ngày.
+- [x] LLM tùy chọn, mặc định tắt: tối đa một công cụ được kiểm tra schema, 120 output token,
+      timeout 8 giây; model không tự viết câu trả lời về giá, tồn kho hoặc đơn.
+- [x] Hạn mức DB 12 request/phút độc lập theo IP và tài khoản; RPC chỉ server được gọi. Log chỉ
+      action/status/thời gian xử lý, không lưu nội dung hội thoại hay IP thô.
+- [x] Ba hướng dẫn tại `/huong-dan`, có canonical, Open Graph, Article JSON-LD và sitemap.
+- [x] 56 test ứng dụng, 270 pgTAP, build/typecheck/lint và nghiệm thu HTTP/browser local.
+- [ ] Kiểm tra provider LLM và trusted proxy trên hosting thật trước khi bật tính năng ngoài local.
+
+Khi chưa cấu hình trusted proxy, mọi client chia sẻ một hạn mức IP chung để không tin header giả.
+Không lưu lịch sử chat đa thiết bị; provider được kiểm tra bằng mock, chưa gọi API trả phí.
+Fleet, giá thật và pilot vẫn là các điều kiện còn thiếu trước vận hành thương mại.
 
 ### GĐ 7 — Hoàn thiện & ra mắt (1 tuần)
 
-- Playwright: đặt thuê → thanh toán → tra cứu đơn; Vitest cho tính giá/ngày.
-- Fix accessibility còn tồn: badge "Còn hàng" (2.97), bottom-nav 9px (3.55), timestamp chat 8px (2.81), focus ring, chat dùng được bằng bàn phím.
-- Performance budget: LCP < 2.5s trên 4G, JS khởi tạo < 200 kB gzip.
-- Trang pháp lý: điều khoản thuê, chính sách huỷ/hoàn cọc, bảo mật dữ liệu cá nhân (NĐ 13/2023/NĐ-CP), hiển thị giá đã gồm VAT.
-- Backup DB, alert lỗi, runbook sự cố.
+**Đã triển khai và kiểm tra phần local ngày 02/11/2026; chưa ra mắt thương mại.**
+Xem [GD7-REVIEW.md](GD7-REVIEW.md), [GD7-UI.md](GD7-UI.md) và
+[GD7-OPERATIONS.md](GD7-OPERATIONS.md).
+
+- [x] Playwright: đặt thuê có mã giảm/phí giao → webhook cọc và số tiền còn lại → tra cứu đơn;
+      replay không thu trùng, tài khoản khác không đọc được đơn. Test tính giá/ngày dùng bộ Node test hiện có.
+- [x] Sửa độ tương phản badge, bottom-nav, timestamp; focus ring, reduced motion và chat bằng bàn phím
+      (mở, giữ focus, Tab/Shift+Tab, gửi bằng Enter, Escape, trả focus).
+- [x] Đo local production build: LCP trung vị mô phỏng 4G là **2.116/1.368/1.108 giây** cho
+      `/`, `/san-pham`, `/huong-dan`; JavaScript gzip ước tính **120.972/116.588/106.701 byte**.
+      Ảnh hero dùng responsive preload; không viết lại luồng localStorage. Số đo không chứng minh 4G production.
+- [x] Trang điều khoản thuê, hủy/hoàn cọc và bảo mật **dự thảo theo lựa chọn của người dùng**;
+      `noindex`, không nằm trong sitemap, ghi rõ VAT chưa xác nhận và bản in không phải hóa đơn thuế.
+      Nguồn tham chiếu cập nhật gồm Luật 91/2025/QH15 và Nghị định 356/2025/NĐ-CP; chưa tuyên bố tuân thủ.
+- [x] Backup PostgreSQL riêng của A.I.R và phục hồi vào database tạm; kiểm tra quyền/RLS và dữ liệu
+      đại diện, dọn database tạm đúng marker. Có Auth và Storage metadata, **không có blob bytes**.
+- [x] Log lỗi được lọc; webhook cảnh báo HTTPS tùy chọn, mặc định tắt, có timeout và cooldown theo
+      tiến trình; kiểm tra bằng mock, không gửi cảnh báo ra bên ngoài trong nghiệm thu.
+- [x] Runbook đối soát thanh toán, sự cố dịch vụ, lộ credentials và phục hồi local.
+- [ ] Ban hành chính sách với thông tin đơn vị vận hành, giá/VAT và điều kiện thương mại được xác nhận.
+- [ ] Cấu hình và thử nhận cảnh báo thật; backup ngoài máy, blob backup, retention và diễn tập production.
+- [ ] Xác minh hiệu năng trên hosting/4G thật, bank/SMS/LLM nếu bật, fleet/giá thật và pilot.
+      Trang chủ hiện vẫn chứa nội dung demo; phải tách/hoàn thiện trước khi công bố dịch vụ.
 
 ### GĐ 8 — Sau ra mắt
 

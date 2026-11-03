@@ -93,5 +93,13 @@ export interface ChatSeed {
 export interface ChatReply {
   text: string
   products?: Product[]
+  catalogProducts?: Array<{
+    id: string
+    slug: string
+    name: string
+    pricePerDayVnd: number
+    imageUrl: string | null
+    isSample: boolean
+  }>
   action?: ChatAction
 }
