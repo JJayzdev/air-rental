@@ -8,16 +8,15 @@ chọn thiết bị → chọn thời gian thuê → điền thông tin nhận m
 Đây là bản **source chạy được và chỉnh sửa được**. Giao diện (CSS, bố cục, mascot, breakpoint)
 giữ nguyên bản gốc; phần logic được viết lại bằng React và đã sửa các lỗi của bản publish.
 
-> **Trạng thái:** bản Vite và các màn demo Next.js vẫn lưu đơn demo trong `localStorage`. Next.js có
-> catalog SSR (GĐ 1), luồng đặt thuê GĐ 2, tài khoản GĐ 3 và thanh toán chuyển khoản GĐ 4 qua Supabase
-> local (Auth, tồn kho, đơn, sổ địa chỉ, yêu thích, giấy tờ tùy chọn, sổ giao dịch và hoàn cọc). Webhook
-> SePay mới chạy với ngân hàng giả lập trên local; email/SMS xác nhận đơn chưa được cấu hình; sản phẩm
-> hiện vẫn là dữ liệu mẫu nên chưa sẵn sàng pilot thương mại.
+Ứng dụng chính nằm trong `web/` (Next.js 15 + Supabase local), đã hoàn thiện GĐ 0–7: catalog SSR,
+đặt thuê và tồn kho, tài khoản, thanh toán chuyển khoản, quản trị, chat AI, nội dung hướng dẫn,
+kiểm thử khả năng truy cập và hồ sơ vận hành. Bản Vite ở thư mục gốc vẫn là demo giao diện lưu
+`localStorage`. GĐ 8 tạm bỏ qua.
 
 ## Mục lục
 
 - [Chạy nhanh](#chạy-nhanh)
-- [Bản Next.js (GĐ 0)](#bản-nextjs-gđ-0)
+- [Bản Next.js (ứng dụng chính)](#bản-nextjs-ứng-dụng-chính)
 - [Lệnh](#lệnh)
 - [Công nghệ](#công-nghệ)
 - [Cấu trúc](#cấu-trúc)
@@ -44,20 +43,20 @@ npm run build     # ra dist/
 npm run preview   # xem thử bản build
 ```
 
-## Bản Next.js (GĐ 0–2 local preview)
+## Bản Next.js (ứng dụng chính)
 
 Repo có **hai app chạy song song**. Bản Vite giữ luồng demo; bản Next.js có catalog URL thật và luồng
 booking tích hợp Supabase khi cấu hình.
 
 ![Giao diện bản Next.js](docs/preview-next.jpg)
 
-|            | Bản Vite (thư mục gốc)  | Bản Next.js (`web/`)                                            |
-| ---------- | ----------------------- | --------------------------------------------------------------- |
-| Công nghệ  | React 19 + Vite 7 + JSX | Next.js 15 + React 19 + TypeScript strict                       |
-| Điểm vào   | `index.html` → `src/`   | `web/src/app/`                                                  |
-| Cổng dev   | 5173                    | 3000                                                            |
-| Điều hướng | state `view`            | demo state `view`; catalog và booking có URL riêng             |
-| Style      | `src/styles/site.css`   | `web/src/app/globals.css` (base copy + CSS riêng cho catalog)   |
+|            | Bản Vite (thư mục gốc)  | Bản Next.js (`web/`)                                          |
+| ---------- | ----------------------- | ------------------------------------------------------------- |
+| Công nghệ  | React 19 + Vite 7 + JSX | Next.js 15 + React 19 + TypeScript strict                     |
+| Điểm vào   | `index.html` → `src/`   | `web/src/app/`                                                |
+| Cổng dev   | 5173                    | 3000                                                          |
+| Điều hướng | state `view`            | demo state `view`; catalog và booking có URL riêng            |
+| Style      | `src/styles/site.css`   | `web/src/app/globals.css` (base copy + CSS riêng cho catalog) |
 
 ```bash
 cd web
@@ -169,6 +168,31 @@ Chi tiết: [`docs/GD3-ACCOUNTS.md`](docs/GD3-ACCOUNTS.md).
 
 Chi tiết: [`docs/GD4-PAYMENTS.md`](docs/GD4-PAYMENTS.md).
 
+### Trạng thái GĐ 5 — quản trị & giá
+
+- [x] Dashboard, quản lý đơn/kho/máy vật lý, lịch bảo trì và nhật ký thao tác.
+- [x] Mã giảm giá theo phần trăm hoặc số tiền, khu vực giao, phí giao và tổng tiền sau giảm.
+- [x] Một engine giá phía server dùng chung cho báo giá và tạo đơn; tiền cọc không bị giảm.
+- [x] 290 pgTAP và 66 Node test pass; build, typecheck, lint đạt.
+
+Chi tiết: [`docs/GD5-ADMIN.md`](docs/GD5-ADMIN.md), [`docs/GD5-PRICING.md`](docs/GD5-PRICING.md).
+
+### Trạng thái GĐ 6 — chat AI & nội dung
+
+- [x] FAQ và intent xác định chạy trước; chat tra catalog, tồn kho và đơn của chính tài khoản.
+- [x] LLM tùy chọn, mặc định tắt; hạn mức 12 request/phút độc lập theo IP và tài khoản.
+- [x] Ba bài hướng dẫn tại `/huong-dan` có canonical, Open Graph, JSON-LD và sitemap.
+
+Chi tiết: [`docs/GD6-REVIEW.md`](docs/GD6-REVIEW.md), [`docs/GD6-LOCAL.md`](docs/GD6-LOCAL.md).
+
+### Trạng thái GĐ 7 — hoàn thiện local
+
+- [x] Playwright cho đặt thuê, webhook và tra cứu đơn; kiểm tra tương phản, focus và reduced motion.
+- [x] Trang chính sách dự thảo, runbook vận hành, backup/restore local và cảnh báo lỗi tùy chọn.
+- [x] Đo hiệu năng trên production build local; chưa deploy và chưa cấu hình ngân hàng/SMS/LLM thật.
+
+Chi tiết: [`docs/GD7-UI.md`](docs/GD7-UI.md), [`docs/GD7-OPERATIONS.md`](docs/GD7-OPERATIONS.md).
+
 Kiểm chứng parity (cùng cửa sổ 1000×700, `localStorage` rỗng):
 
 - Chạy 13 bước — trang chủ → anchor → danh mục → chi tiết → tăng số lượng → giỏ → checkout →
@@ -253,7 +277,7 @@ Thư mục khác:
 
 | Đường dẫn         | Mô tả                                                                                      |
 | ----------------- | ------------------------------------------------------------------------------------------ |
-| `web/`            | Bản Next.js 15 + TypeScript (GĐ 0) — xem mục [Bản Next.js](#bản-nextjs-gđ-0)               |
+| `web/`            | Ứng dụng chính Next.js 15 + TypeScript — xem mục [Bản Next.js](#bản-nextjs-ứng-dụng-chính) |
 | `docs/ROADMAP.md` | Kiến trúc đích, mô hình dữ liệu, 8 giai đoạn phát triển                                    |
 | `original-build/` | Bản build gốc tải từ Figma (JS đã minify, **không sửa được**) — giữ để đối chiếu giao diện |
 | `public/`         | Mascot và favicon                                                                          |
@@ -330,19 +354,19 @@ Sửa ở `src/pages/HomePage.jsx` nếu muốn đổi.
 - **Ảnh hotlink Unsplash** — phụ thuộc mạng ngoài, cần thay bằng ảnh thật.
 - **Tương phản chưa đạt AA** ở vài nhãn nhỏ: badge "Còn hàng" (2.97),
   bottom-nav 9px (3.55), timestamp chat 8px (2.81).
-- **Chat là rule-based**, không gọi API/LLM.
+- **Chat mặc định rule-based**; LLM tùy chọn, tắt mặc định và chưa kiểm tra provider thật.
 - Bundle bản Vite: 262 kB JS (81 kB gzip) + 29,5 kB CSS (7,3 kB gzip).
   Bản Next: 104 kB First Load JS.
-- **Bản Next chưa deploy** — chạy local ở cổng 3000; deploy bỏ qua ở GĐ 0.
+- **Bản Next chưa deploy** — nghiệm thu bằng production build chạy local.
 
 ## Lộ trình
 
 Xem [`docs/ROADMAP.md`](docs/ROADMAP.md): công nghệ đích (Next.js + Supabase), cấu trúc feature-based,
 mô hình dữ liệu chống trùng lịch, 8 giai đoạn triển khai, chi phí và rủi ro.
 
-**Đang ở GĐ 4** — Next.js có catalog SSR (GĐ 1), đặt thuê & tồn kho (GĐ 2), tài khoản (GĐ 3) và
-thanh toán chuyển khoản + hoàn cọc (GĐ 4) trên Supabase local. Sản phẩm vẫn là dữ liệu mẫu; tài khoản
-ngân hàng và OTP/SMS thật, MoMo/VNPay và thông báo đơn chưa cấu hình.
+**Đã hoàn thiện GĐ 0–7 trên môi trường local** — Next.js có catalog SSR, đặt thuê & tồn kho, tài khoản,
+thanh toán chuyển khoản + hoàn cọc, quản trị, mã giảm giá/phí giao, chat AI và hồ sơ vận hành. GĐ 8
+tạm bỏ qua. Sản phẩm vẫn là dữ liệu mẫu; ngân hàng, SMS và LLM thật chưa cấu hình; bản Next chưa deploy.
 Deploy preview đã bỏ qua theo quyết định; Husky đã cài và chạy khi commit.
 Repo đã `git init` (nhánh `main`), **chưa có remote** — chưa push.
 

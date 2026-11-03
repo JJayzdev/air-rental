@@ -1,14 +1,13 @@
 # GĐ 5 — Admin (đợt A: vận hành, kho, bảo trì)
 
 **Trạng thái:** xong đợt A ngày 02/11/2026, nghiệm thu local. Đợt B (mã giảm giá, phí giao theo khu
-vực) chưa bắt đầu.
+vực) đã xong cùng ngày — xem [`docs/GD5-PRICING.md`](GD5-PRICING.md).
 
 GĐ 5 được tách làm hai đợt để không trộn phần vận hành nội bộ với phần thay đổi giá/đơn hàng:
 
 - **Đợt A (tài liệu này):** dashboard, quản lý sản phẩm, kho thiết bị, lịch bảo trì, nhật ký thao
   tác, phiếu bàn giao in được.
-- **Đợt B:** mã giảm giá, phí giao theo khu vực, lịch giao — sẽ sửa `create_multi_product_booking`
-  và bảng giá.
+- **Đợt B:** mã giảm giá, phí giao theo khu vực, lịch giao — xem [`docs/GD5-PRICING.md`](GD5-PRICING.md).
 
 ## Phạm vi đã làm
 
@@ -72,15 +71,16 @@ product_units.state: available | maintenance | retired
 
 | Lệnh                                             | Kết quả hiện tại                                                                                                                    |
 | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `npx supabase db reset` + `npx supabase test db` | **209/209 pass** (thêm `admin.test.sql`, plan 38)                                                                                   |
-| `cd web && npm test`                             | **39/39 pass** (thêm `features/admin/admin-schema.test.ts`)                                                                         |
+| `npx supabase db reset` + `npx supabase test db` | **262/262 pass** sau đợt B (riêng đợt A: 209/209, thêm `admin.test.sql` plan 38)                                                    |
+| `cd web && npm test`                             | **47/47 pass** sau đợt B (riêng đợt A: 39/39)                                                                                       |
 | `cd web && npm run lint` / `typecheck`           | sạch                                                                                                                                |
 | `cd web && npm run build`                        | thành công, có `/admin`, `/admin/san-pham`, `/admin/kho`, `/admin/bao-tri`, `/admin/nhat-ky`, `/quan-ly-don/[id]/phieu-ban-giao`    |
 | `node scripts/check-gd5-admin.mjs`               | pass: dashboard, tạo sản phẩm + catalog revalidate, thêm/ngừng máy, mở/đóng bảo trì, phiếu bàn giao, chặn staff sửa sản phẩm, 390px |
 
 ## Giới hạn còn lại
 
-- Chưa có mã giảm giá, phí giao theo khu vực, lịch giao (đợt B).
+- Mã giảm giá, phí giao và tổng tiền đã xong ở đợt B; xem giới hạn còn lại trong
+  [`docs/GD5-PRICING.md`](GD5-PRICING.md).
 - Chưa có audit log cho thao tác sản phẩm/kho/bảo trì; nhật ký hiện chỉ đọc `order_events`.
 - Ảnh sản phẩm vẫn sửa bằng seed/migration; form admin chưa upload ảnh.
 - Dashboard tính doanh thu theo `payments.created_at`, chưa có báo cáo theo ngày/tuần hay xuất CSV.
