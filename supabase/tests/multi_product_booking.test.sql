@@ -111,6 +111,9 @@ select * from public.create_multi_product_booking(
   '2099-08-01', '2099-08-01', 'pickup', 'Customer One', '0912345678', 'Test address 123'
 );
 set local role postgres;
+insert into public.unit_maintenance (unit_id, reason, started_on, expected_end_on, created_by)
+values ('52000000-0000-0000-0000-000000000004', 'repair', current_date, current_date,
+  '53000000-0000-0000-0000-000000000003');
 update public.product_units set state = 'maintenance' where id = '52000000-0000-0000-0000-000000000004';
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '53000000-0000-0000-0000-000000000002', true);
@@ -121,6 +124,8 @@ select * from public.create_multi_product_booking(
   '2099-08-04', '2099-08-04', 'pickup', 'Customer Two', '0912345679', 'Other test address'
 );
 set local role postgres;
+update public.unit_maintenance set completed_on = current_date
+where unit_id = '52000000-0000-0000-0000-000000000004' and completed_on is null;
 update public.product_units set state = 'available' where id = '52000000-0000-0000-0000-000000000004';
 set local role anon;
 select is((select bool_and(available) from public.booking_calendar(
@@ -191,6 +196,11 @@ select lives_ok($$select public.transition_booking((select order_id from future_
 select throws_ok($$select public.transition_booking((select order_id from future_not_due), 'delivering')$$,
   'P0001', 'One or more units are not ready for handover', 'staff cannot hand over a confirmed booking before its contractual start');
 set local role postgres;
+insert into public.unit_maintenance (unit_id, reason, started_on, expected_end_on, created_by)
+select oi.unit_id, 'repair', current_date, current_date, '53000000-0000-0000-0000-000000000003'
+from public.order_items oi
+where oi.order_id = (select order_id from second_booking)
+  and oi.product_id = '51000000-0000-0000-0000-000000000001';
 update public.product_units set state = 'maintenance' where id = (
   select oi.unit_id from public.order_items oi where oi.order_id = (select order_id from second_booking)
     and oi.product_id = '51000000-0000-0000-0000-000000000001'
@@ -199,6 +209,11 @@ set local role authenticated;
 select throws_ok($$select public.transition_booking((select order_id from second_booking), 'delivering')$$,
   'P0001', 'One or more units are not ready for handover', 'maintenance unit cannot be handed over');
 set local role postgres;
+update public.unit_maintenance set completed_on = current_date
+where unit_id = (
+  select oi.unit_id from public.order_items oi where oi.order_id = (select order_id from second_booking)
+    and oi.product_id = '51000000-0000-0000-0000-000000000001'
+) and completed_on is null;
 update public.product_units set state = 'available' where id = (
   select oi.unit_id from public.order_items oi where oi.order_id = (select order_id from second_booking)
     and oi.product_id = '51000000-0000-0000-0000-000000000001'
