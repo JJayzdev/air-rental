@@ -10,6 +10,25 @@ export function deliveryFeeFor(
   return zone.feeVnd
 }
 
+/** Stable identity for an asynchronous quote; every amount-affecting input is represented. */
+export function rentalQuoteKey(input: {
+  items: Array<{ productId: string; quantity: number }>
+  start: string
+  end: string
+  fulfillment: 'pickup' | 'delivery'
+  deliveryZoneId: string | null
+  code: string
+}) {
+  return JSON.stringify({
+    items: [...input.items].sort((a, b) => a.productId.localeCompare(b.productId)),
+    start: input.start,
+    end: input.end,
+    fulfillment: input.fulfillment,
+    deliveryZoneId: input.deliveryZoneId,
+    code: input.code.trim().toUpperCase(),
+  })
+}
+
 /** Turns the database error text into a customer-facing message. */
 export function discountErrorMessage(message: string): string {
   if (message.includes('Discount code was not found')) return 'Mã giảm giá không tồn tại.'

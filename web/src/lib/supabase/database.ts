@@ -221,6 +221,10 @@ export interface Database {
     }
     Views: Record<string, never>
     Functions: {
+      consume_chat_rate_limit: {
+        Args: { p_ip_hash: string; p_user_hash: string | null }
+        Returns: boolean
+      }
       booking_calendar: {
         Args: { p_items: Json; p_from: string; p_to: string; p_start: string | null }
         Returns: { rental_date: string; available: boolean }[]
@@ -277,6 +281,17 @@ export interface Database {
       preview_booking_discount: {
         Args: { p_items: Json; p_start: string; p_end: string; p_discount_code: string }
         Returns: { subtotal_vnd: number; discount_vnd: number; description: string }[]
+      }
+      preview_booking_quote: {
+        Args: {
+          p_items: Json
+          p_start: string
+          p_end: string
+          p_fulfillment: 'pickup' | 'delivery'
+          p_discount_code?: string
+          p_delivery_zone_id?: string | null
+        }
+        Returns: Json
       }
       cancel_booking: { Args: { p_order_id: string }; Returns: undefined }
       expire_pending_bookings: { Args: Record<PropertyKey, never>; Returns: number }

@@ -1,4 +1,4 @@
-# A.I.R — Next.js (GĐ 0–3 local)
+# A.I.R — Next.js (ứng dụng chính, GĐ 0–7 local)
 
 App Next.js 15 + TypeScript strict, port từ bản Vite ở thư mục cha. Giao diện giữ nguyên
 (`globals.css` bắt đầu từ bản sao y nguyên `../src/styles/site.css`, sau đó nối thêm style cho
@@ -43,7 +43,7 @@ src/
   app/          App Router: layout, page, client-app, globals.css
   components/   app-shell (state), layout/, ui/, chat/
   views/        8 màn: Home … Account
-  features/     schema Zod + domain GĐ 1–3 (catalog, booking, cart, orders, account, favorites)
+  features/     schema Zod + domain GĐ 1–7 (catalog, booking, cart, orders, account, favorites, pricing, admin)
   lib/          format, dates, pricing, order-code, storage, env, observability
   data/         products.ts
   types/        type dùng chung
@@ -94,6 +94,7 @@ src/
 - Chi tiết và giới hạn: [`../docs/GD3-ACCOUNTS.md`](../docs/GD3-ACCOUNTS.md).
 
 ## Catalog GĐ1
+
 - `/san-pham` hỗ trợ tìm kiếm `q`, lọc `danh-muc` và sắp xếp `sap-xep` qua URL;
   `/san-pham/[slug]` có metadata, canonical, Open Graph và JSON-LD Product.
 - Khi chạy local không có Supabase credentials, trang dùng 24 sản phẩm `SAMPLE` và luôn gắn nhãn.
@@ -108,3 +109,45 @@ src/
   Supabase Storage; ảnh máy thực tế, quyền ảnh, catalog fleet và giá thuê thật còn chờ xác nhận.
 - Mascot Next đã được chuyển sang WebP; file PNG gốc vẫn nằm nguyên để bản Vite tiếp tục dùng.
 - Catalog giữ giỏ UUID riêng với giỏ demo numeric. Chỉ non-sample sản phẩm mới có thể thêm vào checkout.
+
+## Trợ lý chat GĐ6
+
+- `/api/chat` giới hạn JSON 8 KiB, chỉ nhận same-origin request từ trình duyệt, và không lưu hội thoại.
+  Search dùng catalog active; availability dùng `booking_calendar`; trạng thái đơn chỉ truy vấn order
+  của user đã xác minh qua cookie session, lọc owner ID kể cả với tài khoản staff.
+- Quota cố định 12 request/phút, độc lập theo IP và user, lưu HMAC-SHA256 identity thay cho IP hoặc
+  transcript. Production cần `SUPABASE_SERVICE_ROLE_KEY` (chỉ gọi RPC quota),
+  `CHAT_RATE_LIMIT_SECRET` (ít nhất 32 ký tự) và migration GĐ6 ở mọi môi trường cần chat. Chat bị
+  chặn nếu quota store không hoạt động. Mặc định proxy IP không tin cậy, mọi request chung một quota
+  IP an toàn; đặt `CHAT_TRUST_PROXY=true` chỉ khi ingress đã gỡ header do client gửi và tự đặt
+  `X-Forwarded-For`.
+- LLM tắt mặc định. Chỉ bật gửi câu hỏi sang OpenAI khi đặt `AIR_ENABLE_CHAT_LLM=true`,
+  `OPENAI_API_KEY` và `OPENAI_MODEL`; giao diện báo khách trước khi nhập tin nhắn. Gửi `store:false`
+  để không lưu trạng thái Responses truy xuất lại qua API, nhưng dữ liệu vẫn chịu chính sách xử lý và
+  lưu giữ của nhà cung cấp. Model chỉ chọn tối đa một tool đã giới hạn; câu trả lời tồn kho/đơn do dữ
+  liệu server tạo. FAQ và intent xác định chạy trước LLM. Nếu provider lỗi, trợ lý dùng FAQ xác định.
+
+## Thanh toán GĐ4
+
+- `payment_state` tách khỏi trạng thái đơn; `payments` là sổ giao dịch append-only, RLS chỉ đọc.
+- Webhook `POST /api/webhooks/sepay` xác thực `Authorization: Apikey`, idempotent theo
+  `(provider, external_id)`; replay trả giao dịch cũ thay vì tạo dòng mới.
+- Hoàn cọc khi đơn `completed`: trigger tạo khoản `pending`, staff xác nhận đã chuyển tiền.
+- Hoá đơn in/PDF tại `/don-thue/[id]/hoa-don`; thanh toán thật và MoMo/VNPay chưa cấu hình.
+
+## Quản trị và giá GĐ5
+
+- `/admin` có dashboard, quản lý đơn, kho/máy vật lý, lịch bảo trì và nhật ký thao tác.
+- `/admin/ma-giam-gia` quản lý mã phần trăm/số tiền; `/admin/khu-vuc-giao` quản lý phí giao và
+  ngưỡng miễn phí.
+- Checkout chọn nhận tại cửa hàng hoặc giao hàng; giá, giảm giá và phí giao được tính lại ở server
+  qua `preview_booking_quote()` trước khi tạo đơn.
+- `orders.total_vnd` = tiền thuê sau giảm + phí giao, chưa gồm cọc; cọc không bị mã giảm giá.
+
+## Hoàn thiện GĐ7
+
+- Kiểm thử Playwright cho đặt thuê + webhook + tra cứu đơn; bổ sung kiểm tra tương phản, focus ring,
+  reduced motion và thao tác chat bằng bàn phím.
+- Trang điều khoản thuê, huỷ/hoàn cọc và bảo mật ở trạng thái dự thảo, `noindex`, không vào sitemap.
+- Runbook vận hành, backup/restore PostgreSQL local và cảnh báo lỗi HTTPS tùy chọn (mặc định tắt).
+- Chưa deploy, chưa cấu hình ngân hàng/SMS/LLM thật; hiệu năng mới đo trên production build local.
