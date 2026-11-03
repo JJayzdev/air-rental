@@ -41,3 +41,24 @@ jobs:
         run: npm run build
         env:
           SKIP_ENV_VALIDATION: true
+
+  db-tests:
+    name: Supabase migrations & pgTAP
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local Supabase
+        run: supabase start
+
+      - name: Reset database with migrations and seed
+        run: supabase db reset
+
+      - name: Run pgTAP tests
+        run: supabase test db
