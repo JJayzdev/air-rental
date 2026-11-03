@@ -5,3 +5,5 @@ dist
 .vite
 supabase/.temp/
 supabase/.branches/
+.local-backups/
+artifacts/
