@@ -9,7 +9,7 @@ import type { Metadata } from 'next'
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
-  title: 'Mã giảm giá — A.I.R',
+  title: 'Mã giảm giá',
 }
 
 export default async function AdminDiscountsPage({

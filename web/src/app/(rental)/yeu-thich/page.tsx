@@ -8,7 +8,7 @@ import { requireVerifiedUser } from '@/lib/supabase/auth'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
-  title: 'Thiết bị yêu thích — A.I.R',
+  title: 'Thiết bị yêu thích',
   robots: { index: false, follow: false },
 }
 

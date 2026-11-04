@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     'Điều khoản thuê, hủy đơn và hoàn tiền, giao nhận, bảo mật dữ liệu và hỗ trợ khách hàng tại A.I.R.',
   alternates: { canonical: '/chinh-sach' },
   openGraph: {
-    title: 'Chính sách thuê thiết bị | A.I.R',
+    title: 'Chính sách thuê thiết bị',
     description:
       'Điều khoản thuê, hủy đơn và hoàn tiền, giao nhận, bảo mật dữ liệu và hỗ trợ khách hàng.',
     url: '/chinh-sach',

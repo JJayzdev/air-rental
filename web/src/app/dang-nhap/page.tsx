@@ -8,7 +8,7 @@ import type { Metadata } from 'next'
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
-  title: 'Đăng nhập — A.I.R',
+  title: 'Đăng nhập',
 }
 
 export default async function SignInPage({

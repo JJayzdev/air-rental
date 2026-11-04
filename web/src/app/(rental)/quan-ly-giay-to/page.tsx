@@ -9,7 +9,7 @@ import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
-  title: 'Giấy tờ cần xem — A.I.R',
+  title: 'Giấy tờ cần xem',
   robots: { index: false, follow: false },
 }
 

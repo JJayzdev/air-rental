@@ -8,7 +8,7 @@ import type { Metadata } from 'next'
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
-  title: 'Bảng điều khiển — A.I.R',
+  title: 'Bảng điều khiển',
 }
 
 export default async function AdminDashboardPage({

@@ -16,7 +16,7 @@ import type { Metadata } from 'next'
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
-  title: 'Hoá đơn thuê — A.I.R',
+  title: 'Hoá đơn thuê',
 }
 
 export default async function RentalInvoicePage({ params }: { params: Promise<{ id: string }> }) {

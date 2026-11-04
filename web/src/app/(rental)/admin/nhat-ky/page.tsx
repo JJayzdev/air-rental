@@ -8,7 +8,7 @@ import type { Metadata } from 'next'
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
-  title: 'Nhật ký hoạt động — A.I.R',
+  title: 'Nhật ký hoạt động',
 }
 
 export default async function AdminAuditPage() {

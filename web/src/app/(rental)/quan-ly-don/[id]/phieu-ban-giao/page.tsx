@@ -10,7 +10,7 @@ import type { Metadata } from 'next'
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
-  title: 'Phiếu bàn giao thiết bị — A.I.R',
+  title: 'Phiếu bàn giao thiết bị',
 }
 
 export default async function HandoverSheetPage({ params }: { params: Promise<{ id: string }> }) {

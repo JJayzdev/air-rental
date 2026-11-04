@@ -25,12 +25,12 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const url = `/san-pham/${encodeURIComponent(product.slug)}`
   const description = `${product.name} — thuê ${product.pricePerDayVnd.toLocaleString('vi-VN')} ₫/ngày. ${product.description}`
   return {
-    title: `${product.name} | A.I.R`,
+    title: `${product.name}`,
     description,
     alternates: { canonical: url },
     robots: product.isSample ? { index: false, follow: true } : undefined,
     openGraph: {
-      title: `${product.name} | A.I.R`,
+      title: `${product.name}`,
       description,
       url,
       type: 'website',

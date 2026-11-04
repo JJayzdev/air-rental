@@ -6,7 +6,7 @@ import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
-  title: 'Sổ địa chỉ — A.I.R',
+  title: 'Sổ địa chỉ',
   robots: { index: false, follow: false },
 }
 

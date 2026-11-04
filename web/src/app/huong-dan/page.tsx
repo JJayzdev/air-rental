@@ -3,12 +3,12 @@ import Link from 'next/link'
 import { guides } from './content'
 
 export const metadata: Metadata = {
-  title: 'Hướng dẫn thuê và chọn thiết bị | A.I.R',
+  title: 'Hướng dẫn thuê và chọn thiết bị',
   description:
     'Kinh nghiệm chọn laptop, máy ảnh và cân nhắc thuê hay mua thiết bị công nghệ theo nhu cầu.',
   alternates: { canonical: '/huong-dan' },
   openGraph: {
-    title: 'Hướng dẫn chọn và thuê thiết bị | A.I.R',
+    title: 'Hướng dẫn chọn và thuê thiết bị',
     description: 'Hướng dẫn thực tế để chọn thiết bị theo nhu cầu sử dụng.',
     url: '/huong-dan',
     type: 'website',

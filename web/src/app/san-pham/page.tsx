@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
       'Khám phá laptop, điện thoại, máy ảnh, tablet và phụ kiện công nghệ cho thuê theo ngày tại A.I.R.',
     alternates: { canonical: '/san-pham' },
     openGraph: {
-      title: 'Thiết bị cho thuê | A.I.R',
+      title: 'Thiết bị cho thuê',
       description: 'Laptop, máy ảnh, điện thoại và phụ kiện cho thuê theo ngày.',
       url: '/san-pham',
       images: [{ url: '/images/catalog-placeholder.svg', alt: 'Thiết bị cho thuê tại A.I.R' }],

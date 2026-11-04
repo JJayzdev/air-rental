@@ -19,7 +19,7 @@ import { identityDocumentsEnabled } from '@/lib/supabase/service'
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
-  title: 'Quản lý đơn — A.I.R',
+  title: 'Quản lý đơn',
 }
 
 const NEXT_STATES: Partial<Record<OrderState, OrderState[]>> = {

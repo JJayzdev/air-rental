@@ -15,9 +15,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params
   const guide = guides.find((item) => item.slug === slug)
-  if (!guide) return { title: 'Không tìm thấy hướng dẫn | A.I.R', robots: { index: false } }
+  if (!guide) return { title: 'Không tìm thấy hướng dẫn', robots: { index: false } }
   return {
-    title: `${guide.title} | A.I.R`,
+    title: `${guide.title}`,
     description: guide.description,
     alternates: { canonical: `/huong-dan/${guide.slug}` },
     openGraph: {
