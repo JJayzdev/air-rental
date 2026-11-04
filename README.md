@@ -7,6 +7,17 @@ xem danh mục, chọn lịch thuê, nhận báo giá, đặt đơn, theo dõi t
 Ứng dụng chính nằm trong [`web/`](web/) — Next.js 15, React 19, TypeScript strict và Supabase.
 Thư mục gốc vẫn giữ bản Vite tĩnh để tham chiếu giao diện và chạy trên GitHub Pages.
 
+## Bản đang chạy
+
+| Bản                | URL                                                    |
+| ------------------ | ------------------------------------------------------ |
+| Ứng dụng đầy đủ    | https://air-rental.vercel.app                          |
+| Giao diện tĩnh     | https://jjayzdev.github.io/air-rental/                 |
+| Supabase (backend) | project `iseenbdkqnzzhqttazne`, region `ap-southeast-1` |
+
+Bản Vercel dùng Supabase Cloud, có đăng nhập, đặt thuê, tồn kho và quản trị. Bản GitHub Pages chỉ
+là giao diện tĩnh, không có backend.
+
 ## Tính năng
 
 - **Danh mục và tìm kiếm**: lọc theo danh mục, sắp xếp theo giá, tìm theo tên hoặc cấu hình.
@@ -164,19 +175,32 @@ npx supabase test db
 
 ### Vercel (ứng dụng đầy đủ)
 
+Bản production hiện chạy tại **https://air-rental.vercel.app**, backend là Supabase Cloud
+`iseenbdkqnzzhqttazne`.
+
 1. Tạo project Supabase Cloud (khuyến nghị region `ap-southeast-1`).
 2. Chạy migrations và seed:
 
    ```bash
    npx supabase link --project-ref <project-ref>
-   npx supabase db push
-   npx supabase db reset --linked   # chỉ dùng cho môi trường mới
+   npx supabase db push --remote --include-seed
    ```
 
 3. Import thư mục `web/` vào Vercel, đặt các biến môi trường ở trên.
 4. Thêm URL Vercel vào **Auth → URL Configuration** của Supabase:
    - Site URL: `https://<domain>`
    - Redirect URLs: `https://<domain>/auth/callback`, `http://localhost:3000/auth/callback`
+
+5. Cấp quyền quản trị cho tài khoản đầu tiên sau khi đăng nhập:
+
+   ```sql
+   update public.profiles set role = 'admin' where id = (
+     select id from auth.users where email = 'you@example.com'
+   );
+   ```
+
+Sau khi thêm domain riêng, cập nhật `NEXT_PUBLIC_APP_URL` và danh sách redirect trong Supabase rồi
+deploy lại.
 
 ### GitHub Pages (bản tĩnh)
 

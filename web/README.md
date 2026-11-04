@@ -95,7 +95,18 @@ npx supabase test db
 
 ## Triển khai
 
+Bản production: **https://air-rental.vercel.app** (Vercel + Supabase Cloud, project
+`iseenbdkqnzzhqttazne`).
+
 Deploy thư mục `web/` lên Vercel và cấu hình các biến môi trường trong dashboard. Thêm domain vào
 **Supabase → Auth → URL Configuration** với redirect `/auth/callback`.
+
+Cấp quyền quản trị cho tài khoản đầu tiên sau khi đăng nhập:
+
+```sql
+update public.profiles set role = 'admin' where id = (
+  select id from auth.users where email = 'you@example.com'
+);
+```
 
 Bản Vite ở thư mục gốc được deploy riêng lên GitHub Pages và chỉ là giao diện tĩnh.
