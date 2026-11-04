@@ -176,7 +176,8 @@ npx supabase test db
 ### Vercel (ứng dụng đầy đủ)
 
 Bản production hiện chạy tại **https://air-rental.vercel.app**, backend là Supabase Cloud
-`iseenbdkqnzzhqttazne`.
+`iseenbdkqnzzhqttazne`. Project Vercel đã kết nối GitHub: mỗi push lên `main` tự động deploy
+production từ thư mục `web/`.
 
 1. Tạo project Supabase Cloud (khuyến nghị region `ap-southeast-1`).
 2. Chạy migrations và seed:
