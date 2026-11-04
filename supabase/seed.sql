@@ -118,3 +118,67 @@ on conflict (id) do update set
   min_subtotal_vnd = excluded.min_subtotal_vnd,
   max_uses = excluded.max_uses,
   active = true;
+
+-- Bookable fleet fixtures for the hosted demo. These rows are seeded for evaluation,
+-- not a verified inventory. Replace them with real stock before operating commercially.
+insert into public.products
+  (id, category_id, slug, name, description, price_per_day_vnd, deposit_vnd, state,
+   specifications, image_urls, image_alt, sort_order, is_sample, source_url)
+select v.id::uuid, c.id, v.slug, v.name, v.description, v.price::bigint, v.deposit::bigint,
+  'active', v.specifications::jsonb, array['/images/catalog-placeholder.svg'],
+  'Ảnh thiết bị A.I.R', v.sort_order, false, null
+from (values
+  ('30000000-0000-4000-8000-000000000001', 'laptop', 'lenovo-yoga-7-14',
+    'Lenovo Yoga 7 14', 'Laptop văn phòng linh hoạt, màn hình cảm ứng, phù hợp làm việc và học tập.',
+    290000, 4500000, '{"màn hình":"14 inch cảm ứng","bộ xử lý":"Intel Core Ultra 5","ram":"16 GB"}', 25),
+  ('30000000-0000-4000-8000-000000000002', 'laptop', 'hp-spectre-x360-14',
+    'HP Spectre x360 14', 'Laptop cao cấp cho công việc sáng tạo, màn hình OLED và bút cảm ứng.',
+    430000, 7000000, '{"màn hình":"14 inch OLED","bộ xử lý":"Intel Core Ultra 7","ram":"16 GB"}', 26),
+  ('30000000-0000-4000-8000-000000000003', 'phone', 'samsung-galaxy-s24',
+    'Samsung Galaxy S24', 'Điện thoại Android nhỏ gọn, camera tốt, phù hợp công việc và chụp ảnh.',
+    230000, 3800000, '{"màn hình":"6.2 inch","chip":"Snapdragon 8 Gen 3","bộ nhớ":"256 GB"}', 27),
+  ('30000000-0000-4000-8000-000000000004', 'phone', 'xiaomi-14',
+    'Xiaomi 14', 'Điện thoại Android cấu hình cao, sạc nhanh, camera Leica.',
+    210000, 3500000, '{"màn hình":"6.36 inch","chip":"Snapdragon 8 Gen 3","bộ nhớ":"256 GB"}', 28),
+  ('30000000-0000-4000-8000-000000000005', 'camera', 'nikon-z30',
+    'Nikon Z30', 'Máy ảnh không gương lật cho vlog và quay video, kèm lens kit.',
+    380000, 6000000, '{"cảm biến":"APS-C 20.9 MP","ngàm":"Nikon Z","video":"4K30"}', 29),
+  ('30000000-0000-4000-8000-000000000006', 'camera', 'fujifilm-x-s20',
+    'Fujifilm X-S20', 'Máy ảnh hybrid cho ảnh và video, chống rung trong thân máy.',
+    470000, 7500000, '{"cảm biến":"APS-C 26.1 MP","chống rung":"IBIS 7 stop","video":"6.2K30"}', 30),
+  ('30000000-0000-4000-8000-000000000007', 'tablet', 'ipad-10-9',
+    'iPad 10.9-inch', 'Tablet cho ghi chú, đọc tài liệu và họp trực tuyến.',
+    170000, 2800000, '{"màn hình":"10.9 inch","chip":"Apple A14","bộ nhớ":"64 GB"}', 31),
+  ('30000000-0000-4000-8000-000000000008', 'accessory', 'bose-qc-ultra',
+    'Bose QuietComfort Ultra', 'Tai nghe chống ồn cho làm việc tập trung và di chuyển.',
+    110000, 1500000, '{"loại":"Tai nghe chụp tai","kết nối":"Bluetooth","chống ồn":"Chủ động"}', 32)
+) as v(id, category_slug, slug, name, description, price, deposit, specifications, sort_order)
+join public.categories c on c.slug = v.category_slug
+on conflict (slug) do update set
+  category_id = excluded.category_id,
+  name = excluded.name,
+  description = excluded.description,
+  price_per_day_vnd = excluded.price_per_day_vnd,
+  deposit_vnd = excluded.deposit_vnd,
+  state = 'active',
+  specifications = excluded.specifications,
+  image_urls = excluded.image_urls,
+  image_alt = excluded.image_alt,
+  sort_order = excluded.sort_order,
+  is_sample = false;
+
+insert into public.product_units (product_id, asset_tag, state)
+select p.id, 'AIR-' || upper(p.slug) || '-' || n::text, 'available'
+from public.products p
+cross join generate_series(1, 3) as units(n)
+where p.id::text between '30000000-0000-4000-8000-000000000001' and '30000000-0000-4000-8000-000000000008'
+on conflict (asset_tag) do update set state = 'available';
+
+insert into public.price_tiers(product_id, min_days, max_days, discount_percent)
+select p.id, tier.min_days, tier.max_days, tier.discount_percent
+from public.products p
+cross join (values (1, 2, 0), (3, 6, 10), (7, null::integer, 20)) as tier(min_days, max_days, discount_percent)
+where p.id::text between '30000000-0000-4000-8000-000000000001' and '30000000-0000-4000-8000-000000000008'
+on conflict (product_id, min_days) do update set
+  max_days = excluded.max_days,
+  discount_percent = excluded.discount_percent;
