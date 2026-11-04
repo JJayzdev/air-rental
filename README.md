@@ -1,384 +1,209 @@
-# A.I.R — Thuê thiết bị công nghệ
+# A.I.R — Thuê thiết bị công nghệ theo ngày
 
-![Giao diện A.I.R](docs/preview.jpg)
+Website cho thuê laptop, điện thoại, máy ảnh, tablet và phụ kiện công nghệ. Người dùng có thể
+xem danh mục, chọn lịch thuê, nhận báo giá, đặt đơn, theo dõi trạng thái và quản lý tài khoản.
+Đội ngũ vận hành có khu vực quản trị đơn, kho, bảo trì, giá và mã giảm giá.
 
-Website thuê laptop, điện thoại, máy ảnh, tablet và phụ kiện công nghệ theo ngày:
-chọn thiết bị → chọn thời gian thuê → điền thông tin nhận máy → theo dõi đơn.
+Ứng dụng chính nằm trong [`web/`](web/) — Next.js 15, React 19, TypeScript strict và Supabase.
+Thư mục gốc vẫn giữ bản Vite tĩnh để tham chiếu giao diện và chạy trên GitHub Pages.
 
-Đây là bản **source chạy được và chỉnh sửa được**. Giao diện (CSS, bố cục, mascot, breakpoint)
-giữ nguyên bản gốc; phần logic được viết lại bằng React và đã sửa các lỗi của bản publish.
+## Tính năng
 
-Ứng dụng chính nằm trong `web/` (Next.js 15 + Supabase local), đã hoàn thiện GĐ 0–7: catalog SSR,
-đặt thuê và tồn kho, tài khoản, thanh toán chuyển khoản, quản trị, chat AI, nội dung hướng dẫn,
-kiểm thử khả năng truy cập và hồ sơ vận hành. Bản Vite ở thư mục gốc vẫn là demo giao diện lưu
-`localStorage`. GĐ 8 tạm bỏ qua.
+- **Danh mục và tìm kiếm**: lọc theo danh mục, sắp xếp theo giá, tìm theo tên hoặc cấu hình.
+- **Trang sản phẩm**: thông số, giá theo ngày, tiền cọc, ảnh, nguồn tham khảo và JSON-LD.
+- **Giỏ thuê nhiều thiết bị**: chọn số lượng, ngày nhận/trả, hình thức nhận máy.
+- **Báo giá phía server**: bậc thuê dài ngày, mã giảm giá, phí giao và tổng tiền sau giảm.
+- **Đặt thuê và tồn kho**: giữ máy theo toàn bộ khoảng thuê, chống trùng lịch, idempotency.
+- **Tài khoản**: đăng nhập email magic link, hồ sơ, sổ địa chỉ, đơn của tôi, yêu thích.
+- **Thanh toán**: trạng thái thanh toán tách khỏi trạng thái đơn, webhook SePay, hoàn cọc.
+- **Quản trị**: dashboard, đơn hàng, kho máy vật lý, bảo trì, khu vực giao, mã giảm giá, nhật ký.
+- **Trợ lý A.I.R**: FAQ và tìm sản phẩm; LLM tùy chọn, mặc định tắt.
+- **Nội dung**: hướng dẫn chọn thiết bị và trung tâm chính sách thuê.
+- **SEO**: metadata, canonical, Open Graph, sitemap, robots và dữ liệu có cấu trúc.
 
-## Mục lục
+## Công nghệ
 
-- [Chạy nhanh](#chạy-nhanh)
-- [Bản Next.js (ứng dụng chính)](#bản-nextjs-ứng-dụng-chính)
-- [Lệnh](#lệnh)
-- [Công nghệ](#công-nghệ)
-- [Cấu trúc](#cấu-trúc)
-- [Màn hình](#màn-hình)
-- [Dữ liệu & lưu trữ](#dữ-liệu--lưu-trữ)
-- [Khác bản gốc](#khác-bản-gốc)
-- [Giới hạn đã biết](#giới-hạn-đã-biết)
-- [Lộ trình](#lộ-trình)
-- [Ghi công & giấy phép](#ghi-công--giấy-phép)
+| Lớp          | Công nghệ                                      |
+| ------------ | ---------------------------------------------- |
+| Giao diện    | Next.js 15 App Router, React 19, CSS thuần      |
+| Ngôn ngữ     | TypeScript strict                              |
+| Dữ liệu/Auth | Supabase (Postgres, Auth, RLS, Storage)        |
+| Kiểm thử     | Node test runner, pgTAP, Playwright scripts    |
+| Chất lượng   | ESLint 9, Prettier, Husky + lint-staged        |
+| Triển khai   | Vercel (Next.js), GitHub Actions (CI)          |
+| Bản tĩnh     | Vite 7 + React 19 ở thư mục gốc (GitHub Pages) |
+
+## Cấu trúc
+
+```text
+.
+├── web/                        # Ứng dụng chính Next.js
+│   ├── src/app/                # App Router: trang, layout, route handlers
+│   ├── src/features/           # booking, cart, pricing, orders, admin, chat...
+│   ├── src/components/         # header, footer, chat, UI
+│   ├── src/lib/                # env, Supabase client, format, observability
+│   └── .env.example
+├── supabase/
+│   ├── migrations/             # Schema, RLS, RPC đặt thuê và thanh toán
+│   ├── tests/                  # pgTAP
+│   └── seed.sql                # Danh mục, tồn kho, giá, khu vực giao, mã giảm
+├── docs/                       # Tài liệu kỹ thuật và nghiệm thu
+├── src/                        # Bản Vite tĩnh (demo giao diện)
+└── .github/workflows/          # CI và deploy GitHub Pages
+```
 
 ## Chạy nhanh
 
-Yêu cầu **Node 18+** (đã test với Node 24) và npm.
-
-```bash
-npm install
-npm run dev
-```
-
-Mở http://localhost:5173. Bản build tĩnh:
-
-```bash
-npm run build     # ra dist/
-npm run preview   # xem thử bản build
-```
-
-## Bản Next.js (ứng dụng chính)
-
-Repo có **hai app chạy song song**. Bản Vite giữ luồng demo; bản Next.js có catalog URL thật và luồng
-booking tích hợp Supabase khi cấu hình.
-
-![Giao diện bản Next.js](docs/preview-next.jpg)
-
-|            | Bản Vite (thư mục gốc)  | Bản Next.js (`web/`)                                          |
-| ---------- | ----------------------- | ------------------------------------------------------------- |
-| Công nghệ  | React 19 + Vite 7 + JSX | Next.js 15 + React 19 + TypeScript strict                     |
-| Điểm vào   | `index.html` → `src/`   | `web/src/app/`                                                |
-| Cổng dev   | 5173                    | 3000                                                          |
-| Điều hướng | state `view`            | demo state `view`; catalog và booking có URL riêng            |
-| Style      | `src/styles/site.css`   | `web/src/app/globals.css` (base copy + CSS riêng cho catalog) |
+Yêu cầu: **Node 20+**, npm và Docker Desktop (nếu chạy Supabase local).
 
 ```bash
 cd web
 npm install
-npm run dev                  # http://localhost:3000
-npm run build && npm start   # bản production, cũng cổng 3000
+npm run dev
 ```
 
-| Lệnh trong `web/`      | Việc                                     |
-| ---------------------- | ---------------------------------------- |
-| `npm run dev`          | Dev server Next.js                       |
-| `npm run build`        | Build production (`.next/`)              |
-| `npm start`            | Chạy bản build                           |
-| `npm run lint`         | ESLint 9 (flat config, `jsx-a11y`, Next) |
-| `npm run typecheck`    | `tsc --noEmit`                           |
-| `npm run format`       | Prettier ghi đè                          |
-| `npm run format:check` | Chỉ kiểm tra định dạng                   |
+Mở http://localhost:3000.
 
-### Cấu trúc `web/`
+Ở chế độ không có Supabase, ứng dụng hiển thị catalog xem trước và các trang nội dung. Để đặt
+thuê thật, cấu hình Supabase theo hướng dẫn bên dưới.
 
-```
-web/
-  src/
-    app/                    # App Router
-      layout.tsx            # <html lang="vi">, metadata, favicon
-      page.tsx              # render ClientApp
-      client-app.tsx        # dynamic(ssr: false) — GĐ 0 chạy hoàn toàn client-side
-      san-pham/             # catalog/detailed product pages, server rendered
-      globals.css           # bản sao y nguyên site.css
-    components/
-      app-shell.tsx         # state toàn cục + điều hướng 8 màn
-      layout/               # Header, Footer, BottomNav, ChatLauncher
-      ui/                   # Icons, Mascot, ProductCard, Toast
-      chat/                 # ChatWidget + chat-engine
-    views/                  # 8 màn: HomeView … AccountView
-    features/               # schema Zod + domain, dựng sẵn cho GĐ 1–2
-    lib/                    # format, dates, pricing, order-code, storage, env, observability
-    data/products.ts        # danh mục + 6 sản phẩm
-    types/index.ts          # type dùng chung
-  .env.example              # biến môi trường (Supabase, Sentry)
-  eslint.config.js          # flat config ESLint 9
+### Chạy với Supabase local
+
+```bash
+# Tại thư mục gốc repo
+npx supabase start
+npx supabase db reset        # chạy migrations + seed
+
+# Lấy URL và anon key in ra từ lệnh start, sau đó tạo web/.env.local
 ```
 
-Điểm kỹ thuật đáng lưu ý:
+Tạo `web/.env.local`:
 
-- **CSS sao y nguyên** — `globals.css` trùng SHA-256 với `src/styles/site.css`, nên breakpoint
-  900/560px và mọi chi tiết giao diện không đổi.
-- **Chạy client-side** — app đọc `localStorage` ngay lần render đầu, nên `client-app.tsx` dùng
-  `dynamic(..., { ssr: false })` để tránh lệch hydration. GĐ 1 mới tách server component + URL.
-- **TypeScript strict** — bật `strict`, `noUnusedLocals`, `noUnusedParameters`; alias `@/*` → `web/src/*`.
-- **Env có schema** — `lib/env.ts` validate bằng Zod; thiếu biến thì báo lỗi rõ ràng thay vì `undefined`.
-- **Sentry** — `lib/observability.ts` gửi lỗi production khi có `NEXT_PUBLIC_SENTRY_DSN`.
-- **CI** — `.github/workflows/ci.yml`: `npm ci` → lint → typecheck → build trên mỗi push/PR.
+```dotenv
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key từ supabase start>
+SUPABASE_SERVICE_ROLE_KEY=<service role key từ supabase start>
+CHAT_RATE_LIMIT_SECRET=<chuỗi ngẫu nhiên dài>
+```
 
-### Trạng thái GĐ 0
+Khởi động lại `npm run dev`. Đăng nhập bằng email magic link; hộp thư local mở tại
+http://127.0.0.1:54324.
 
-- [x] Next.js 15 + TypeScript strict, port đủ 8 màn và `site.css`
-- [x] ESLint 9 + Prettier + `tsc --noEmit`
-- [x] Env schema (Zod), Sentry hook, cấu trúc `features/`
-- [x] CI lint + typecheck + build
-- [x] Kiểm chứng giao diện khớp bản Vite (số liệu bên dưới)
-- [x] **Husky + lint-staged**: `.husky/pre-commit` chạy `cd web && npx lint-staged` (chỉ kiểm tra
-      app Next trong `web/`). Repo đã `git init` nhánh `main`; `prepare: cd .. && husky .husky`
-      đã tạo `.husky/_` ở gốc và trỏ `core.hooksPath` vào đó — hook chạy thật khi commit.
-- [~] **Deploy preview**: bỏ qua theo quyết định — GĐ 0 nghiệm thu bằng build production
-  chạy local (`npm run build && npm start`) thay vì deploy.
+Seed tạo sẵn 8 thiết bị có thể đặt thuê (`AIR-*`) và 24 sản phẩm tham khảo (`SAMPLE-*`).
+Sản phẩm tham khảo không thể đặt thuê.
 
-### Trạng thái catalog GĐ 1
+## Biến môi trường
 
-- [x] URL catalog tìm kiếm/lọc/sắp xếp; chi tiết sản phẩm server-rendered.
-- [x] Metadata/canonical/Open Graph, JSON-LD Product, `sitemap.xml` và `robots.txt`.
-- [x] Supabase anon/RLS read adapter; local preview dùng 24 sản phẩm `SAMPLE`, lỗi backend đã cấu hình không fallback.
-- [~] Seed gồm 24 mẫu minh hoạ, giá/tiền cọc/số lượng đều giả lập; chưa phải danh sách hàng A.I.R sở hữu.
-- [~] Ba ảnh tham khảo CC BY-SA 4.0 có ghi công; 21 placeholder còn lại. Chưa upload Storage hay xác nhận ảnh thật.
-- [x] Chạy migrations, seed, Auth/RLS tests và booking trên Supabase local PG15; 92 pgTAP + 6 concurrency checks.
-- [ ] Xác nhận catalog fleet/giá thật và cấu hình backend live.
-- [x] Checkout multi-product, tài khoản, đơn khách hàng và staff ops đã tích hợp trên Next.js; thanh toán
-      chuyển khoản ở GĐ 4, thông báo đơn chưa cấu hình.
+Xem đầy đủ trong [`web/.env.example`](web/.env.example).
 
-### Trạng thái GĐ 2 — đặt thuê & tồn kho
+| Biến                            | Bắt buộc | Mô tả                                              |
+| ------------------------------- | -------- | -------------------------------------------------- |
+| `NEXT_PUBLIC_APP_URL`           | Có       | URL công khai, dùng cho metadata và callback auth  |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Có       | URL project Supabase                               |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Có       | Anon key cho client và đọc catalog qua RLS         |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Không    | Chat quota, giấy tờ định danh, tác vụ quản trị     |
+| `CHAT_RATE_LIMIT_SECRET`        | Không    | Bí mật server cho RPC giới hạn chat                |
+| `AIR_ENABLE_PAYMENTS`           | Không    | Bật webhook SePay                                  |
+| `SEPAY_WEBHOOK_SECRET`          | Không    | Khớp header `Authorization: Apikey ...` của SePay  |
+| `AIR_BANK_NAME`                 | Không    | Tên ngân hàng hiển thị trên trang đơn              |
+| `AIR_BANK_ACCOUNT_NUMBER`       | Không    | Số tài khoản nhận chuyển khoản                     |
+| `AIR_BANK_ACCOUNT_NAME`         | Không    | Tên chủ tài khoản                                  |
+| `AIR_ENABLE_CHAT_LLM`           | Không    | Bật trả lời bằng LLM                               |
+| `OPENAI_API_KEY`                | Không    | Khóa cho chat LLM                                  |
+| `AIR_ENABLE_PHONE_OTP`          | Không    | Bật đăng nhập OTP điện thoại                       |
+| `AIR_ENABLE_IDENTITY_DOCUMENTS` | Không    | Bật thu thập giấy tờ định danh                     |
 
-- [x] Booking nhiều sản phẩm trong một transaction, giữ máy theo toàn bộ khoảng thuê và buffer.
-- [x] Idempotency, giá snapshot từ DB, cấp phát unit nguyên tử, chuyển trạng thái bởi staff.
-- [x] 92 pgTAP + 6 bài concurrency + `scripts/check-gd2-browser.mjs` exit 0 trên Supabase local.
-- [ ] Pilot với fleet/giá thật, email/SMS xác nhận đơn và thanh toán online (GĐ 4).
-
-Chi tiết: [`docs/GD2-REVIEW.md`](docs/GD2-REVIEW.md), [`docs/GD2-IMPLEMENTATION.md`](docs/GD2-IMPLEMENTATION.md).
-
-### Trạng thái GĐ 3 — tài khoản
-
-- [x] Hồ sơ liên hệ, sổ địa chỉ (một địa chỉ mặc định), đơn của tôi và yêu thích đồng bộ.
-- [x] OTP điện thoại opt-in (`AIR_ENABLE_PHONE_OTP`), session refresh qua middleware, đăng nhập email magic link.
-- [x] Yêu cầu/tải/duyệt giấy tờ định danh tùy chọn, gate `AIR_ENABLE_IDENTITY_DOCUMENTS`, mặc định tắt.
-- [x] Guard `/admin`, `/quan-ly-don`, `/quan-ly-giay-to` theo role ở server component.
-- [x] 140 pgTAP, 6 bài concurrency, browser E2E và smoke favorites pass ngày 01/11/2026.
-- [ ] Xác minh OTP với SMS provider thật.
-
-Chi tiết: [`docs/GD3-ACCOUNTS.md`](docs/GD3-ACCOUNTS.md).
-
-### Trạng thái GĐ 4 — thanh toán & cọc
-
-- [x] `payment_state` tách khỏi trạng thái đơn, sổ giao dịch `payments` append-only, RLS chỉ đọc.
-- [x] Webhook SePay `POST /api/webhooks/sepay` xác thực `Authorization: Apikey`, idempotent theo
-      `(provider, external_id)`; replay trả lại giao dịch cũ, không tạo dòng mới.
-- [x] Hoàn cọc khi đơn `completed`: trigger tạo khoản `pending`, staff xác nhận đã chuyển tiền.
-- [x] Hướng dẫn chuyển khoản, badge trạng thái thanh toán và hoá đơn in/PDF tại `/don-thue/[id]/hoa-don`.
-- [x] 171 pgTAP, 6 webhook HTTP checks, browser E2E cũ và kiểm tra thanh toán/hoàn cọc đều pass ngày 01/11/2026.
-- [ ] Kết nối SePay/ngân hàng thật và MoMo/VNPay; hoá đơn hiện là bản in trình duyệt, không phải hoá đơn VAT.
-
-Chi tiết: [`docs/GD4-PAYMENTS.md`](docs/GD4-PAYMENTS.md).
-
-### Trạng thái GĐ 5 — quản trị & giá
-
-- [x] Dashboard, quản lý đơn/kho/máy vật lý, lịch bảo trì và nhật ký thao tác.
-- [x] Mã giảm giá theo phần trăm hoặc số tiền, khu vực giao, phí giao và tổng tiền sau giảm.
-- [x] Một engine giá phía server dùng chung cho báo giá và tạo đơn; tiền cọc không bị giảm.
-- [x] 290 pgTAP và 66 Node test pass; build, typecheck, lint đạt.
-
-Chi tiết: [`docs/GD5-ADMIN.md`](docs/GD5-ADMIN.md), [`docs/GD5-PRICING.md`](docs/GD5-PRICING.md).
-
-### Trạng thái GĐ 6 — chat AI & nội dung
-
-- [x] FAQ và intent xác định chạy trước; chat tra catalog, tồn kho và đơn của chính tài khoản.
-- [x] LLM tùy chọn, mặc định tắt; hạn mức 12 request/phút độc lập theo IP và tài khoản.
-- [x] Ba bài hướng dẫn tại `/huong-dan` có canonical, Open Graph, JSON-LD và sitemap.
-
-Chi tiết: [`docs/GD6-REVIEW.md`](docs/GD6-REVIEW.md), [`docs/GD6-LOCAL.md`](docs/GD6-LOCAL.md).
-
-### Trạng thái GĐ 7 — hoàn thiện local
-
-- [x] Playwright cho đặt thuê, webhook và tra cứu đơn; kiểm tra tương phản, focus và reduced motion.
-- [x] Trang chính sách dự thảo, runbook vận hành, backup/restore local và cảnh báo lỗi tùy chọn.
-- [x] Đo hiệu năng trên production build local; chưa deploy và chưa cấu hình ngân hàng/SMS/LLM thật.
-
-Chi tiết: [`docs/GD7-UI.md`](docs/GD7-UI.md), [`docs/GD7-OPERATIONS.md`](docs/GD7-OPERATIONS.md).
-
-Kiểm chứng parity (cùng cửa sổ 1000×700, `localStorage` rỗng):
-
-- Chạy 13 bước — trang chủ → anchor → danh mục → chi tiết → tăng số lượng → giỏ → checkout →
-  validate → đặt đơn → đơn thuê → mở chat → chat trả lời → đăng nhập — trên cả hai bản:
-  **0 khác biệt** về nội dung, số tiền, class, computed style và thứ tự DOM
-  (bỏ qua mã đơn, ngày và nội dung toast vốn ngẫu nhiên/theo thời điểm).
-- Ảnh chụp headless: bản dev lệch **0,29%** (479px) và **0,06%** (1280px) số pixel; bản build
-  production lệch **0,40%** và **0,06%**. Mức nhiễu khi chụp **cùng một app hai lần** là
-  0,25–0,41% (mascot FAB có animation vô hạn), tức khác biệt giữa hai bản nằm trong ngưỡng nhiễu.
-- `lint`, `typecheck`, `format:check` sạch; `next build` OK — 104 kB First Load JS.
+Không commit `.env.local` hoặc khóa service role.
 
 ## Lệnh
 
-| Lệnh                   | Việc                                 |
-| ---------------------- | ------------------------------------ |
-| `npm run dev`          | Dev server có hot reload             |
-| `npm run build`        | Build production vào `dist/`         |
-| `npm run preview`      | Chạy thử bản build                   |
-| `npm run lint`         | ESLint: lỗi code + quy ước           |
-| `npm run lint:fix`     | ESLint tự sửa phần sửa được          |
-| `npm run format`       | Prettier định dạng lại toàn bộ       |
-| `npm run format:check` | Chỉ kiểm tra định dạng (dùng cho CI) |
+Tại `web/`:
 
-## Công nghệ
+| Lệnh                   | Việc                              |
+| ---------------------- | --------------------------------- |
+| `npm run dev`          | Dev server (cổng 3000)            |
+| `npm run build`        | Build production                  |
+| `npm start`            | Chạy bản build                    |
+| `npm test`             | 66 Node test cho domain và schema |
+| `npm run lint`         | ESLint                            |
+| `npm run typecheck`    | `tsc --noEmit`                    |
+| `npm run format`       | Prettier                          |
+| `npm run format:check` | Kiểm tra định dạng                |
 
-| Lớp        | Chọn                                   | Ghi chú                                                |
-| ---------- | -------------------------------------- | ------------------------------------------------------ |
-| UI         | React 19                               | JSX thuần, chưa dùng TypeScript                        |
-| Build      | Vite 7                                 | HMR, build ~1.3s                                       |
-| Style      | CSS thuần (1 file)                     | Output gốc của Figma Make, không dùng Tailwind runtime |
-| State      | `useState` / `useMemo` trong `App.jsx` | Chưa cần thư viện state                                |
-| Lưu trữ    | `localStorage`                         | Giỏ, đơn, yêu thích, phiên đăng nhập demo              |
-| Điều hướng | State `view`                           | Không có URL riêng                                     |
-| Icon       | SVG component tự viết                  | Không phụ thuộc thư viện icon                          |
-| Chất lượng | ESLint 9 + Prettier 3                  | Flat config, có `jsx-a11y`                             |
+Tại thư mục gốc (bản Vite):
 
-Không có backend, không có API. Mọi thao tác chạy trong trình duyệt.
-
-## Cấu trúc
-
-```
-src/
-  app/
-    main.jsx                 # điểm vào, mount React
-    App.jsx                  # state toàn cục + điều hướng giữa các màn
-  pages/                     # mỗi màn hình một file, hậu tố "Page"
-    HomePage.jsx
-    ProductsPage.jsx
-    ProductDetailPage.jsx
-    CartPage.jsx
-    CheckoutPage.jsx
-    CheckoutSuccessPage.jsx
-    OrdersPage.jsx
-    AccountPage.jsx
-  components/
-    layout/                  # khung trang
-      Header.jsx
-      Footer.jsx
-      BottomNav.jsx          # thanh điều hướng mobile
-      ChatLauncher.jsx       # nút mascot nổi
-    ui/                      # thành phần dùng lại
-      Icons.jsx
-      Mascot.jsx
-      ProductCard.jsx
-      Toast.jsx
-    chat/
-      ChatWidget.jsx         # giao diện hộp thoại
-      chat-engine.js         # logic trả lời (rule-based)
-  data/
-    products.js              # danh mục + 6 sản phẩm  ← sửa giá/tên/ảnh tại đây
-  lib/
-    format.js                # money(), dateVN(), nowTime()
-    dates.js                 # toISO, addDays, daysBetween, todayISO
-    pricing.js               # lineTotal(), cartSubtotal()
-    order-code.js            # sinh mã đơn AIR-XXXXXX
-    storage.js               # đọc/ghi localStorage
-  styles/
-    site.css                 # CSS gốc của Figma Make
+```bash
+npm install
+npm run dev       # http://localhost:5173
+npm run build     # dist/
+npm run preview
 ```
 
-Thư mục khác:
+Supabase:
 
-| Đường dẫn         | Mô tả                                                                                      |
-| ----------------- | ------------------------------------------------------------------------------------------ |
-| `web/`            | Ứng dụng chính Next.js 15 + TypeScript — xem mục [Bản Next.js](#bản-nextjs-ứng-dụng-chính) |
-| `docs/ROADMAP.md` | Kiến trúc đích, mô hình dữ liệu, 8 giai đoạn phát triển                                    |
-| `original-build/` | Bản build gốc tải từ Figma (JS đã minify, **không sửa được**) — giữ để đối chiếu giao diện |
-| `public/`         | Mascot và favicon                                                                          |
+```bash
+npx supabase start
+npx supabase db reset
+npx supabase test db
+npx supabase gen types typescript --local > web/src/lib/supabase/database.ts
+```
 
-### Quy ước đặt tên
+## Kiểm thử
 
-| Loại            | Quy ước                    | Ví dụ                             |
-| --------------- | -------------------------- | --------------------------------- |
-| Thư mục         | kebab-case, số nhiều       | `components/`, `pages/`           |
-| React component | PascalCase, trùng tên file | `ProductCard.jsx` → `ProductCard` |
-| Trang           | PascalCase + hậu tố `Page` | `CartPage.jsx` → `CartPage`       |
-| Module thường   | kebab-case                 | `chat-engine.js`, `order-code.js` |
+- **66 Node test** cho pricing, booking, catalog, cart, auth cookie, chat và tiện ích.
+- **290 pgTAP** cho schema, RLS, RPC đặt thuê, tồn kho, thanh toán, quản trị và chính sách.
+- **Script Playwright** trong `scripts/` cho các luồng đặt thuê, thanh toán và giao diện.
 
-Định dạng do Prettier quyết định: không dấu `;`, nháy đơn, rộng 100 cột, 2 space, LF.
-ESLint lo phần đúng/sai: `react-hooks`, `jsx-a11y`, `prefer-const`, `eqeqeq`, `no-console`.
+```bash
+cd web && npm test && npm run lint && npm run typecheck && npm run build
+npx supabase test db
+```
 
-## Màn hình
+## Triển khai
 
-| Màn          | File                      | Nội dung                                                                      |
-| ------------ | ------------------------- | ----------------------------------------------------------------------------- |
-| Trang chủ    | `HomePage.jsx`            | Hero, danh mục, 4 thiết bị nổi bật, lợi ích, 3 bước thuê, CTA chat            |
-| Danh mục     | `ProductsPage.jsx`        | Lọc theo danh mục, sắp xếp theo giá, tìm kiếm, trạng thái rỗng                |
-| Chi tiết     | `ProductDetailPage.jsx`   | Thông số, chọn số ngày (1/3/7/14) và số lượng, tạm tính, thêm giỏ / thuê ngay |
-| Giỏ thuê     | `CartPage.jsx`            | Tăng giảm số lượng, xóa món, tóm tắt tiền                                     |
-| Đặt thuê     | `CheckoutPage.jsx`        | Khoảng ngày, hình thức nhận, thông tin người thuê, validate                   |
-| Xác nhận     | `CheckoutSuccessPage.jsx` | Mã đơn, thời gian, tổng tiền                                                  |
-| Đơn thuê     | `OrdersPage.jsx`          | Danh sách đơn đã đặt (lưu qua reload)                                         |
-| Tài khoản    | `AccountPage.jsx`         | Đăng nhập demo bằng SĐT/email, đăng xuất                                      |
-| Trợ lý A.I.R | `ChatWidget.jsx`          | Chat trả lời theo quy tắc + gợi ý sản phẩm, nút điều hướng                    |
+### Vercel (ứng dụng đầy đủ)
 
-Luồng chính: **Trang chủ → Danh mục → Chi tiết → Giỏ → Đặt thuê → Xác nhận → Đơn thuê**.
+1. Tạo project Supabase Cloud (khuyến nghị region `ap-southeast-1`).
+2. Chạy migrations và seed:
 
-## Dữ liệu & lưu trữ
+   ```bash
+   npx supabase link --project-ref <project-ref>
+   npx supabase db push
+   npx supabase db reset --linked   # chỉ dùng cho môi trường mới
+   ```
 
-Sản phẩm nằm trong `src/data/products.js` (6 mẫu, ảnh lấy từ Unsplash).
-Mọi state phía người dùng được lưu vào `localStorage` để reload không mất:
+3. Import thư mục `web/` vào Vercel, đặt các biến môi trường ở trên.
+4. Thêm URL Vercel vào **Auth → URL Configuration** của Supabase:
+   - Site URL: `https://<domain>`
+   - Redirect URLs: `https://<domain>/auth/callback`, `http://localhost:3000/auth/callback`
 
-| Key             | Nội dung                              |
-| --------------- | ------------------------------------- |
-| `air-cart`      | Giỏ thuê: sản phẩm, số ngày, số lượng |
-| `air-orders`    | Danh sách đơn đã đặt                  |
-| `air-favorites` | ID thiết bị yêu thích                 |
-| `air-user`      | Phiên đăng nhập demo                  |
+### GitHub Pages (bản tĩnh)
 
-Xóa toàn bộ: `localStorage.clear()` trong DevTools.
+Workflow `.github/workflows/deploy-pages.yml` build bản Vite ở thư mục gốc và phát hành lên
+GitHub Pages. Bản này chỉ là giao diện tĩnh, không có đăng nhập, thanh toán hay quản trị.
 
-## Khác bản gốc
+## Dữ liệu
 
-Bản publish của Figma có vài lỗi logic. Bản này sửa:
+- Seed tạo **8 thiết bị có thể đặt thuê** với 3 máy mỗi model, đủ để kiểm tra toàn bộ luồng.
+- **24 sản phẩm tham khảo** giữ nhãn `is_sample = true` và không thể đặt thuê. Đây là dữ liệu
+  minh hoạ, không phải xác nhận quyền sở hữu hay tồn kho thực tế.
+- Giá, tiền cọc, khu vực giao và mã giảm giá là dữ liệu mẫu trong `supabase/seed.sql`.
+- Trước khi vận hành thương mại, thay bằng hàng thật, ảnh có quyền sử dụng và bảng giá đã duyệt.
 
-1. **Giỏ và checkout khớp tiền** — ngày kết thúc được khởi tạo theo số ngày trong giỏ
-   (bản gốc: giỏ 3 ngày = 1.050.000 ₫ nhưng checkout tự tính 2 ngày = 750.000 ₫).
-2. **Đơn thuê được lưu** — reload không mất.
-3. **Xóa được món trong giỏ**, giỏ tự clear sau khi đặt.
-4. **Đăng nhập demo có tác dụng** — lưu phiên, vào được trang tài khoản.
-5. **Yêu thích được lưu**, có `aria-pressed`.
-6. **Tìm kiếm ở header hoạt động toàn cục** — Enter là sang trang danh mục kèm từ khóa.
-7. **"Cách thức thuê" / "Về chúng tôi"** cuộn tới đúng section.
-8. **Validate ngày** — ngày kết thúc không thể trước ngày bắt đầu.
-9. **Tiêu đề trang, `lang="vi"`, favicon thương hiệu** (bản gốc: "Figma Make App", `lang="en"`).
-10. **Bàn phím** — thẻ sản phẩm mở được bằng Enter/Space, không chỉ chuột.
-11. Thêm `inputMode`, `autocomplete`, `aria-label` cho form và nút icon.
+## Giới hạn
 
-Giữ nguyên có chủ ý: toàn bộ nội dung, bố cục, hiệu ứng, breakpoint 900/560px, mascot —
-kể cả câu **"Chỉ từ 350K/ngày"** dù thiết bị rẻ nhất là 90K/ngày.
-Sửa ở `src/pages/HomePage.jsx` nếu muốn đổi.
-
-## Giới hạn đã biết
-
-- **Không có backend.** Đơn thuê chỉ nằm trên máy người đặt, không có ai xác nhận.
-  Tồn kho là số cố định (`available`), không chặn trùng lịch theo ngày.
-- **Các màn demo vẫn không có URL riêng** — bản Vite và state-routing Next chưa deep-link được;
-  riêng catalog Next đã có URL riêng.
-- **Ảnh hotlink Unsplash** — phụ thuộc mạng ngoài, cần thay bằng ảnh thật.
-- **Tương phản chưa đạt AA** ở vài nhãn nhỏ: badge "Còn hàng" (2.97),
-  bottom-nav 9px (3.55), timestamp chat 8px (2.81).
-- **Chat mặc định rule-based**; LLM tùy chọn, tắt mặc định và chưa kiểm tra provider thật.
-- Bundle bản Vite: 262 kB JS (81 kB gzip) + 29,5 kB CSS (7,3 kB gzip).
-  Bản Next: 104 kB First Load JS.
-- **Bản Next chưa deploy** — nghiệm thu bằng production build chạy local.
-
-## Lộ trình
-
-Xem [`docs/ROADMAP.md`](docs/ROADMAP.md): công nghệ đích (Next.js + Supabase), cấu trúc feature-based,
-mô hình dữ liệu chống trùng lịch, 8 giai đoạn triển khai, chi phí và rủi ro.
-
-**Đã hoàn thiện GĐ 0–7 trên môi trường local** — Next.js có catalog SSR, đặt thuê & tồn kho, tài khoản,
-thanh toán chuyển khoản + hoàn cọc, quản trị, mã giảm giá/phí giao, chat AI và hồ sơ vận hành. GĐ 8
-tạm bỏ qua. Sản phẩm vẫn là dữ liệu mẫu; ngân hàng, SMS và LLM thật chưa cấu hình; bản Next chưa deploy.
-Deploy preview đã bỏ qua theo quyết định; Husky đã cài và chạy khi commit.
-Repo đã `git init` (nhánh `main`), **chưa có remote** — chưa push.
+- Thanh toán mặc định tắt; SePay và ngân hàng thật cần cấu hình riêng.
+- SMS OTP và giấy tờ định danh mặc định tắt.
+- Chat LLM mặc định tắt; FAQ cục bộ vẫn hoạt động.
+- Hoá đơn hiện là bản in trình duyệt, chưa phải hoá đơn VAT.
+- Dữ liệu seed phục vụ đánh giá sản phẩm, không phải hợp đồng cho thuê thực tế.
 
 ## Ghi công & giấy phép
 
-Giao diện dựa trên **"Electronics Rental Website"** của tác giả **Pam** trên Figma Community,
-giấy phép [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+Giao diện tham khảo **"Electronics Rental Website"** của **Pam** trên Figma Community, giấy phép
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Bản này giữ tinh thần bố cục gốc, viết
+lại logic bằng React/Next.js và bổ sung backend Supabase.
 
-Theo CC BY 4.0, bạn được phép sửa và dùng thương mại, với điều kiện **ghi công tác giả**
-và **ghi rõ đã chỉnh sửa**. Bản này là tác phẩm phái sinh: giữ CSS và bố cục gốc, viết lại
-toàn bộ logic bằng React và sửa các lỗi liệt kê ở trên.
-
-- Ảnh sản phẩm: Unsplash, theo [Unsplash License](https://unsplash.com/license).
-- Mascot robot: thuộc bản gốc của tác giả Pam.
-- Dòng "Prototype UI/UX phi thương mại" ở footer là nội dung demo của bản gốc, không phải điều khoản giấy phép.
+- Ảnh sản phẩm tham khảo: Unsplash và Wikimedia Commons, ghi công trên từng trang.
+- Mascot robot thuộc tác phẩm gốc của Pam.
