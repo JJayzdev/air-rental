@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next'
 import { getCatalog } from '@/features/products/catalog-server'
 import { absoluteAppUrl } from '@/features/products/catalog-seo'
 import { guides } from './huong-dan/content'
+import { policyDocuments } from './chinh-sach/content'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,6 +28,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(`${guide.updated}T00:00:00Z`),
       changeFrequency: 'yearly' as const,
       priority: 0.6,
+    })),
+    {
+      url: absoluteAppUrl('/chinh-sach'),
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    ...policyDocuments.map((policy) => ({
+      url: absoluteAppUrl(`/chinh-sach/${policy.slug}`),
+      lastModified: now,
+      changeFrequency: 'yearly' as const,
+      priority: 0.5,
     })),
     ...products
       .filter((product) => !product.isSample)

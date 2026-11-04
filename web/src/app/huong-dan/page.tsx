@@ -35,9 +35,8 @@ export default function GuidesPage() {
           </div>
         </div>
         <p className="catalog-sample-note" role="note">
-          Đây là hướng dẫn tham khảo chung. Catalog A.I.R hiện có thể chứa dữ liệu sản phẩm mẫu; xác
-          nhận model, cấu hình, giá, khoản cọc và khả năng cung cấp trên từng thiết bị trước khi
-          quyết định.
+          Hướng dẫn mang tính tham khảo chung. Trước khi đặt thuê, hãy kiểm tra model, cấu hình,
+          giá, tiền cọc và khả năng cung cấp trên trang từng thiết bị.
         </p>
         <div className="guide-grid">
           {guides.map((guide) => (

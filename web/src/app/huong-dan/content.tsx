@@ -57,8 +57,8 @@ export const guides: Guide[] = [
           hình, webcam, Wi-Fi và pin; lưu lại tình trạng máy khi nhận để hai bên cùng có căn cứ.
         </p>
         <p>
-          <Link href="/san-pham?danh-muc=laptop">Tham khảo danh mục laptop</Link>. Catalog hiện có
-          thể chứa dữ liệu mẫu; hãy kiểm tra thông tin và khả năng cung cấp trên từng thiết bị.
+          <Link href="/san-pham?danh-muc=laptop">Tham khảo danh mục laptop</Link>. Kiểm tra thông
+          tin cấu hình và khả năng cung cấp trên từng thiết bị trước khi đặt thuê.
         </p>
       </>
     ),
@@ -149,8 +149,8 @@ export const guides: Guide[] = [
           ngày thuê; hệ thống giữ thêm một ngày đệm giữa các lượt thuê. Bước thanh toán có thể áp
           dụng bậc giá theo thời lượng, mã giảm giá và phí giao theo khu vực; tiền cọc được gắn với
           từng sản phẩm. Hãy xem tổng tiền và thông tin từng thiết bị ở bước đặt thuê trước khi gửi
-          yêu cầu. Dữ liệu catalog hiện có thể là dữ liệu mẫu, nên các con số trong giao diện chưa
-          phải báo giá hay xác nhận tồn kho.
+          yêu cầu. Giá và tình trạng còn máy được xác nhận lại ở bước đặt thuê trước khi đơn có hiệu
+          lực.
         </p>
         <h2>Đưa nhu cầu sử dụng vào quyết định</h2>
         <p>
@@ -165,8 +165,8 @@ export const guides: Guide[] = [
           còn phù hợp không.
         </p>
         <p>
-          <Link href="/san-pham">Tham khảo catalog thiết bị</Link>. Giá và khả năng cung cấp hiển
-          thị trong môi trường này có thể là dữ liệu mẫu, không phải báo giá xác nhận.
+          <Link href="/san-pham">Tham khảo catalog thiết bị</Link>. Giá và khả năng cung cấp được
+          xác nhận ở bước đặt thuê.
         </p>
       </>
     ),

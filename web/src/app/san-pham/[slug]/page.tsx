@@ -15,16 +15,15 @@ type ProductPageProps = { params: Promise<{ slug: string }> }
 
 async function findProduct(slug: string) {
   const catalog = await getCatalog()
-  return findCatalogProduct(catalog.products, slug)
+  return { product: findCatalogProduct(catalog.products, slug), mode: catalog.mode }
 }
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params
-  const product = await findProduct(slug)
-  if (!product)
-    return { title: 'Không tìm thấy sản phẩm | A.I.R', robots: { index: false, follow: true } }
+  const { product } = await findProduct(slug)
+  if (!product) return { title: 'Không tìm thấy sản phẩm', robots: { index: false, follow: true } }
   const url = `/san-pham/${encodeURIComponent(product.slug)}`
-  const description = `${product.name} — giá tham khảo ${product.pricePerDayVnd.toLocaleString('vi-VN')} ₫/ngày. ${product.description}`
+  const description = `${product.name} — thuê ${product.pricePerDayVnd.toLocaleString('vi-VN')} ₫/ngày. ${product.description}`
   return {
     title: `${product.name} | A.I.R`,
     description,
@@ -42,8 +41,9 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params
-  const [product, viewer] = await Promise.all([findProduct(slug), readViewerFavorites()])
+  const [{ product, mode }, viewer] = await Promise.all([findProduct(slug), readViewerFavorites()])
   if (!product) notFound()
+  const previewMode = mode === 'local-sample'
   const detailHref = `/san-pham/${encodeURIComponent(product.slug)}`
 
   const canonical = absoluteAppUrl(`/san-pham/${encodeURIComponent(product.slug)}`)
@@ -69,9 +69,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         unitText: 'DAY',
       },
       url: canonical,
-      description: product.isSample
-        ? 'Giá minh hoạ, không phải báo giá thuê.'
-        : 'Giá tham khảo theo ngày.',
+      description: 'Giá thuê theo ngày.',
     }
   }
 
@@ -87,9 +85,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </nav>
         {product.isSample && (
           <aside className="catalog-sample-note" role="note">
-            <strong>Sản phẩm tham khảo • giá và kho là dữ liệu mẫu</strong>
+            <strong>Thiết bị xem trước</strong>
             <span>
-              Thông số liên kết tới nhà sản xuất; chưa có xác nhận máy này sẵn sàng cho thuê.
+              {previewMode
+                ? 'Thông tin và giá đang ở chế độ xem trước cục bộ. Bạn vẫn có thể thử quy trình thuê trên trình duyệt.'
+                : 'Thông tin mang tính tham khảo. Thiết bị này chưa được mở nhận đặt thuê.'}
             </span>
           </aside>
         )}
@@ -102,11 +102,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               priority
               sizes="(max-width: 760px) 100vw, 55vw"
             />
-            {product.isSample && (
-              <span className="catalog-sample-badge">
-                {product.imageCredit ? 'ẢNH THAM KHẢO' : 'ẢNH MẪU'}
-              </span>
-            )}
+            {product.isSample && <span className="catalog-sample-badge">Ảnh tham khảo</span>}
           </div>
           {product.imageCredit && (
             <p className="catalog-image-credit">
@@ -133,11 +129,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </p>
             )}
             <div className="detail-price">
-              {product.pricePerDayVnd.toLocaleString('vi-VN')} ₫{' '}
-              <small>/ ngày · giá tham khảo</small>
+              {product.pricePerDayVnd.toLocaleString('vi-VN')} ₫ <small>/ ngày</small>
             </div>
             <p className="catalog-deposit">
-              Tiền cọc tham khảo: {product.depositVnd.toLocaleString('vi-VN')} ₫
+              Tiền cọc: {product.depositVnd.toLocaleString('vi-VN')} ₫
             </p>
             <h2>Thông số</h2>
             <dl className="catalog-spec-list">
@@ -149,16 +144,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
               ))}
             </dl>
             <div className="catalog-boundary-note">
-              {product.isSample
-                ? 'Sản phẩm mẫu chỉ để xem; không thể đặt thuê. Giá và cọc là số liệu minh họa.'
-                : 'Sản phẩm này có trong backend catalog. Bước đặt thuê cần tài khoản và unit fixture khả dụng trên Supabase local; không tạo giao dịch hay giao nhận thật.'}
+              {product.isSample && !previewMode
+                ? 'Thiết bị này đang ở chế độ tham khảo và chưa mở nhận đặt thuê. Giá và cọc hiển thị để bạn tham khảo.'
+                : 'Thiết bị được kiểm tra tình trạng trước khi bàn giao. Lịch và tồn kho được xác nhận lại khi bạn hoàn tất đơn thuê.'}
             </div>
             <div className="detail-actions">
               <Link className="secondary" href="/san-pham">
                 Quay lại danh mục
               </Link>
-              {product.isSample ? (
-                <span className="sample-booking-disabled">Mẫu tham khảo — chưa nhận đặt thuê</span>
+              {product.isSample && !previewMode ? (
+                <span className="sample-booking-disabled">Chưa mở nhận đặt thuê</span>
               ) : (
                 <AddRentalButton productId={product.id} />
               )}

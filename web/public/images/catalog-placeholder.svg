@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 640" role="img" aria-labelledby="title desc">
-  <title id="title">Ảnh catalog minh hoạ</title>
-  <desc id="desc">Ảnh mẫu sẽ được thay bằng ảnh sản phẩm đã có quyền sử dụng.</desc>
+  <title id="title">Ảnh thiết bị A.I.R</title>
+  <desc id="desc">Ảnh đại diện cho thiết bị công nghệ cho thuê tại A.I.R.</desc>
   <rect width="960" height="640" rx="32" fill="#eef3fb"/>
   <g fill="none" stroke="#1769ff" stroke-linecap="round" stroke-linejoin="round" stroke-width="12">
     <rect x="350" y="185" width="260" height="190" rx="18"/>
@@ -8,5 +8,5 @@
     <circle cx="480" cy="280" r="37"/>
     <path d="m425 340 37-34 31 27 38-42 48 49"/>
   </g>
-  <text x="480" y="525" fill="#405578" font-family="Arial,sans-serif" font-size="27" font-weight="700" text-anchor="middle">ẢNH SẢN PHẨM MẪU</text>
+  <text x="480" y="525" fill="#405578" font-family="Arial,sans-serif" font-size="27" font-weight="700" text-anchor="middle">A.I.R RENTAL</text>
 </svg>

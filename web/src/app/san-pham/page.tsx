@@ -14,18 +14,16 @@ import {
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const catalog = await getCatalog()
-  const hasSampleProducts = catalog.products.some((product) => product.isSample)
   return {
-    title: 'Catalog minh họa | A.I.R',
-    description: 'Khám phá catalog học tập và dữ liệu minh họa của đồ án A.I.R.',
+    title: 'Thiết bị cho thuê',
+    description:
+      'Khám phá laptop, điện thoại, máy ảnh, tablet và phụ kiện công nghệ cho thuê theo ngày tại A.I.R.',
     alternates: { canonical: '/san-pham' },
-    robots: hasSampleProducts ? { index: false, follow: true } : undefined,
     openGraph: {
-      title: 'Catalog đồ án | A.I.R',
-      description: 'Catalog dữ liệu minh họa của đồ án A.I.R.',
+      title: 'Thiết bị cho thuê | A.I.R',
+      description: 'Laptop, máy ảnh, điện thoại và phụ kiện cho thuê theo ngày.',
       url: '/san-pham',
-      images: [{ url: '/images/catalog-placeholder.svg', alt: 'Ảnh catalog A.I.R' }],
+      images: [{ url: '/images/catalog-placeholder.svg', alt: 'Thiết bị cho thuê tại A.I.R' }],
       type: 'website',
     },
   }
@@ -63,8 +61,8 @@ export default async function CatalogPage({
         </nav>
         <div className="page-heading">
           <div>
-            <span className="eyebrow">Catalog đồ án</span>
-            <h1>Khám phá sản phẩm</h1>
+            <span className="eyebrow">Danh mục thiết bị</span>
+            <h1>Thuê thiết bị công nghệ</h1>
             <p>{products.length} thiết bị phù hợp với lựa chọn của bạn</p>
           </div>
         </div>
@@ -89,13 +87,13 @@ export default async function CatalogPage({
           <aside className="catalog-sample-note" role="note">
             <strong>
               {catalog.mode === 'local-sample'
-                ? 'Chế độ xem trước • dữ liệu mẫu'
-                : 'Có sản phẩm mẫu trong catalog'}
+                ? 'Chế độ xem trước cục bộ'
+                : 'Một số thiết bị đang ở chế độ xem trước'}
             </strong>
             <span>
               {catalog.mode === 'local-sample'
-                ? 'Catalog này là nội dung tham khảo; giá, cọc và số lượng không đại diện hàng có thật. Sample không thể đặt thuê.'
-                : 'Các sản phẩm có nhãn MẪU không thể đặt. Sản phẩm backend không phải bằng chứng quyền sở hữu hay giao nhận; checkout chỉ dùng fixture local trong bài tập.'}
+                ? 'Danh mục đang hiển thị dữ liệu mẫu để xem trước giao diện và quy trình thuê. Giá, cọc và tình trạng máy không phải cam kết cung cấp.'
+                : 'Các thiết bị có nhãn Tham khảo chỉ để xem thông tin. Thiết bị còn lại có thể đặt thuê và được kiểm tra tồn kho khi xác nhận.'}
             </span>
           </aside>
         )}
@@ -175,7 +173,7 @@ export default async function CatalogPage({
                     sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw"
                   />
                   <span className={product.isSample ? 'catalog-sample-badge' : 'available'}>
-                    {product.isSample ? 'MẪU' : 'Catalog'}
+                    {product.isSample ? 'Tham khảo' : 'Có sẵn'}
                   </span>
                 </Link>
                 {product.imageCredit && (
@@ -246,8 +244,8 @@ export default async function CatalogPage({
         )}
 
         <p className="catalog-footer-note">
-          Chưa hỗ trợ đặt thuê trực tuyến. Giá hiển thị chỉ để tham khảo.{' '}
-          <Link href="/">Mở bản demo riêng (không chuyển sản phẩm)</Link>
+          Cần tư vấn chọn máy? Xem <Link href="/huong-dan">hướng dẫn thuê</Link> hoặc mở chat để
+          được gợi ý theo nhu cầu.
         </p>
       </section>
     </main>

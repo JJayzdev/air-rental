@@ -1,100 +1,249 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { BrandMark } from '@/components/ui/Icons'
+import { ArrowRight, Calendar, Check, Search } from '@/components/ui/Icons'
+import { SiteFooter } from '@/components/layout/site-footer'
+import { SiteHeader } from '@/components/layout/site-header'
+import { CatalogProductCard } from '@/features/products/catalog-product-card'
+import { getCatalog } from '@/features/products/catalog-server'
+import { CATALOG_CATEGORIES } from '@/features/products/catalog-data'
+
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'A.I.R — đồ án mô phỏng cho thuê thiết bị',
-  description: 'Đồ án học tập về giao diện và luồng phần mềm mô phỏng cho thuê thiết bị công nghệ.',
+  title: 'A.I.R — Thuê thiết bị công nghệ theo ngày',
+  description:
+    'Thuê laptop, điện thoại, máy ảnh, tablet và phụ kiện công nghệ theo ngày. Đặt lịch trực tuyến, nhận máy linh hoạt, không cần mua.',
+  alternates: { canonical: '/' },
+  openGraph: {
+    title: 'A.I.R — Thuê thiết bị công nghệ theo ngày',
+    description:
+      'Laptop, máy ảnh, điện thoại và phụ kiện cho công việc, sự kiện và chuyến đi. Đặt thuê theo ngày.',
+    url: '/',
+    type: 'website',
+  },
 }
 
-export default function HomePage() {
+const CATEGORY_ICONS: Record<string, string> = {
+  laptop: '▰',
+  phone: '▯',
+  camera: '◉',
+  tablet: '▱',
+  accessory: '⌁',
+}
+
+const BENEFITS = [
+  {
+    icon: '✓',
+    title: 'Thiết bị được kiểm tra',
+    text: 'Mỗi máy được vệ sinh và kiểm tra trước khi bàn giao.',
+  },
+  {
+    icon: '↻',
+    title: 'Linh hoạt theo ngày',
+    text: 'Thuê ngắn ngày cho công việc, sự kiện hoặc chuyến đi.',
+  },
+  {
+    icon: '♢',
+    title: 'Giá minh bạch',
+    text: 'Báo giá theo ngày, ưu đãi dài ngày và phí giao rõ ràng.',
+  },
+  {
+    icon: '◉',
+    title: 'Hỗ trợ nhanh',
+    text: 'Trợ lý trực tuyến và đội ngũ hỗ trợ trong giờ hoạt động.',
+  },
+]
+
+const STEPS = [
+  {
+    icon: <Search size={28} />,
+    title: 'Chọn thiết bị',
+    text: 'Tìm theo danh mục, so sánh cấu hình và thêm máy phù hợp vào giỏ thuê.',
+  },
+  {
+    icon: <Calendar size={28} />,
+    title: 'Chọn ngày nhận',
+    text: 'Chọn lịch nhận, trả và hình thức nhận máy. Giá được tính ngay khi chọn ngày.',
+  },
+  {
+    icon: <Check size={28} />,
+    title: 'Xác nhận và nhận máy',
+    text: 'Hoàn tất thông tin liên hệ, nhận xác nhận đơn và theo dõi trạng thái thuê.',
+  },
+]
+
+export default async function HomePage() {
+  const catalog = await getCatalog()
+  const featured = catalog.products.filter((product) => !product.isSample).slice(0, 4)
+  const showcase = featured.length ? featured : catalog.products.slice(0, 4)
+  const heroProduct = showcase[0] ?? catalog.products[0]
+  const floatingOne = showcase[1] ?? heroProduct
+  const floatingTwo = showcase[2] ?? heroProduct
+
   return (
     <>
-      <header className="header">
-        <div className="shell header-inner catalog-header-inner">
-          <Link className="plain logo-button" href="/" aria-label="A.I.R — giới thiệu đồ án">
-            <span className="brand">
-              <span className="brand-mark">
-                <BrandMark />
-              </span>
-              <strong>A.I.R</strong>
-            </span>
-          </Link>
-          <nav className="desktop-nav catalog-site-nav" aria-label="Điều hướng đồ án">
-            <Link href="/san-pham">Catalog</Link>
-            <Link href="/huong-dan">Hướng dẫn</Link>
-            <Link href="/chinh-sach">Kịch bản</Link>
-            <Link href="/demo">Prototype cũ</Link>
-          </nav>
-        </div>
-      </header>
-      <main className="shell rental-page academic-home">
-        <section className="academic-hero">
-          <p className="eyebrow">Đồ án học tập · Prototype UI/UX</p>
-          <h1>A.I.R — mô phỏng luồng thuê thiết bị công nghệ</h1>
-          <p className="academic-lead">
-            Khám phá cách một giao diện có thể dẫn người dùng từ catalog đến giỏ thuê và tài khoản.
-            Bản trình bày chính dùng Next.js; các bước backend chỉ chạy với fixture Supabase local.
-          </p>
-          <p className="rental-notice" role="note">
-            Đây là sản phẩm học tập. Catalog mặc định dùng dữ liệu mẫu; không có thiết bị, giao
-            dịch, khách hàng hay dịch vụ thương mại được xác nhận. Sản phẩm sample không thể đặt
-            thuê.
-          </p>
-          <div className="academic-hero-actions">
-            <Link className="primary" href="/san-pham">
-              Khám phá catalog mẫu
-            </Link>
-            <Link className="secondary" href="/huong-dan">
-              Cách demo đồ án
-            </Link>
+      <SiteHeader active="home" />
+
+      <main>
+        <section className="hero">
+          <div className="orb orb-a" />
+          <div className="orb orb-b" />
+          <div className="shell hero-grid">
+            <div className="hero-copy">
+              <span className="eyebrow">Thuê thiết bị công nghệ theo ngày</span>
+              <h1>
+                Thiết bị bạn cần, <em>đúng lúc bạn cần.</em>
+              </h1>
+              <p>
+                Laptop cho dự án gấp, máy ảnh cho chuyến đi, điện thoại cho sự kiện — thuê theo
+                ngày, nhận máy nhanh, không phải đầu tư một khoản lớn.
+              </p>
+              <div className="hero-actions">
+                <Link className="primary" href="/san-pham">
+                  Khám phá thiết bị <ArrowRight />
+                </Link>
+                <Link className="secondary" href="/huong-dan">
+                  Cách thuê
+                </Link>
+              </div>
+              <div className="trust">
+                <span>
+                  <b>{catalog.products.length}+</b> thiết bị
+                </span>
+                <span>
+                  <b>5</b> danh mục
+                </span>
+                <span>
+                  <b>30 phút</b> giữ máy khi đặt
+                </span>
+              </div>
+            </div>
+
+            <div className="hero-visual">
+              {heroProduct && (
+                <div className="hero-card">
+                  <Image
+                    src={heroProduct.imageUrls[0]}
+                    alt={heroProduct.imageAlt || heroProduct.name}
+                    fill
+                    priority
+                    sizes="(max-width: 900px) 80vw, 480px"
+                  />
+                  <span className="price-chip">
+                    Chỉ từ
+                    <b>{heroProduct.pricePerDayVnd.toLocaleString('vi-VN')} ₫/ngày</b>
+                  </span>
+                </div>
+              )}
+              {floatingOne && (
+                <Image
+                  className="floating-product phone"
+                  src={floatingOne.imageUrls[0]}
+                  alt={floatingOne.imageAlt || floatingOne.name}
+                  width={210}
+                  height={250}
+                />
+              )}
+              {floatingTwo && (
+                <Image
+                  className="floating-product camera"
+                  src={floatingTwo.imageUrls[0]}
+                  alt={floatingTwo.imageAlt || floatingTwo.name}
+                  width={210}
+                  height={250}
+                />
+              )}
+            </div>
           </div>
         </section>
 
-        <nav aria-label="Các khu vực của đồ án" className="academic-demo-grid">
-          <Link className="rental-panel" href="/san-pham">
-            <span className="eyebrow">Catalog chính</span>
-            <h2>Khám phá thiết bị mẫu</h2>
-            <p>Tìm kiếm, lọc danh mục và xem thông tin tham khảo. Sample không bookable.</p>
-            <span className="guide-read-more">Mở catalog →</span>
-          </Link>
-          <Link className="rental-panel" href="/gio-thue">
-            <span className="eyebrow">Luồng thuê</span>
-            <h2>Giỏ thuê</h2>
-            <p>Giỏ Next.js tách riêng; checkout cần tài khoản, sản phẩm test và Supabase local.</p>
-            <span className="guide-read-more">Xem giỏ →</span>
-          </Link>
-          <Link className="rental-panel" href="/don-thue">
-            <span className="eyebrow">Tài khoản</span>
-            <h2>Đơn thuê test</h2>
-            <p>Đăng nhập local để xem đơn fixture thuộc tài khoản đó.</p>
-            <span className="guide-read-more">Mở đơn thuê →</span>
-          </Link>
-          <Link className="rental-panel" href="/huong-dan">
-            <span className="eyebrow">Tài liệu</span>
-            <h2>Hướng dẫn đồ án</h2>
-            <p>Xem cách demo, các giả định và giới hạn dữ liệu.</p>
-            <span className="guide-read-more">Đọc hướng dẫn →</span>
-          </Link>
-          <Link className="rental-panel" href="/chinh-sach">
-            <span className="eyebrow">Tình huống học tập</span>
-            <h2>Chính sách mô phỏng</h2>
-            <p>Năm kịch bản cho bài tập, không phải điều kiện kinh doanh thật.</p>
-            <span className="guide-read-more">Xem kịch bản →</span>
-          </Link>
-          <Link className="rental-panel" href="/demo">
-            <span className="eyebrow">Prototype cũ</span>
-            <h2>Bản demo giao diện local</h2>
-            <p>Trải nghiệm riêng dùng localStorage và dữ liệu hư cấu trong trình duyệt.</p>
-            <span className="guide-read-more">Mở prototype →</span>
-          </Link>
-        </nav>
+        <section className="categories shell" aria-label="Danh mục thiết bị">
+          <div className="category-row">
+            {CATALOG_CATEGORIES.filter((category) => category.slug !== 'all').map((category) => (
+              <Link
+                className="category-chip"
+                key={category.slug}
+                href={`/san-pham?danh-muc=${category.slug}`}
+              >
+                <span>{CATEGORY_ICONS[category.slug] ?? '✦'}</span>
+                {category.name}
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="section shell">
+          <div className="section-head">
+            <div>
+              <span className="eyebrow">Sản phẩm nổi bật</span>
+              <h2>Thiết bị được chọn nhiều</h2>
+            </div>
+            <Link href="/san-pham">
+              Xem tất cả <ArrowRight />
+            </Link>
+          </div>
+          <div className="product-grid">
+            {showcase.map((product) => (
+              <CatalogProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        </section>
+
+        <section className="benefits">
+          <div className="shell benefits-grid">
+            {BENEFITS.map((benefit) => (
+              <div className="benefit" key={benefit.title}>
+                <span>{benefit.icon}</span>
+                <div>
+                  <h3>{benefit.title}</h3>
+                  <p>{benefit.text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section id="how" className="section shell how">
+          <div className="section-head">
+            <div>
+              <span className="eyebrow">Quy trình thuê</span>
+              <h2>Ba bước để nhận thiết bị</h2>
+            </div>
+          </div>
+          <div className="steps">
+            {STEPS.map((step, index) => (
+              <div className="step" key={step.title}>
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                <div className="step-icon">{step.icon}</div>
+                <h3>{step.title}</h3>
+                <p>{step.text}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="subsection shell home-cta">
+          <div>
+            <span className="eyebrow">Sẵn sàng cho kế hoạch tiếp theo</span>
+            <h2>Chọn thiết bị phù hợp và giữ lịch ngay hôm nay</h2>
+            <p>
+              Giỏ thuê được lưu trên trình duyệt. Bạn có thể chọn ngày, xem báo giá và hoàn tất
+              thông tin nhận máy trong vài phút.
+            </p>
+          </div>
+          <div className="home-cta-actions">
+            <Link className="primary" href="/san-pham">
+              Bắt đầu chọn máy
+            </Link>
+            <Link className="secondary" href="/gio-thue">
+              Mở giỏ thuê
+            </Link>
+          </div>
+        </section>
       </main>
-      <footer className="catalog-site-footer">
-        <div className="shell copyright">
-          A.I.R · Prototype UI/UX phi thương mại · Dữ liệu minh họa
-        </div>
-      </footer>
+
+      <SiteFooter />
     </>
   )
 }

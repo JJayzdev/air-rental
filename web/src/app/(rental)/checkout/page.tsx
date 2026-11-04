@@ -41,10 +41,12 @@ export default async function CheckoutPage() {
         <h1>Thông tin nhận thiết bị</h1>
       </div>
       <p className="rental-notice">
-        Yêu cầu thuê sẽ giữ thiết bị trong 30 phút để chờ xác nhận. Chưa thu tiền trực tuyến.
+        Yêu cầu thuê sẽ giữ thiết bị trong 30 phút để A.I.R xác nhận tồn kho và liên hệ với bạn.
       </p>
       <p className="rental-policy-note">
-        Thông tin VAT chưa xác nhận; xem <Link href="/chinh-sach">chính sách dự thảo</Link>.
+        Bằng việc gửi yêu cầu, bạn đồng ý với{' '}
+        <Link href="/chinh-sach/dieu-khoan-thue">điều khoản thuê</Link> và{' '}
+        <Link href="/chinh-sach/huy-don-hoan-coc">chính sách hủy đơn, hoàn cọc</Link>.
       </p>
       <RentalCartPanel
         products={catalog.products}
