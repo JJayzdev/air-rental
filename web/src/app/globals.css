@@ -590,7 +590,7 @@ button {
   height: 100%;
 }
 .price-chip {
-  z-index: 3;
+  z-index: 5;
   box-shadow: var(--shadow);
   background: #fff;
   border-radius: 14px;
@@ -3923,6 +3923,10 @@ footer {
   color: var(--blue);
   width: 26px;
   height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
 }
 .category-row .category-chip:hover {
   color: var(--blue);
