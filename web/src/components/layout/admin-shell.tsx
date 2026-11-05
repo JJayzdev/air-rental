@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState } from 'react'
 import { BrandMark } from '@/components/ui/Icons'
 import { signOut } from '@/features/auth/actions'
 
@@ -69,6 +70,7 @@ export function AdminShell({
   const isAdmin = role === 'admin'
   const displayName = name.trim() || email
   const initial = displayName.charAt(0).toUpperCase()
+  const [accountOpen, setAccountOpen] = useState(false)
 
   return (
     <div className="admin-shell">
@@ -83,14 +85,34 @@ export function AdminShell({
           </span>
         </Link>
 
-        <div className="admin-profile">
-          <span className="admin-avatar" aria-hidden>
-            {initial}
-          </span>
-          <div>
-            <strong>{displayName}</strong>
-            <small>{isAdmin ? 'Quản trị viên' : 'Nhân viên'}</small>
-          </div>
+        <div className="admin-profile-wrap">
+          <button
+            aria-expanded={accountOpen}
+            className="admin-profile"
+            onClick={() => setAccountOpen((value) => !value)}
+            type="button"
+          >
+            <span className="admin-avatar" aria-hidden>
+              {initial}
+            </span>
+            <div>
+              <strong>{displayName}</strong>
+              <small>{isAdmin ? 'Quản trị viên' : 'Nhân viên'}</small>
+            </div>
+          </button>
+          {accountOpen && (
+            <div className="admin-account-menu">
+              <Link href="/admin" onClick={() => setAccountOpen(false)}>
+                Bảng điều khiển
+              </Link>
+              <Link href="/tai-khoan" onClick={() => setAccountOpen(false)}>
+                Tài khoản của tôi
+              </Link>
+              <form action={signOut}>
+                <button type="submit">Đăng xuất</button>
+              </form>
+            </div>
+          )}
         </div>
 
         <nav className="admin-nav" aria-label="Điều hướng quản trị">

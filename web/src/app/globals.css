@@ -4038,14 +4038,48 @@ footer {
   letter-spacing: 1.6px;
   text-transform: uppercase;
 }
+.admin-profile-wrap {
+  position: relative;
+}
+.admin-account-menu {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 12px;
+  background: #0d234f;
+}
+.admin-account-menu a,
+.admin-account-menu button {
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: #dbe5f7;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  background: transparent;
+  cursor: pointer;
+}
+.admin-account-menu a:hover,
+.admin-account-menu button:hover {
+  color: #fff;
+  background: rgb(255 255 255 / 10%);
+}
 .admin-profile {
   display: flex;
   align-items: center;
   gap: 11px;
+  width: 100%;
   padding: 12px;
   border: 1px solid rgb(255 255 255 / 10%);
   border-radius: 14px;
+  color: #dbe5f7;
+  font: inherit;
+  text-align: left;
   background: rgb(255 255 255 / 5%);
+  cursor: pointer;
 }
 .admin-avatar {
   display: grid;
