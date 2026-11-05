@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { BrandMark } from '@/components/ui/Icons'
-import { signOut } from '@/features/auth/actions'
+import { AccountMenu } from '@/components/layout/account-menu'
 import { getVerifiedAppRole } from '@/lib/supabase/auth'
 import { supabaseIsConfigured } from '@/lib/supabase/server'
 
@@ -20,7 +20,6 @@ export async function SiteHeader({ active }: { active?: SiteSection }) {
     ? await getVerifiedAppRole().catch(() => ({ user: null, role: null }))
     : { user: null, role: null }
   const { user, role } = session
-  const isStaff = role === 'staff' || role === 'admin'
 
   return (
     <header className="header site-header">
@@ -49,24 +48,19 @@ export async function SiteHeader({ active }: { active?: SiteSection }) {
               Đơn của tôi
             </Link>
           )}
-          {isStaff && <Link href="/quan-ly-don">Quản lý đơn</Link>}
-          {isStaff && <Link href="/admin">Quản trị</Link>}
         </nav>
 
         <div className="site-header-actions">
           {user ? (
-            <>
-              <Link
-                className="site-account-link"
-                href="/tai-khoan"
-                aria-current={active === 'account' ? 'page' : undefined}
-              >
-                Tài khoản
-              </Link>
-              <form action={signOut} className="rental-signout">
-                <button type="submit">Đăng xuất</button>
-              </form>
-            </>
+            <AccountMenu
+              email={user.email ?? ''}
+              name={
+                typeof user.user_metadata?.full_name === 'string'
+                  ? user.user_metadata.full_name
+                  : ''
+              }
+              role={role}
+            />
           ) : (
             <Link className="site-account-link" href="/dang-nhap">
               Đăng nhập
