@@ -494,15 +494,7 @@ export const SAMPLE_CATALOG: CatalogProduct[] = SAMPLE_ROWS.map(
     depositVnd,
     specifications,
     sourceUrl,
-    imageUrls: [
-      slug === 'canon-eos-r50'
-        ? '/images/catalog/canon-eos-r50.jpg'
-        : slug === 'sony-a6400'
-          ? '/images/catalog/sony-a6400.jpg'
-          : slug === 'iphone-16-pro'
-            ? '/images/catalog/iphone-16-pro.jpg'
-            : `/images/catalog/category-${categorySlug}.svg`,
-    ],
+    imageUrls: [`/images/catalog/${slug}.jpg`],
     imageAlt: SAMPLE_IMAGE_CREDITS[slug]
       ? `Ảnh tham khảo ${name}; không phải máy bàn giao`
       : 'Ảnh minh hoạ catalog mẫu, chưa phải ảnh sản phẩm',
