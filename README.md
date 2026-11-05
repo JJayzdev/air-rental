@@ -13,7 +13,6 @@ Thư mục gốc vẫn giữ bản Vite tĩnh để tham chiếu giao diện và
 | ------------------ | ------------------------------------------------------ |
 | Ứng dụng đầy đủ    | https://air-rental.vercel.app                          |
 | Giao diện tĩnh     | https://jjayzdev.github.io/air-rental/                 |
-| Supabase (backend) | project `iseenbdkqnzzhqttazne`, region `ap-southeast-1` |
 
 Bản Vercel dùng Supabase Cloud, có đăng nhập, đặt thuê, tồn kho và quản trị. Bản GitHub Pages chỉ
 là giao diện tĩnh, không có backend.
