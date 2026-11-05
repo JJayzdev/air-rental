@@ -87,7 +87,10 @@ const registerPartnerSchema = z
   })
   .strict()
 
-export async function registerPartner(formData: FormData): Promise<never> {
+export async function registerPartner(
+  _prevState: { success: boolean; error: string | null } | null,
+  formData: FormData,
+): Promise<{ success: boolean; error: string | null }> {
   const parsed = registerPartnerSchema.safeParse({
     fullName: formData.get('fullName'),
     email: formData.get('email'),
@@ -98,7 +101,9 @@ export async function registerPartner(formData: FormData): Promise<never> {
     password: formData.get('password'),
     acceptedTerms: formData.get('acceptedTerms'),
   })
-  if (!parsed.success) redirect('/dang-ky-doi-tac?error=invalid')
+  if (!parsed.success) {
+    return { success: false, error: 'Vui lòng kiểm tra lại thông tin đăng ký.' }
+  }
 
   const supabase = await createSupabaseServerClient()
   const { error: authError, data } = await supabase.auth.signUp({
@@ -115,7 +120,9 @@ export async function registerPartner(formData: FormData): Promise<never> {
       },
     },
   })
-  if (authError || !data?.user) redirect('/dang-ky-doi-tac?error=auth')
+  if (authError || !data?.user) {
+    return { success: false, error: 'Không tạo được tài khoản. Email có thể đã được sử dụng.' }
+  }
   const userId = (data.user as any).id
 
   const { error } = await (supabase as any).from('partners').insert([
@@ -129,9 +136,11 @@ export async function registerPartner(formData: FormData): Promise<never> {
       status: 'pending',
     },
   ])
-  if (error) redirect('/dang-ky-doi-tac?error=db')
+  if (error) {
+    return { success: false, error: 'Lưu hồ sơ đối tác không thành công. Vui lòng thử lại sau.' }
+  }
 
   await (supabase as any).from('profiles').update({ role: 'partner' }).eq('id', userId)
 
-  redirect('/dang-ky-doi-tac?sent=1')
+  return { success: true, error: null }
 }
