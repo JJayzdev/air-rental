@@ -70,7 +70,7 @@ export async function SiteHeader({ active }: { active?: SiteSection }) {
                 Đăng nhập
               </Link>
               <Link className="partner-join-link" href="/dang-ky-doi-tac">
-                Đăng ký đối tác
+                Trở thành đối tác của A.I.R ngay hôm nay!
               </Link>
             </>
           )}

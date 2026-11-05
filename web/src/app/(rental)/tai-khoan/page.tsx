@@ -17,11 +17,13 @@ export default async function AccountPage({
   const { supabase, user } = await requireVerifiedUser('/tai-khoan')
   const { data: profile, error } = await supabase
     .from('profiles')
-    .select('full_name,phone')
+    .select('full_name,phone,role')
     .eq('id', user.id)
     .maybeSingle()
   if (error) throw new Error('Không tải được hồ sơ tài khoản. Vui lòng thử lại.')
   const params = await searchParams
+
+  const isPartner = profile?.role === 'partner'
 
   return (
     <main className="shell rental-page">
@@ -42,6 +44,12 @@ export default async function AccountPage({
       {params.profile === 'failed' && (
         <p className="rental-error" role="alert">
           Chưa cập nhật được hồ sơ. Vui lòng thử lại.
+        </p>
+      )}
+      {isPartner && (
+        <p className="rental-message" role="status">
+          Bạn đã là đối tác của A.I.R. Truy cập <Link href="/partner">Bảng điều khiển đối tác</Link>{' '}
+          để quản lý sản phẩm và doanh thu.
         </p>
       )}
       <section className="rental-panel rental-account-panel">
@@ -73,6 +81,18 @@ export default async function AccountPage({
           </button>
         </form>
       </section>
+      {!isPartner && (
+        <section className="rental-panel rental-account-panel">
+          <h2>Trở thành đối tác A.I.R</h2>
+          <p>
+            Có thiết bị rảnh rỗi (laptop, máy ảnh, điện thoại, tablet, phụ kiện…)? Đăng ký đối tác
+            để đưa thiết bị của bạn lên sàn cho thuê A.I.R và nhận doanh thu từ mỗi đơn thuê.
+          </p>
+          <Link className="partner-account-link" href="/dang-ky-doi-tac">
+            Trở thành đối tác của A.I.R ngay hôm nay!
+          </Link>
+        </section>
+      )}
       <section className="rental-panel rental-account-panel">
         <h2>Địa chỉ nhận hàng</h2>
         <p>Quản lý địa chỉ giao máy và chọn địa chỉ mặc định cho lần đặt thuê tiếp theo.</p>
