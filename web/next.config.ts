@@ -6,6 +6,12 @@ const projectRoot = dirname(fileURLToPath(import.meta.url))
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseOrigin = supabaseUrl ? new URL(supabaseUrl) : null
 
+const unsplashPattern = {
+  protocol: 'https' as const,
+  hostname: 'images.unsplash.com',
+  pathname: '/**',
+}
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   experimental: { serverActions: { bodySizeLimit: '6mb' } },
@@ -15,6 +21,7 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: supabaseOrigin
       ? [
+          unsplashPattern,
           {
             protocol: supabaseOrigin.protocol.slice(0, -1) as 'http' | 'https',
             hostname: supabaseOrigin.hostname,
@@ -22,7 +29,7 @@ const nextConfig: NextConfig = {
             pathname: '/storage/v1/object/public/**',
           },
         ]
-      : [],
+      : [unsplashPattern],
   },
 }
 

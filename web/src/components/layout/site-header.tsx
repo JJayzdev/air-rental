@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import { BrandMark } from '@/components/ui/Icons'
+import { BrandMark, Cart, Search, User } from '@/components/ui/Icons'
 import { AccountMenu } from '@/components/layout/account-menu'
+import { CartBadge } from '@/components/layout/cart-badge'
 import { getVerifiedAppRole } from '@/lib/supabase/auth'
 import { supabaseIsConfigured } from '@/lib/supabase/server'
 
@@ -10,10 +11,26 @@ export type SiteSection =
 const PRIMARY_LINKS: Array<{ href: string; label: string; section: SiteSection }> = [
   { href: '/', label: 'Trang chủ', section: 'home' },
   { href: '/san-pham', label: 'Sản phẩm', section: 'products' },
-  { href: '/huong-dan', label: 'Hướng dẫn', section: 'guides' },
+  { href: '/huong-dan', label: 'Cách thức thuê', section: 'guides' },
   { href: '/chinh-sach', label: 'Chính sách', section: 'policies' },
-  { href: '/gio-thue', label: 'Giỏ thuê', section: 'cart' },
 ]
+
+function SearchForm() {
+  return (
+    <form action="/san-pham" method="get" role="search" className="header-search-form">
+      <label className="header-search">
+        <Search />
+        <input
+          type="search"
+          name="q"
+          placeholder="Bạn muốn thuê thiết bị nào?"
+          aria-label="Tìm thiết bị"
+          maxLength={80}
+        />
+      </label>
+    </form>
+  )
+}
 
 export async function SiteHeader({ active }: { active?: SiteSection }) {
   const session = supabaseIsConfigured()
@@ -53,7 +70,28 @@ export async function SiteHeader({ active }: { active?: SiteSection }) {
           )}
         </nav>
 
+        <SearchForm />
+
         <div className="site-header-actions">
+          {!user && (
+            <Link
+              className="icon-button"
+              href="/tai-khoan"
+              aria-label="Tài khoản"
+              aria-current={active === 'account' ? 'page' : undefined}
+            >
+              <User />
+            </Link>
+          )}
+          <Link
+            className="icon-button cart-icon"
+            href="/gio-thue"
+            aria-label="Giỏ thuê"
+            aria-current={active === 'cart' ? 'page' : undefined}
+          >
+            <Cart />
+            <CartBadge />
+          </Link>
           {user ? (
             <AccountMenu
               email={user.email ?? ''}
@@ -65,11 +103,15 @@ export async function SiteHeader({ active }: { active?: SiteSection }) {
               role={role}
             />
           ) : (
-            <Link className="site-account-link" href="/dang-nhap">
+            <Link className="login desktop-only" href="/dang-nhap">
               Đăng nhập
             </Link>
           )}
         </div>
+      </div>
+
+      <div className="mobile-search shell">
+        <SearchForm />
       </div>
     </header>
   )

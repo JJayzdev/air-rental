@@ -590,16 +590,15 @@ button {
   height: 100%;
 }
 .price-chip {
-  z-index: 5;
   box-shadow: var(--shadow);
   background: #fff;
   border-radius: 14px;
   padding: 10px 14px;
   font-size: 11px;
   position: absolute;
-  top: 20px;
+  bottom: 20px;
   left: 20px;
-  transform: rotate(-8deg);
+  z-index: 2;
 }
 .price-chip b {
   color: var(--blue);
@@ -1940,7 +1939,8 @@ footer {
   .hero-copy > p {
     font-size: 15px;
   }
-  .hero-actions button {
+  .hero-actions button,
+  .hero-actions a {
     padding: 11px 13px;
     font-size: 12px;
   }
@@ -3821,7 +3821,75 @@ footer {
   }
 }
 
+@keyframes air-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes air-card {
+  from {
+    transform: translateY(18px) rotate(2deg);
+  }
+  to {
+    transform: rotate(2deg);
+  }
+}
+@keyframes air-pop {
+  from {
+    opacity: 0;
+    transform: translateY(14px) rotate(var(--rot, 0deg)) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(var(--rot, 0deg)) scale(1);
+  }
+}
+@keyframes air-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--rot, 0deg));
+  }
+  50% {
+    transform: translateY(-7px) rotate(var(--rot, 0deg));
+  }
+}
+.hero-copy {
+  animation: air-rise 0.6s ease-out both;
+}
+.hero-card {
+  animation: air-card 0.6s ease-out both;
+}
+.hero-card .price-chip {
+  animation: air-rise 0.6s 0.5s ease-out both;
+}
+.floating-product {
+  --rot: 0deg;
+  transform: rotate(var(--rot));
+  animation:
+    air-pop 0.6s 0.35s ease-out both,
+    air-bob 5s 1s ease-in-out infinite;
+}
+.floating-product.phone {
+  --rot: 7deg;
+  transform: rotate(var(--rot));
+}
+.floating-product.camera {
+  --rot: -6deg;
+  transform: rotate(var(--rot));
+  animation-delay: 0.5s, 1.8s;
+}
 @media (prefers-reduced-motion: reduce) {
+  .hero-copy,
+  .hero-card,
+  .hero-card .price-chip,
+  .floating-product {
+    animation: none !important;
+  }
   *,
   *::before,
   *::after {
@@ -3835,69 +3903,75 @@ footer {
 /* --- Site chrome, homepage and catalog polish --- */
 .site-header-inner {
   align-items: center;
-  gap: 14px;
+  gap: 18px;
 }
 .site-header-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-left: auto;
+  gap: 18px;
 }
-.site-account-link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 38px;
-  padding: 8px 14px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  color: var(--navy);
-  font-weight: 700;
+.site-header .icon-button {
   text-decoration: none;
-  background: #fff;
-  white-space: nowrap;
 }
-.site-account-link:hover {
-  color: var(--blue);
-  border-color: var(--blue);
+.site-header .login {
+  text-decoration: none;
+  white-space: nowrap;
 }
 .site-nav a[aria-current='page'] {
   color: var(--blue);
   font-weight: 800;
 }
+.site-header-inner > .header-search-form {
+  margin-left: auto;
+}
+.site-header .header-search-form .header-search {
+  margin: 0;
+}
+.site-header .header-search input::-webkit-search-cancel-button {
+  display: none;
+}
 @media (max-width: 900px) {
+  .site-header {
+    height: auto;
+  }
   .site-header .site-header-inner {
     height: auto;
-    min-height: 62px;
+    min-height: 58px;
     flex-wrap: wrap;
-    padding: 9px 0;
-    gap: 6px 12px;
+    padding: 6px 0 0;
+    gap: 4px 12px;
   }
-  .site-header .site-nav {
-    order: 3;
-    width: 100%;
-    margin-left: 0;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 4px 16px;
+  .site-header .desktop-only,
+  .site-header-inner > .header-search-form {
+    display: none;
   }
-  .site-header .site-nav a {
-    font-size: 12px;
+  .site-header .logo-button {
+    margin-right: auto;
+  }
+  .site-header .desktop-nav {
+    display: flex;
+    order: 5;
+    flex: 0 0 100%;
+    margin: 0;
+    gap: 18px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    white-space: nowrap;
+  }
+  .site-header .desktop-nav a {
+    font-size: 13px;
+    padding: 6px 0;
+  }
+  .site-header .mobile-search {
+    padding-bottom: 10px;
   }
   .site-header-actions {
-    margin-left: 0;
+    gap: 6px;
   }
 }
-@media (max-width: 520px) {
-  .site-header .site-nav {
-    gap: 2px 12px;
-  }
-  .site-header .site-nav a {
-    font-size: 11px;
-  }
-  .site-account-link {
-    min-height: 34px;
-    padding: 6px 11px;
-    font-size: 12px;
+@media (max-width: 560px) {
+  .site-header-actions {
+    gap: 4px;
   }
 }
 .category-row .category-chip {
@@ -3910,22 +3984,21 @@ footer {
   border-radius: 18px;
   justify-content: center;
   align-items: center;
-  gap: 6px;
-  flex-direction: column;
+  gap: 10px;
+  flex-direction: row;
+  flex: none;
   font-weight: 700;
   display: flex;
   text-decoration: none;
   box-shadow: 0 8px 30px #08265c0f;
-  transition:
-    transform 160ms ease,
-    border-color 160ms ease,
-    color 160ms ease;
+  transition: all 0.2s;
 }
 .category-row .category-chip span,
 .category-row .category-chip svg {
   color: var(--blue);
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3935,6 +4008,12 @@ footer {
   color: var(--blue);
   border-color: var(--blue);
   transform: translateY(-3px);
+}
+@media (max-width: 900px) {
+  .category-row .category-chip {
+    min-width: 125px;
+    height: 72px;
+  }
 }
 .section-head > a {
   color: var(--blue);
@@ -4067,7 +4146,7 @@ footer {
   background: #0e4fd1;
 }
 .site-header-actions .account-avatar {
-  margin-top: 18px;
+  margin: 0;
 }
 .account-dropdown {
   position: absolute;

@@ -3,10 +3,20 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { ArrowRight, Calendar, Check, Search } from '@/components/ui/Icons'
 import { SiteFooter } from '@/components/layout/site-footer'
+import Mascot from '@/components/ui/Mascot'
 import { SiteHeader } from '@/components/layout/site-header'
 import { CatalogProductCard } from '@/features/products/catalog-product-card'
 import { getCatalog } from '@/features/products/catalog-server'
 import { CATALOG_CATEGORIES } from '@/features/products/catalog-data'
+
+const unsplash = (id: string) =>
+  `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=900&q=85`
+
+const HERO = {
+  image: unsplash('1565630916779-e303be97b6f5'),
+  phone: unsplash('1711967299865-c88350fddb70'),
+  camera: unsplash('1516035069371-29a1b244cc32'),
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -33,6 +43,14 @@ function CategoryIcon({ slug }: { slug: string }) {
     strokeLinecap: 'round' as const,
     strokeLinejoin: 'round' as const,
     'aria-hidden': true,
+  }
+  if (slug === 'all') {
+    return (
+      <svg {...common}>
+        <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z" />
+        <path d="M19 16v4M17 18h4" />
+      </svg>
+    )
   }
   if (slug === 'laptop') {
     return (
@@ -123,9 +141,10 @@ export default async function HomePage() {
   const catalog = await getCatalog()
   const featured = catalog.products.filter((product) => !product.isSample).slice(0, 4)
   const showcase = featured.length ? featured : catalog.products.slice(0, 4)
-  const heroProduct = showcase[0] ?? catalog.products[0]
-  const floatingOne = showcase[1] ?? heroProduct
-  const floatingTwo = showcase[2] ?? heroProduct
+  const minPrice = catalog.products.length
+    ? Math.min(...catalog.products.map((product) => product.pricePerDayVnd))
+    : 0
+  const priceLabel = minPrice > 0 ? `${Math.round(minPrice / 1000)}K/ngày` : ''
 
   return (
     <>
@@ -137,28 +156,25 @@ export default async function HomePage() {
           <div className="orb orb-b" />
           <div className="shell hero-grid">
             <div className="hero-copy">
-              <span className="eyebrow">Thuê thiết bị công nghệ theo ngày</span>
+              <span className="eyebrow">Thuê thông minh • Sống linh hoạt</span>
               <h1>
-                Thiết bị bạn cần, <em>đúng lúc bạn cần.</em>
+                Công nghệ trong tầm tay, <em>thuê dễ dàng.</em>
               </h1>
               <p>
-                Laptop cho dự án gấp, máy ảnh cho chuyến đi, điện thoại cho sự kiện — thuê theo
-                ngày, nhận máy nhanh, không phải đầu tư một khoản lớn.
+                Thuê thiết bị công nghệ linh hoạt, tiết kiệm và nhanh chóng. Không cần mua, vẫn
+                luôn được trải nghiệm mới nhất.
               </p>
               <div className="hero-actions">
                 <Link className="primary" href="/san-pham">
                   Khám phá thiết bị <ArrowRight />
                 </Link>
                 <Link className="secondary" href="/huong-dan">
-                  Cách thuê
+                  Cách thức thuê
                 </Link>
               </div>
               <div className="trust">
                 <span>
                   <b>{catalog.products.length}+</b> thiết bị
-                </span>
-                <span>
-                  <b>5</b> danh mục
                 </span>
                 <span>
                   <b>30 phút</b> giữ máy khi đặt
@@ -167,52 +183,47 @@ export default async function HomePage() {
             </div>
 
             <div className="hero-visual">
-              {heroProduct && (
-                <div className="hero-card">
-                  <Image
-                    src={heroProduct.imageUrls[0]}
-                    alt={heroProduct.imageAlt || heroProduct.name}
-                    fill
-                    priority
-                    sizes="(max-width: 900px) 80vw, 480px"
-                  />
-                </div>
-              )}
-              {heroProduct && (
-                <span className="price-chip">
-                  Chỉ từ
-                  <b>{heroProduct.pricePerDayVnd.toLocaleString('vi-VN')} ₫/ngày</b>
-                </span>
-              )}
-              {floatingOne && (
+              <div className="hero-card">
                 <Image
-                  className="floating-product phone"
-                  src={floatingOne.imageUrls[0]}
-                  alt={floatingOne.imageAlt || floatingOne.name}
-                  width={210}
-                  height={250}
+                  src={HERO.image}
+                  alt="Laptop và thiết bị công nghệ cho thuê"
+                  fill
+                  priority
+                  sizes="(max-width: 900px) 80vw, 480px"
                 />
-              )}
-              {floatingTwo && (
-                <Image
-                  className="floating-product camera"
-                  src={floatingTwo.imageUrls[0]}
-                  alt={floatingTwo.imageAlt || floatingTwo.name}
-                  width={210}
-                  height={250}
-                />
-              )}
+                {priceLabel && (
+                  <span className="price-chip">
+                    Chỉ từ <b>{priceLabel}</b>
+                  </span>
+                )}
+              </div>
+              <Image
+                className="floating-product phone"
+                src={HERO.phone}
+                alt="Điện thoại thông minh"
+                sizes="105px"
+                width={210}
+                height={250}
+              />
+              <Image
+                className="floating-product camera"
+                src={HERO.camera}
+                alt="Máy ảnh"
+                sizes="105px"
+                width={210}
+                height={250}
+              />
             </div>
           </div>
         </section>
 
         <section className="categories shell" aria-label="Danh mục thiết bị">
           <div className="category-row">
-            {CATALOG_CATEGORIES.filter((category) => category.slug !== 'all').map((category) => (
+            {CATALOG_CATEGORIES.map((category) => (
               <Link
                 className="category-chip"
                 key={category.slug}
-                href={`/san-pham?danh-muc=${category.slug}`}
+                href={category.slug === 'all' ? '/san-pham' : `/san-pham?danh-muc=${category.slug}`}
               >
                 <CategoryIcon slug={category.slug} />
                 {category.name}
@@ -288,6 +299,20 @@ export default async function HomePage() {
               Mở giỏ thuê
             </Link>
           </div>
+        </section>
+
+        <section className="support shell">
+          <div>
+            <span className="eyebrow">A.I.R luôn bên bạn</span>
+            <h2>Cần tư vấn thiết bị phù hợp?</h2>
+            <p>
+              Đội ngũ hỗ trợ và trợ lý A.I.R sẵn sàng giải đáp về sản phẩm, giá và quy trình thuê.
+            </p>
+            <Link className="primary" href="/huong-dan">
+              Xem hướng dẫn thuê
+            </Link>
+          </div>
+          <Mascot />
         </section>
       </main>
 
