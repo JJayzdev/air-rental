@@ -6,6 +6,8 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { getVerifiedAppRole } from '@/lib/supabase/auth'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
+import type { Database } from '@/lib/supabase/database'
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const vndAmount = (min: number, max: number) =>
@@ -125,7 +127,16 @@ export async function registerPartner(
   }
   const userId = (data.user as any).id
 
-  const { error } = await (supabase as any).from('partners').insert([
+  // Dùng service role key để viết database (bypass RLS) vì session sau signUp
+  // có thể chưa được gán vào supabase client trong cùng action.
+  const serviceUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceUrl || !serviceKey) {
+    return { success: false, error: 'Hệ thống chưa cấu hình khóa bảo mật.' }
+  }
+  const serviceSupabase = createClient<Database>(serviceUrl, serviceKey)
+
+  const { error } = await (serviceSupabase as any).from('partners').insert([
     {
       user_id: userId,
       display_name: parsed.data.fullName,
@@ -140,7 +151,7 @@ export async function registerPartner(
     return { success: false, error: 'Lưu hồ sơ đối tác không thành công. Vui lòng thử lại sau.' }
   }
 
-  await (supabase as any).from('profiles').update({ role: 'partner' }).eq('id', userId)
+  await (serviceSupabase as any).from('profiles').update({ role: 'partner' }).eq('id', userId)
 
   return { success: true, error: null }
 }
