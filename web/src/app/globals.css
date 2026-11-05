@@ -749,6 +749,7 @@ button {
   position: absolute;
   top: 12px;
   left: 12px;
+  z-index: 2;
 }
 .favorite {
   width: 34px;
@@ -3915,9 +3916,11 @@ footer {
     border-color 160ms ease,
     color 160ms ease;
 }
-.category-row .category-chip span {
+.category-row .category-chip span,
+.category-row .category-chip svg {
   color: var(--blue);
-  font-size: 24px;
+  width: 26px;
+  height: 26px;
 }
 .category-row .category-chip:hover {
   color: var(--blue);

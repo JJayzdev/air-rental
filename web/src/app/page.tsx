@@ -24,12 +24,58 @@ export const metadata: Metadata = {
   },
 }
 
-const CATEGORY_ICONS: Record<string, string> = {
-  laptop: '▰',
-  phone: '▯',
-  camera: '◉',
-  tablet: '▱',
-  accessory: '⌁',
+function CategoryIcon({ slug }: { slug: string }) {
+  const common = {
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.8,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    'aria-hidden': true,
+  }
+  if (slug === 'laptop') {
+    return (
+      <svg {...common}>
+        <rect x="3" y="4" width="18" height="12" rx="2" />
+        <path d="M2 19h20" />
+      </svg>
+    )
+  }
+  if (slug === 'phone') {
+    return (
+      <svg {...common}>
+        <rect x="7" y="3" width="10" height="18" rx="2" />
+        <path d="M11 18h2" />
+      </svg>
+    )
+  }
+  if (slug === 'camera') {
+    return (
+      <svg {...common}>
+        <path d="M4 7h4l2-3h4l2 3h4v11H4z" />
+        <circle cx="12" cy="13" r="3.5" />
+      </svg>
+    )
+  }
+  if (slug === 'tablet') {
+    return (
+      <svg {...common}>
+        <rect x="5" y="3" width="14" height="18" rx="2" />
+        <path d="M11 18h2" />
+      </svg>
+    )
+  }
+  if (slug === 'accessory') {
+    return (
+      <svg {...common}>
+        <path d="M8 7V5a4 4 0 0 1 8 0v2" />
+        <rect x="3" y="7" width="18" height="13" rx="2" />
+        <circle cx="12" cy="13.5" r="2.5" />
+      </svg>
+    )
+  }
+  return <span aria-hidden>+</span>
 }
 
 const BENEFITS = [
@@ -166,7 +212,7 @@ export default async function HomePage() {
                 key={category.slug}
                 href={`/san-pham?danh-muc=${category.slug}`}
               >
-                <span>{CATEGORY_ICONS[category.slug] ?? '✦'}</span>
+                <CategoryIcon slug={category.slug} />
                 {category.name}
               </Link>
             ))}
