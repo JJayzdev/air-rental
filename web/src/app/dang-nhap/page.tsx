@@ -11,10 +11,15 @@ export const metadata: Metadata = {
   title: 'Đăng nhập',
 }
 
+const ERROR_MESSAGES: Record<string, string> = {
+  link: 'Liên kết đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng gửi mã OTP mới.',
+  unavailable: 'Chưa kết nối được hệ thống đăng nhập. Vui lòng thử lại sau.',
+}
+
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>
+  searchParams: Promise<{ next?: string; error?: string }>
 }) {
   const params = await searchParams
   const next = safeInternalPath(
@@ -24,6 +29,7 @@ export default async function SignInPage({
   )
   const { user } = await getVerifiedUser().catch(() => ({ user: null }))
   if (user) redirect(next)
+  const errorMessage = params.error ? ERROR_MESSAGES[params.error] : undefined
   return (
     <main className="shell rental-page">
       <nav className="rental-breadcrumb">
@@ -33,7 +39,8 @@ export default async function SignInPage({
       <section className="rental-panel rental-auth-panel">
         <p className="eyebrow">Tài khoản A.I.R</p>
         <h1>Đăng nhập để đặt thuê</h1>
-        <p>Dùng email đã đăng ký để nhận liên kết đăng nhập dùng một lần.</p>
+        <p>Nhập email đã đăng ký để nhận mã OTP, sau đó nhập mã để đăng nhập.</p>
+        {errorMessage && <p className="rental-error">{errorMessage}</p>}
         <LoginForm next={next} phoneOtpEnabled={process.env.AIR_ENABLE_PHONE_OTP === 'true'} />
       </section>
     </main>

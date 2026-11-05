@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import type { EmailOtpType } from '@supabase/supabase-js'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { safeInternalPath } from '@/lib/safe-internal-path'
+import { syncRegistrationProfile } from '@/features/auth/registration-profile'
 
 const EMAIL_OTP_TYPES = new Set<EmailOtpType>([
   'magiclink',
@@ -37,6 +38,8 @@ export async function GET(request: NextRequest) {
       const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
       if (error) return NextResponse.redirect(new URL('/dang-nhap?error=link', request.url))
     }
+    const { data } = await supabase.auth.getUser()
+    if (data.user) await syncRegistrationProfile(supabase, data.user)
     return NextResponse.redirect(new URL(next, request.url))
   } catch {
     return NextResponse.redirect(new URL('/dang-nhap?error=unavailable', request.url))

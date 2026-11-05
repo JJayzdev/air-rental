@@ -13,6 +13,7 @@ export default function robots(): MetadataRoute.Robots {
           '/gio-thue',
           '/checkout',
           '/dang-nhap',
+          '/dang-ky',
           '/tai-khoan',
           '/don-thue',
           '/yeu-thich',
