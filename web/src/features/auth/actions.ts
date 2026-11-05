@@ -79,6 +79,8 @@ export async function registerAccount(
             province: parsed.data.province,
           },
           registration_synced: false,
+          terms_accepted: true,
+          terms_accepted_at: new Date().toISOString(),
         },
       },
     })
