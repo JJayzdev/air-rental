@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import ChatLauncher from '@/components/layout/ChatLauncher'
 import ChatWidget from './ChatWidget'
 import type { View } from '@/types'
@@ -17,6 +17,19 @@ const nextPath: Record<View, string> = {
   account: '/tai-khoan',
 }
 
+/** Khu quản trị dùng giao diện riêng nên không hiển thị trợ lý của khách hàng. */
+function isAdminArea(pathname: string | null) {
+  if (!pathname) return false
+  return (
+    pathname === '/admin' ||
+    pathname.startsWith('/admin/') ||
+    pathname === '/quan-ly-don' ||
+    pathname.startsWith('/quan-ly-don/') ||
+    pathname === '/quan-ly-giay-to' ||
+    pathname.startsWith('/quan-ly-giay-to/')
+  )
+}
+
 export default function ChatAssistant({
   llmEnabled = false,
   offlineFaq = false,
@@ -26,6 +39,8 @@ export default function ChatAssistant({
 }) {
   const [open, setOpen] = useState(false)
   const router = useRouter()
+  const pathname = usePathname()
+  if (isAdminArea(pathname)) return null
   return (
     <>
       {!open && <ChatLauncher onOpen={() => setOpen(true)} />}

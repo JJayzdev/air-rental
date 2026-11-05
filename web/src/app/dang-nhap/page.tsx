@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { LoginForm } from './login-form'
-import { getVerifiedUser } from '@/lib/supabase/auth'
+import { defaultLandingPath } from '@/features/auth/landing-path'
+import { getVerifiedAppRole } from '@/lib/supabase/auth'
 import { safeInternalPath } from '@/lib/safe-internal-path'
 import type { Metadata } from 'next'
 
@@ -24,11 +25,14 @@ export default async function SignInPage({
   const params = await searchParams
   const next = safeInternalPath(
     params.next,
-    '/don-thue',
+    '',
     process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   )
-  const { user } = await getVerifiedUser().catch(() => ({ user: null }))
-  if (user) redirect(next)
+  const { supabase, user } = await getVerifiedAppRole().catch(() => ({
+    supabase: null,
+    user: null,
+  }))
+  if (user && supabase) redirect(next || (await defaultLandingPath(supabase, user.id)))
   const errorMessage = params.error ? ERROR_MESSAGES[params.error] : undefined
   return (
     <main className="shell rental-page">

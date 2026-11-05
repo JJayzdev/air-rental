@@ -42,7 +42,7 @@ export default function ChatWidget({
       id: nextId(),
       role: 'bot',
       text: offlineFaq
-        ? 'Xin chào! Mình là FAQ local của đồ án A.I.R. Dữ liệu trong bản demo là giả lập.'
+        ? 'Xin chào! Mình là trợ lý A.I.R. Bạn cần tư vấn thiết bị, giá thuê hay cách đặt thuê?'
         : GREETING,
       time: 'Bây giờ',
     },

@@ -30,7 +30,7 @@ export default async function AdminMaintenancePage({
   )
 
   return (
-    <main className="shell rental-page rental-admin">
+    <main className="admin-page rental-admin">
       <div className="rental-heading">
         <p className="eyebrow">Vận hành</p>
         <h1>Bảo trì thiết bị</h1>

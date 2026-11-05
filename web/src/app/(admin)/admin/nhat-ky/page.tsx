@@ -18,7 +18,7 @@ export default async function AdminAuditPage() {
   const events = await listAdminAuditEvents(supabase)
 
   return (
-    <main className="shell rental-page rental-admin">
+    <main className="admin-page rental-admin">
       <div className="rental-heading">
         <p className="eyebrow">Vận hành</p>
         <h1>Nhật ký hoạt động</h1>

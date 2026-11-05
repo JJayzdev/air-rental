@@ -8,6 +8,7 @@ const initialState: EmailOtpActionState = { message: '' }
 
 export function RegisterForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState(registerAccount, initialState)
+  const nextQuery = next ? `?next=${encodeURIComponent(next)}` : ''
 
   if (state.sent && state.email) {
     return (
@@ -21,7 +22,7 @@ export function RegisterForm({ next }: { next: string }) {
           trong email để đăng nhập.
         </p>
         <p className="rental-auth-actions">
-          <Link className="primary" href={`/dang-nhap?next=${encodeURIComponent(next)}`}>
+          <Link className="primary" href={`/dang-nhap${nextQuery}`}>
             Nhập mã OTP để hoàn tất
           </Link>
         </p>
@@ -150,8 +151,7 @@ export function RegisterForm({ next }: { next: string }) {
       )}
 
       <p className="rental-auth-switch">
-        Đã có tài khoản?{' '}
-        <Link href={`/dang-nhap?next=${encodeURIComponent(next)}`}>Đăng nhập bằng OTP</Link>
+        Đã có tài khoản? <Link href={`/dang-nhap${nextQuery}`}>Đăng nhập bằng OTP</Link>
       </p>
     </form>
   )

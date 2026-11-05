@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import type { EmailOtpType } from '@supabase/supabase-js'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { safeInternalPath } from '@/lib/safe-internal-path'
+import { defaultLandingPath } from '@/features/auth/landing-path'
 import { syncRegistrationProfile } from '@/features/auth/registration-profile'
 
 const EMAIL_OTP_TYPES = new Set<EmailOtpType>([
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
   const rawType = request.nextUrl.searchParams.get('type')
   const next = safeInternalPath(
     request.nextUrl.searchParams.get('next'),
-    '/don-thue',
+    '',
     request.nextUrl.origin,
   )
   if (!code && !tokenHash)
@@ -40,7 +41,9 @@ export async function GET(request: NextRequest) {
     }
     const { data } = await supabase.auth.getUser()
     if (data.user) await syncRegistrationProfile(supabase, data.user)
-    return NextResponse.redirect(new URL(next, request.url))
+    const destination =
+      next || (data.user ? await defaultLandingPath(supabase, data.user.id) : '/don-thue')
+    return NextResponse.redirect(new URL(destination, request.url))
   } catch {
     return NextResponse.redirect(new URL('/dang-nhap?error=unavailable', request.url))
   }

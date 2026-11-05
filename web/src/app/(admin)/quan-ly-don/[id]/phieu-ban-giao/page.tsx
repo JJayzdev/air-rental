@@ -24,7 +24,7 @@ export default async function HandoverSheetPage({ params }: { params: Promise<{ 
   const units = await listAssignedUnitsForOrders(supabase, [order.id])
 
   return (
-    <main className="shell rental-page rental-invoice rental-handover">
+    <main className="admin-page rental-invoice rental-handover">
       <nav className="rental-breadcrumb rental-no-print">
         <Link href="/quan-ly-don">Quản lý đơn</Link>
         <span> / Phiếu bàn giao</span>

@@ -17,33 +17,39 @@ const FAQ_FALLBACK =
   'Mình chưa hiểu rõ câu hỏi. Bạn có thể hỏi về thiết bị, giá thuê, giao nhận, đặt cọc, hoàn trả hoặc cách đặt thuê nhé.'
 export const isKnownFaq = (text: string) => buildReply(text).text !== FAQ_FALLBACK
 
-/** Local-only FAQ used by the no-backend demo; it never reads accounts or catalog data. */
+/** Local-only FAQ used when the chat backend is not configured. */
 export const buildDemoReply = (text: string): ChatReply => {
   const t = text.toLowerCase()
   if (/(giá|bao nhiêu|tính tiền|chi phí|cọc)/.test(t)) {
     return {
-      text: 'Giá và tiền cọc trong bản demo là số liệu minh họa, không phải báo giá hoặc khoản cần thanh toán.',
+      text: 'Giá thuê theo ngày và tiền cọc được ghi rõ trên trang từng thiết bị. Bạn có thể xem tổng chi phí trước khi xác nhận đơn.',
+      action: { label: 'Xem thiết bị', view: 'products' },
     }
   }
   if (/(đơn|kiểm tra|trạng thái)/.test(t)) {
     return {
-      text: 'Trang đơn thuê cần Supabase local và tài khoản test. Catalog mẫu mặc định không tạo được đơn.',
-      action: { label: 'Mở luồng đơn thuê', view: 'orders' },
+      text: 'Sau khi đăng nhập, bạn xem được trạng thái đơn, lịch nhận máy và tiến độ hoàn cọc trong mục Đơn của tôi.',
+      action: { label: 'Mở đơn thuê', view: 'orders' },
     }
   }
   if (/(cách|quy trình|đặt thuê|book)/.test(t)) {
     return {
-      text: 'Catalog mẫu chỉ để xem và không thể đặt thuê. Bài checkout cần sản phẩm test không phải sample, một unit khả dụng và tài khoản trong Supabase local.',
-      action: { label: 'Xem catalog mẫu', view: 'products' },
+      text: 'Chọn thiết bị và ngày thuê, thêm vào giỏ, đăng nhập rồi điền thông tin nhận máy. A.I.R sẽ liên hệ xác nhận lịch giao trước khi bàn giao.',
+      action: { label: 'Xem thiết bị', view: 'products' },
     }
   }
-  if (/(dữ liệu|mẫu|sample|thật)/.test(t)) {
+  if (/(giao|nhận|ship|vận chuyển)/.test(t)) {
     return {
-      text: 'Dữ liệu trong prototype là giả lập. Không có thiết bị, khách hàng hay giao dịch thật được xác nhận. Xem hướng dẫn demo để biết giới hạn.',
+      text: 'A.I.R giao máy tận nơi trong khu vực hỗ trợ. Phí giao hiển thị ở bước đặt thuê, bạn cũng có thể chọn nhận tại cửa hàng.',
+    }
+  }
+  if (/(hoàn|trả|hỏng|bảo hành|sự cố)/.test(t)) {
+    return {
+      text: 'Khi trả máy, nhân viên kiểm tra tình trạng cùng bạn. Thiết bị hư hỏng do sử dụng sai có thể phát sinh phí theo chính sách thuê.',
     }
   }
   return {
-    text: 'Mình đang ở chế độ FAQ local. Hãy hỏi về dữ liệu mẫu, giá minh họa, catalog hoặc giới hạn checkout.',
+    text: 'Mình có thể tư vấn về thiết bị, giá thuê, đặt cọc, giao nhận, hoàn trả và cách đặt thuê. Bạn muốn hỏi mục nào?',
   }
 }
 
@@ -53,40 +59,40 @@ export const buildReply = (text: string, _context: { orders?: Order[] } = {}): C
 
   if (/(giá|bao nhiêu|tính tiền|chi phí)/.test(t)) {
     return {
-      text: 'Giá trong catalog là dữ liệu minh họa. Chỉ bài fixture Supabase local mới có thể tính thử checkout; không có báo giá hoặc khoản thanh toán thật.',
-      action: { label: 'Xem catalog đồ án', view: 'products' },
+      text: 'Giá thuê theo ngày và tiền cọc được ghi rõ trên trang từng thiết bị. Tổng chi phí, phí giao và ưu đãi được tính lại ở bước đặt thuê.',
+      action: { label: 'Xem thiết bị', view: 'products' },
     }
   }
 
   if (/(cách|quy trình|3 bước|đặt thuê)/.test(t)) {
     return {
-      text: 'Catalog sample không thể đặt thuê. Bài checkout cần tài khoản local, sản phẩm test không phải sample và unit khả dụng.',
-      action: { label: 'Xem catalog mẫu', view: 'products' },
+      text: 'Chọn thiết bị và ngày thuê, thêm vào giỏ, đăng nhập rồi điền thông tin nhận máy. A.I.R sẽ liên hệ xác nhận lịch giao trước khi bàn giao.',
+      action: { label: 'Xem thiết bị', view: 'products' },
     }
   }
 
   if (/(đơn|kiểm tra|trạng thái)/.test(t)) {
     return {
-      text: 'Trang đơn chỉ đọc đơn fixture thuộc tài khoản Supabase local đã đăng nhập.',
-      action: { label: 'Mở trang đơn test', view: 'orders' },
+      text: 'Sau khi đăng nhập, bạn xem được trạng thái đơn, lịch nhận máy và tiến độ hoàn cọc trong mục Đơn của tôi.',
+      action: { label: 'Mở đơn thuê', view: 'orders' },
     }
   }
 
   if (/(cọc|đặt cọc|thanh toán)/.test(t)) {
     return {
-      text: 'Khoản cọc và thanh toán trong demo là dữ liệu fixture. Không chuyển tiền thật; trạng thái mock không phải chứng từ ngân hàng.',
+      text: 'Tiền cọc được thu khi bàn giao và hoàn lại sau khi kiểm tra thiết bị. Bạn có thể thanh toán khi nhận máy hoặc chuyển khoản theo hướng dẫn trên trang đơn.',
     }
   }
 
   if (/(giao|nhận|ship|vận chuyển)/.test(t)) {
     return {
-      text: 'Vùng giao hàng và phí trong bài checkout lấy từ fixture local, không tạo lịch giao nhận thật.',
+      text: 'A.I.R giao máy tận nơi trong khu vực hỗ trợ. Phí giao hiển thị ở bước đặt thuê, bạn cũng có thể chọn nhận tại cửa hàng.',
     }
   }
 
   if (/(hoàn|trả|hỏng|bảo hành|sự cố)/.test(t)) {
     return {
-      text: 'Bài tập có phiếu diễn tập giao nhận và xử lý sự cố. A.I.R trong đồ án không có kênh hỗ trợ hay bàn giao thiết bị thật.',
+      text: 'Khi trả máy, nhân viên kiểm tra tình trạng cùng bạn. Thiết bị hư hỏng do sử dụng sai có thể phát sinh phí theo chính sách thuê.',
     }
   }
 

@@ -24,7 +24,7 @@ export default async function StaffIdentityDocumentsPage({
   const params = await searchParams
   if (!identityDocumentsEnabled())
     return (
-      <main className="shell rental-page">
+      <main className="admin-page">
         <nav className="rental-breadcrumb">
           <Link href="/quan-ly-don">Quản lý đơn</Link>
           <span> / Giấy tờ</span>
@@ -53,7 +53,7 @@ export default async function StaffIdentityDocumentsPage({
   )
 
   return (
-    <main className="shell rental-page">
+    <main className="admin-page">
       <nav className="rental-breadcrumb">
         <Link href="/quan-ly-don">Quản lý đơn</Link>
         <span> / Giấy tờ</span>

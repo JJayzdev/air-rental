@@ -23,7 +23,7 @@ export default async function AdminDeliveryZonesPage({
   const params = await searchParams
 
   return (
-    <main className="shell rental-page rental-admin">
+    <main className="admin-page rental-admin">
       <div className="rental-heading">
         <p className="eyebrow">Quản trị</p>
         <h1>Khu vực giao hàng</h1>

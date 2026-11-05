@@ -61,7 +61,7 @@ export default async function StaffOrdersPage({
   const now = getServerNow()
   const pageCount = Math.max(1, Math.ceil(orderPage.totalCount / STAFF_ORDER_PAGE_SIZE))
   return (
-    <main className="shell rental-page">
+    <main className="admin-page">
       <div className="rental-heading">
         <p className="eyebrow">Nhân viên</p>
         <h1>Quản lý đơn thuê</h1>

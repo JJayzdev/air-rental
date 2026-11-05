@@ -4,6 +4,7 @@ import { absoluteAppUrl } from '@/features/products/catalog-seo'
 import { createSupabaseServerClient, supabaseIsConfigured } from '@/lib/supabase/server'
 import { safeInternalPath } from '@/lib/safe-internal-path'
 import { redirect } from 'next/navigation'
+import { defaultLandingPath } from './landing-path.ts'
 import { syncRegistrationProfile } from './registration-profile.ts'
 import {
   emailOtpRequestSchema,
@@ -33,6 +34,14 @@ function emailSendErrorMessage(message: string): string | null {
   return null
 }
 
+function authCallbackUrl(value: FormDataEntryValue | null): string {
+  if (typeof value !== 'string' || !value) return absoluteAppUrl('/auth/callback')
+  const next = safeInternalPath(value, '', appBaseUrl())
+  return next
+    ? absoluteAppUrl(`/auth/callback?next=${encodeURIComponent(next)}`)
+    : absoluteAppUrl('/auth/callback')
+}
+
 export async function registerAccount(
   _state: EmailOtpActionState,
   formData: FormData,
@@ -60,8 +69,7 @@ export async function registerAccount(
     }
   }
   try {
-    const next = safeInternalPath(formData.get('next'), '/don-thue', appBaseUrl())
-    const callback = absoluteAppUrl(`/auth/callback?next=${encodeURIComponent(next)}`)
+    const callback = authCallbackUrl(formData.get('next'))
     const supabase = await createSupabaseServerClient()
     const { error } = await supabase.auth.signInWithOtp({
       email: parsed.data.email,
@@ -109,8 +117,7 @@ export async function requestEmailOtp(
   const parsed = emailOtpRequestSchema.safeParse({ email: formData.get('email') })
   if (!parsed.success) return { error: true, message: 'Vui lòng nhập địa chỉ email hợp lệ.' }
   try {
-    const next = safeInternalPath(formData.get('next'), '/don-thue', appBaseUrl())
-    const callback = absoluteAppUrl(`/auth/callback?next=${encodeURIComponent(next)}`)
+    const callback = authCallbackUrl(formData.get('next'))
     const supabase = await createSupabaseServerClient()
     const { error } = await supabase.auth.signInWithOtp({
       email: parsed.data.email,
@@ -151,6 +158,7 @@ export async function verifyEmailOtp(
   if (!parsed.success) return { error: true, message: 'Vui lòng nhập đủ 6 chữ số của mã OTP.' }
 
   let verified = false
+  let destination = ''
   try {
     const supabase = await createSupabaseServerClient()
     let result = await supabase.auth.verifyOtp({
@@ -171,14 +179,16 @@ export async function verifyEmailOtp(
       return { error: true, message: 'Mã OTP không đúng hoặc đã hết hạn.' }
     }
     await syncRegistrationProfile(supabase, result.data.user)
+    const requested = safeInternalPath(formData.get('next'), '', appBaseUrl())
+    destination = requested || (await defaultLandingPath(supabase, result.data.user.id))
     verified = true
   } catch {
     return { error: true, message: 'Chưa xác minh được mã OTP. Vui lòng thử lại.' }
   }
-  if (!verified) return { error: true, message: 'Chưa xác minh được mã OTP. Vui lòng thử lại.' }
-
-  const next = safeInternalPath(formData.get('next'), '/don-thue', appBaseUrl())
-  redirect(next)
+  if (!verified || !destination) {
+    return { error: true, message: 'Chưa xác minh được mã OTP. Vui lòng thử lại.' }
+  }
+  redirect(destination)
 }
 
 export async function signOut() {
@@ -227,6 +237,7 @@ export async function verifyPhoneOtp(
   if (!parsed.success)
     return { error: true, message: 'Số điện thoại hoặc mã đăng nhập chưa hợp lệ.' }
   let verified = false
+  let destination = ''
   try {
     const supabase = await createSupabaseServerClient()
     const { data, error } = await supabase.auth.verifyOtp({
@@ -236,12 +247,13 @@ export async function verifyPhoneOtp(
     })
     if (error || !data.user)
       return { error: true, message: 'Mã đăng nhập không đúng hoặc đã hết hạn.' }
+    const requested = safeInternalPath(formData.get('next'), '', appBaseUrl())
+    destination = requested || (await defaultLandingPath(supabase, data.user.id))
     verified = true
   } catch {
     return { error: true, message: 'Chưa xác minh được mã đăng nhập. Vui lòng thử lại.' }
   }
-  if (!verified)
+  if (!verified || !destination)
     return { error: true, message: 'Chưa xác minh được mã đăng nhập. Vui lòng thử lại.' }
-  const next = safeInternalPath(formData.get('next'), '/don-thue', appBaseUrl())
-  redirect(next)
+  redirect(destination)
 }

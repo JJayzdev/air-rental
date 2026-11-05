@@ -17,6 +17,7 @@ export function LoginForm({
   const [sendState, sendAction, sending] = useActionState(requestEmailOtp, initialState)
   const [verifyState, verifyAction, verifying] = useActionState(verifyEmailOtp, initialState)
   const sentEmail = sendState.sent && sendState.email ? sendState.email : null
+  const nextQuery = next ? `?next=${encodeURIComponent(next)}` : ''
 
   if (!sentEmail) {
     return (
@@ -43,8 +44,7 @@ export function LoginForm({
           )}
         </form>
         <p className="rental-auth-switch">
-          Chưa có tài khoản?{' '}
-          <Link href={`/dang-ky?next=${encodeURIComponent(next)}`}>Đăng ký ngay</Link>
+          Chưa có tài khoản? <Link href={`/dang-ky${nextQuery}`}>Đăng ký ngay</Link>
         </p>
         {phoneOtpEnabled && <PhoneOtpForm next={next} />}
       </>
@@ -95,7 +95,7 @@ export function LoginForm({
             {sending ? 'Đang gửi lại…' : 'Gửi lại mã'}
           </button>
         </form>
-        <Link href={`/dang-nhap?next=${encodeURIComponent(next)}`}>Đổi email</Link>
+        <Link href={`/dang-nhap${nextQuery}`}>Đổi email</Link>
       </div>
       {sendState.message && (
         <p aria-live="polite" className={sendState.error ? 'rental-error' : 'rental-message'}>
