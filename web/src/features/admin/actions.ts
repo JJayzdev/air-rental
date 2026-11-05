@@ -14,6 +14,8 @@ import {
   maintenanceSchema,
 } from './admin-schema.ts'
 import { getVerifiedAppRole } from '@/lib/supabase/auth'
+import { createClient } from '@supabase/supabase-js'
+import type { Database } from '@/lib/supabase/database'
 function valueOf(formData: FormData, key: string) {
   const value = formData.get(key)
   return typeof value === 'string' ? value : ''
@@ -270,23 +272,51 @@ const partnerIdSchema = z.object({
 export async function approvePartner(formData: FormData): Promise<never> {
   const parsed = partnerIdSchema.safeParse({ partnerId: formData.get('partnerId') })
   if (!parsed.success) redirect('/admin/doi-tac?error=invalid')
-  const { supabase, user, role } = await getVerifiedAppRole()
+  const { user, role } = await getVerifiedAppRole()
   if (!user || role !== 'admin') redirect('/dang-nhap?next=%2Fadmin%2Fdoi-tac')
-  const { error } = await (supabase as any)
+
+  // Dùng service role key để cập nhật profiles (bypass RLS)
+  const serviceUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceUrl || !serviceKey) {
+    redirect('/admin/doi-tac?error=failed')
+  }
+  const serviceSupabase = createClient<Database>(serviceUrl, serviceKey)
+
+  // Lấy user_id từ partner
+  const { data: partner } = (await serviceSupabase
+    .from('partners')
+    .select('user_id')
+    .eq('id', parsed.data.partnerId)
+    .maybeSingle()) as { data: { user_id: string } | null }
+  if (!partner) redirect('/admin/doi-tac?error=failed')
+
+  const { error } = await (serviceSupabase as any)
     .from('partners')
     .update({ status: 'active' })
     .eq('id', parsed.data.partnerId)
-  revalidatePath('/admin/doi-tac')
   if (error) redirect('/admin/doi-tac?error=failed')
+
+  await serviceSupabase.from('profiles').update({ role: 'partner' }).eq('id', partner.user_id)
+
+  revalidatePath('/admin/doi-tac')
   redirect('/admin/doi-tac?saved=approved')
 }
 
 export async function rejectPartner(formData: FormData): Promise<never> {
   const parsed = partnerIdSchema.safeParse({ partnerId: formData.get('partnerId') })
   if (!parsed.success) redirect('/admin/doi-tac?error=invalid')
-  const { supabase, user, role } = await getVerifiedAppRole()
+  const { user, role } = await getVerifiedAppRole()
   if (!user || role !== 'admin') redirect('/dang-nhap?next=%2Fadmin%2Fdoi-tac')
-  const { error } = await (supabase as any)
+
+  const serviceUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceUrl || !serviceKey) {
+    redirect('/admin/doi-tac?error=failed')
+  }
+  const serviceSupabase = createClient<Database>(serviceUrl, serviceKey)
+
+  const { error } = await (serviceSupabase as any)
     .from('partners')
     .update({ status: 'rejected' })
     .eq('id', parsed.data.partnerId)
