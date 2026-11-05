@@ -18,6 +18,27 @@ function valueOf(formData: FormData, key: string) {
   return typeof value === 'string' ? value : ''
 }
 
+function parseAdminProductImages(value: string): string[] {
+  const urls = value
+    .split(/[\r\n,]+/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+  const result = urls.length > 0 ? urls : ['/images/catalog-placeholder.svg']
+  for (const url of result) {
+    if (url.startsWith('/images/') && !url.includes('..')) continue
+    let parsedUrl: URL
+    try {
+      parsedUrl = new URL(url)
+    } catch {
+      throw new Error('invalid image url')
+    }
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      throw new Error('invalid image url')
+    }
+  }
+  return result
+}
+
 async function requireRole(roles: Array<'staff' | 'admin'>, next: string) {
   const result = await getVerifiedAppRole().catch(() => ({
     supabase: null,
@@ -46,6 +67,7 @@ export async function saveAdminProduct(formData: FormData): Promise<never> {
     slug: valueOf(formData, 'slug'),
     name: valueOf(formData, 'name'),
     description: valueOf(formData, 'description'),
+    imageUrls: valueOf(formData, 'imageUrls'),
     pricePerDayVnd: valueOf(formData, 'pricePerDayVnd'),
     depositVnd: valueOf(formData, 'depositVnd'),
     state: valueOf(formData, 'state'),
@@ -55,11 +77,19 @@ export async function saveAdminProduct(formData: FormData): Promise<never> {
   if (!role) redirect('/admin?denied=admin')
   if (!parsed.success) redirect('/admin/san-pham?product=invalid')
 
+  let imageUrls: string[]
+  try {
+    imageUrls = parseAdminProductImages(parsed.data.imageUrls)
+  } catch {
+    redirect('/admin/san-pham?product=invalid')
+  }
+
   const payload = {
     category_id: parsed.data.categoryId,
     slug: parsed.data.slug,
     name: parsed.data.name,
     description: parsed.data.description,
+    image_urls: imageUrls,
     price_per_day_vnd: parsed.data.pricePerDayVnd,
     deposit_vnd: parsed.data.depositVnd,
     state: parsed.data.state,

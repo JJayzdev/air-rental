@@ -18,6 +18,7 @@ export interface AdminProductView {
   isSample: boolean
   pricePerDayVnd: number
   depositVnd: number
+  imageUrls: string[]
   unitCount: number
   availableUnits: number
 }
@@ -118,7 +119,9 @@ export async function listAdminCategories(supabase: ServerDbClient): Promise<Adm
 export async function listAdminProducts(supabase: ServerDbClient): Promise<AdminProductView[]> {
   const { data: products, error } = await supabase
     .from('products')
-    .select('id,slug,name,description,category_id,state,is_sample,price_per_day_vnd,deposit_vnd')
+    .select(
+      'id,slug,name,description,category_id,state,is_sample,price_per_day_vnd,deposit_vnd,image_urls',
+    )
     .order('name', { ascending: true })
   if (error || !products) throw new Error('Không tải được danh sách sản phẩm. Vui lòng thử lại.')
   const [{ data: categories, error: categoriesError }, { data: units, error: unitsError }] =
@@ -143,6 +146,7 @@ export async function listAdminProducts(supabase: ServerDbClient): Promise<Admin
       isSample: product.is_sample,
       pricePerDayVnd: Number(product.price_per_day_vnd),
       depositVnd: Number(product.deposit_vnd),
+      imageUrls: Array.isArray(product.image_urls) ? product.image_urls : [],
       unitCount: owned.length,
       availableUnits: owned.filter((unit) => unit.state === 'available').length,
     }

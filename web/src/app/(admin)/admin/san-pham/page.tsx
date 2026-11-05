@@ -78,6 +78,14 @@ export default async function AdminProductsPage({
             <textarea name="description" rows={2} />
           </label>
           <label>
+            Link ảnh (mỗi link một dòng)
+            <textarea
+              name="imageUrls"
+              placeholder="/images/catalog/may-anh.jpg&#10;https://..."
+              rows={3}
+            />
+          </label>
+          <label>
             Giá thuê / ngày (VND)
             <input inputMode="numeric" name="pricePerDayVnd" required />
           </label>
@@ -110,13 +118,19 @@ export default async function AdminProductsPage({
             {products.map((product) => (
               <article className="rental-panel rental-admin-item" key={product.id}>
                 <header>
-                  <div>
-                    <h3>{product.name}</h3>
-                    <p className="rental-admin-meta">
-                      {product.categoryName} · {product.slug} · {product.availableUnits}/
-                      {product.unitCount} máy sẵn sàng
-                      {product.isSample ? ' · dữ liệu mẫu' : ''}
-                    </p>
+                  <div className="admin-product-head">
+                    {product.imageUrls[0] && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img alt="" className="admin-product-thumb" src={product.imageUrls[0]} />
+                    )}
+                    <div>
+                      <h3>{product.name}</h3>
+                      <p className="rental-admin-meta">
+                        {product.categoryName} · {product.slug} · {product.availableUnits}/
+                        {product.unitCount} máy sẵn sàng
+                        {product.isSample ? ' · dữ liệu mẫu' : ''}
+                      </p>
+                    </div>
                   </div>
                   <span className={`rental-payment-badge is-${product.state}`}>
                     {PRODUCT_STATE_LABELS[product.state]}
@@ -150,6 +164,14 @@ export default async function AdminProductsPage({
                     <label>
                       Mô tả
                       <textarea defaultValue={product.description} name="description" rows={2} />
+                    </label>
+                    <label>
+                      Link ảnh (mỗi link một dòng)
+                      <textarea
+                        defaultValue={product.imageUrls.join('\\n')}
+                        name="imageUrls"
+                        rows={3}
+                      />
                     </label>
                     <label>
                       Giá thuê / ngày (VND)

@@ -47,6 +47,7 @@ export const adminProductSchema = z
     slug: z.string().trim().min(3).max(80).regex(slugPattern),
     name: z.string().trim().min(3).max(120),
     description: z.string().trim().max(2000),
+    imageUrls: z.string().trim().max(4000).optional().default(''),
     pricePerDayVnd: vndAmount(1000, 100_000_000),
     depositVnd: vndAmount(0, 200_000_000),
     state: z.enum(['draft', 'active', 'archived']),
