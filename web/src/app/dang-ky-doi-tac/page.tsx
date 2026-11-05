@@ -11,8 +11,9 @@ export const metadata: Metadata = {
 }
 
 export default async function PartnerRegisterPage() {
-  const { role } = await getVerifiedAppRole().catch(() => ({ role: null }))
+  const { user, role } = await getVerifiedAppRole().catch(() => ({ user: null, role: null }))
   if (role === 'partner') redirect('/partner')
+  if (!user) redirect('/dang-nhap?next=%2Fdang-ky-doi-tac')
 
   return (
     <main className="shell rental-page">

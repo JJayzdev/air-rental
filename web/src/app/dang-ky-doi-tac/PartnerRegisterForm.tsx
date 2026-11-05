@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useActionState } from 'react'
 import { registerPartner } from '@/features/partner/actions'
 
@@ -83,25 +82,11 @@ export function PartnerRegisterForm() {
               maxLength={1000}
             />
           </label>
-          <label>
-            Mật khẩu
-            <input name="password" type="password" required minLength={6} maxLength={128} />
-          </label>
-          <div className="rental-admin-check">
-            <input name="acceptedTerms" type="checkbox" required />
-            <span>
-              Tôi đồng ý với <Link href="/chinh-sach">điều khoản thuê</Link> và{' '}
-              <Link href="/chinh-sach">chính sách bảo mật</Link>.
-            </span>
-          </div>
           <button className="primary" type="submit" disabled={isPending}>
             {isPending ? 'Đang gửi…' : 'Gửi yêu cầu đăng ký'}
           </button>
         </form>
       )}
-      <p className="rental-auth-switch">
-        Đã có tài khoản? <Link href="/dang-nhap">Đăng nhập</Link>
-      </p>
     </>
   )
 }

@@ -5,7 +5,6 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { getVerifiedAppRole } from '@/lib/supabase/auth'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/database'
 
@@ -84,8 +83,6 @@ const registerPartnerSchema = z
     companyName: z.string().trim().min(2).max(120),
     taxCode: z.string().trim().max(30).optional().default(''),
     description: z.string().trim().max(1000).optional().default(''),
-    password: z.string().min(6).max(128),
-    acceptedTerms: z.literal('on'),
   })
   .strict()
 
@@ -100,35 +97,20 @@ export async function registerPartner(
     companyName: formData.get('companyName'),
     taxCode: formData.get('taxCode'),
     description: formData.get('description'),
-    password: formData.get('password'),
-    acceptedTerms: formData.get('acceptedTerms'),
   })
   if (!parsed.success) {
     return { success: false, error: 'Vui lòng kiểm tra lại thông tin đăng ký.' }
   }
 
-  const supabase = await createSupabaseServerClient()
-  const { error: authError, data } = await supabase.auth.signUp({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    options: {
-      data: {
-        full_name: parsed.data.fullName,
-        phone: parsed.data.phone,
-        role: 'partner',
-        partner_company: parsed.data.companyName,
-        partner_tax_code: parsed.data.taxCode,
-        partner_description: parsed.data.description,
-      },
-    },
-  })
-  if (authError || !data?.user) {
-    return { success: false, error: 'Không tạo được tài khoản. Email có thể đã được sử dụng.' }
+  const { user, role } = await getVerifiedAppRole()
+  if (!user) {
+    return { success: false, error: 'Vui lòng đăng nhập trước khi đăng ký đối tác.' }
   }
-  const userId = (data.user as any).id
+  if (role === 'partner') {
+    return { success: false, error: 'Bạn đã là đối tác.' }
+  }
 
-  // Dùng service role key để viết database (bypass RLS) vì session sau signUp
-  // có thể chưa được gán vào supabase client trong cùng action.
+  // Dùng service role key để viết database (bypass RLS)
   const serviceUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!serviceUrl || !serviceKey) {
@@ -136,9 +118,19 @@ export async function registerPartner(
   }
   const serviceSupabase = createClient<Database>(serviceUrl, serviceKey)
 
+  // Kiểm tra xem đã có hồ sơ đối tác cho user này chưa
+  const { data: existing } = await serviceSupabase
+    .from('partners')
+    .select('id')
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (existing) {
+    return { success: false, error: 'Bạn đã có hồ sơ đối tác.' }
+  }
+
   const { error } = await (serviceSupabase as any).from('partners').insert([
     {
-      user_id: userId,
+      user_id: user.id,
       display_name: parsed.data.fullName,
       email: parsed.data.email,
       phone: parsed.data.phone,
@@ -151,7 +143,7 @@ export async function registerPartner(
     return { success: false, error: 'Lưu hồ sơ đối tác không thành công. Vui lòng thử lại sau.' }
   }
 
-  await (serviceSupabase as any).from('profiles').update({ role: 'partner' }).eq('id', userId)
+  await (serviceSupabase as any).from('profiles').update({ role: 'partner' }).eq('id', user.id)
 
   return { success: true, error: null }
 }

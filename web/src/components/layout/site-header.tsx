@@ -55,31 +55,19 @@ export async function SiteHeader({ active }: { active?: SiteSection }) {
 
         <div className="site-header-actions">
           {user ? (
-            <>
-              <AccountMenu
-                email={user.email ?? ''}
-                name={
-                  typeof user.user_metadata?.full_name === 'string'
-                    ? user.user_metadata.full_name
-                    : ''
-                }
-                role={role}
-              />
-              {role !== 'partner' && (
-                <Link className="partner-join-link" href="/dang-ky-doi-tac">
-                  Trở thành đối tác của A.I.R ngay hôm nay!
-                </Link>
-              )}
-            </>
+            <AccountMenu
+              email={user.email ?? ''}
+              name={
+                typeof user.user_metadata?.full_name === 'string'
+                  ? user.user_metadata.full_name
+                  : ''
+              }
+              role={role}
+            />
           ) : (
-            <>
-              <Link className="site-account-link" href="/dang-nhap">
-                Đăng nhập
-              </Link>
-              <Link className="partner-join-link" href="/dang-ky-doi-tac">
-                Trở thành đối tác của A.I.R ngay hôm nay!
-              </Link>
-            </>
+            <Link className="site-account-link" href="/dang-nhap">
+              Đăng nhập
+            </Link>
           )}
         </div>
       </div>
