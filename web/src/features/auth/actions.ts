@@ -24,6 +24,15 @@ function appBaseUrl() {
   return process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 }
 
+function emailSendErrorMessage(message: string): string | null {
+  const wait = message.match(/after (\d+) seconds?/i)
+  if (wait) return `Vui lòng chờ ${wait[1]} giây trước khi yêu cầu mã mới.`
+  if (/rate limit/i.test(message)) {
+    return 'Bạn đã yêu cầu quá nhiều mã. Vui lòng thử lại sau ít phút.'
+  }
+  return null
+}
+
 export async function registerAccount(
   _state: EmailOtpActionState,
   formData: FormData,
@@ -74,6 +83,8 @@ export async function registerAccount(
       },
     })
     if (error) {
+      const friendly = emailSendErrorMessage(error.message)
+      if (friendly) return { error: true, message: friendly }
       return { error: true, message: 'Chưa gửi được email xác nhận. Vui lòng thử lại.' }
     }
     return {
@@ -104,6 +115,8 @@ export async function requestEmailOtp(
       options: { shouldCreateUser: false, emailRedirectTo: callback },
     })
     if (error) {
+      const friendly = emailSendErrorMessage(error.message)
+      if (friendly) return { error: true, message: friendly }
       if (/signups? not allowed|user not found/i.test(error.message)) {
         return {
           error: true,
