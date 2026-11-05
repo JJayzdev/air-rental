@@ -7,14 +7,14 @@ import { signOut } from '@/features/auth/actions'
 interface AccountMenuProps {
   email: string
   name: string
-  role: 'customer' | 'staff' | 'admin' | null
+  role: string | null
 }
 
 export function AccountMenu({ email, name, role }: AccountMenuProps) {
   const [open, setOpen] = useState(false)
   const displayName = name.trim() || email
   const initial = displayName.charAt(0).toUpperCase() || '?'
-  const isAdmin = role === 'admin' || role === 'staff'
+  const isAdmin = role === 'admin' || role === 'staff' || role === 'partner'
 
   return (
     <div className="account-menu">

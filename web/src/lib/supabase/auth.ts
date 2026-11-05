@@ -17,7 +17,8 @@ export async function requireVerifiedUser(next = '/gio-thue') {
 
 export async function getVerifiedAppRole() {
   const { supabase, user } = await getVerifiedUser()
-  if (!user) return { supabase, user: null, role: null as 'customer' | 'staff' | 'admin' | null }
+  if (!user)
+    return { supabase, user: null, role: null as 'customer' | 'staff' | 'admin' | 'partner' | null }
   const { data } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
   return { supabase, user, role: data?.role ?? 'customer' }
 }

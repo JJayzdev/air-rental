@@ -44,9 +44,12 @@ export async function SiteHeader({ active }: { active?: SiteSection }) {
             </Link>
           ))}
           {user && (
-            <Link href="/don-thue" aria-current={active === 'orders' ? 'page' : undefined}>
-              Đơn của tôi
-            </Link>
+            <>
+              <Link href="/don-thue" aria-current={active === 'orders' ? 'page' : undefined}>
+                Đơn của tôi
+              </Link>
+              {role === 'partner' && <Link href="/partner">Đối tác</Link>}
+            </>
           )}
         </nav>
 

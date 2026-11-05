@@ -3,7 +3,9 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/database'
 
 export function landingPathForRole(role: string | null | undefined): string {
-  return role === 'admin' || role === 'staff' ? '/admin' : '/don-thue'
+  if (role === 'admin' || role === 'staff') return '/admin'
+  if (role === 'partner') return '/partner'
+  return '/don-thue'
 }
 
 export async function defaultLandingPath(

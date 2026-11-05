@@ -97,6 +97,19 @@ export type CustomerAddressRow = {
   updated_at: string
 }
 
+export type PartnerRow = {
+  id: string
+  user_id: string
+  display_name: string
+  tax_code: string | null
+  phone: string | null
+  email: string | null
+  commission_rate: number
+  status: 'pending' | 'active' | 'suspended' | 'rejected'
+  created_at: string
+  updated_at: string
+}
+
 export type IdentityDocumentRequestRow = {
   id: string
   user_id: string
@@ -128,7 +141,7 @@ export interface Database {
     Tables: {
       profiles: Table<{
         id: string
-        role: 'customer' | 'staff' | 'admin'
+        role: 'customer' | 'staff' | 'admin' | 'partner'
         full_name: string | null
         phone: string | null
       }>
@@ -145,6 +158,7 @@ export interface Database {
         is_sample: boolean
         price_per_day_vnd: number
         deposit_vnd: number
+        partner_id: string | null
       }>
       product_units: Table<{
         id: string
