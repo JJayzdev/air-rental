@@ -14,7 +14,8 @@ export function AccountMenu({ email, name, role }: AccountMenuProps) {
   const [open, setOpen] = useState(false)
   const displayName = name.trim() || email
   const initial = displayName.charAt(0).toUpperCase() || '?'
-  const isAdmin = role === 'admin' || role === 'staff' || role === 'partner'
+  const isAdmin = role === 'admin' || role === 'staff'
+  const isPartner = role === 'partner'
 
   return (
     <div className="account-menu">
@@ -36,6 +37,11 @@ export function AccountMenu({ email, name, role }: AccountMenuProps) {
           <Link href="/tai-khoan" onClick={() => setOpen(false)}>
             Tài khoản của tôi
           </Link>
+          {isPartner && (
+            <Link href="/partner" onClick={() => setOpen(false)}>
+              Bảng điều khiển
+            </Link>
+          )}
           {isAdmin && (
             <Link href="/admin" onClick={() => setOpen(false)}>
               Bảng điều khiển
