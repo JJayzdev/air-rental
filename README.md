@@ -25,7 +25,8 @@ là giao diện tĩnh, không có backend.
 - **Giỏ thuê nhiều thiết bị**: chọn số lượng, ngày nhận/trả, hình thức nhận máy.
 - **Báo giá phía server**: bậc thuê dài ngày, mã giảm giá, phí giao và tổng tiền sau giảm.
 - **Đặt thuê và tồn kho**: giữ máy theo toàn bộ khoảng thuê, chống trùng lịch, idempotency.
-- **Tài khoản**: đăng nhập email magic link, hồ sơ, sổ địa chỉ, đơn của tôi, yêu thích.
+- **Tài khoản**: đăng ký thông tin khách hàng, đăng nhập bằng mã OTP email, hồ sơ, sổ địa chỉ,
+  đơn của tôi, yêu thích.
 - **Thanh toán**: trạng thái thanh toán tách khỏi trạng thái đơn, webhook SePay, hoàn cọc.
 - **Quản trị**: dashboard, đơn hàng, kho máy vật lý, bảo trì, khu vực giao, mã giảm giá, nhật ký.
 - **Trợ lý A.I.R**: FAQ và tìm sản phẩm; LLM tùy chọn, mặc định tắt.
@@ -98,8 +99,8 @@ SUPABASE_SERVICE_ROLE_KEY=<service role key từ supabase start>
 CHAT_RATE_LIMIT_SECRET=<chuỗi ngẫu nhiên dài>
 ```
 
-Khởi động lại `npm run dev`. Đăng nhập bằng email magic link; hộp thư local mở tại
-http://127.0.0.1:54324.
+Khởi động lại `npm run dev`. Tạo tài khoản tại `/dang-ky`, sau đó đăng nhập bằng mã OTP tại
+`/dang-nhap`; hộp thư local mở tại http://127.0.0.1:54324.
 
 Seed tạo sẵn 8 thiết bị có thể đặt thuê (`AIR-*`) và 24 sản phẩm tham khảo (`SAMPLE-*`).
 Sản phẩm tham khảo không thể đặt thuê.
@@ -192,7 +193,11 @@ production từ thư mục `web/`.
    - Site URL: `https://<domain>`
    - Redirect URLs: `https://<domain>/auth/callback`, `http://localhost:3000/auth/callback`
 
-5. Cấp quyền quản trị cho tài khoản đầu tiên sau khi đăng nhập:
+5. Cấu hình **Auth → SMTP** và đặt template **Magic Link** có `{{ .Token }}` để email chứa cả mã
+   OTP 6 chữ số. Luồng hiện tại: khách điền thông tin tại `/dang-ky`, nhận email xác nhận, rồi
+   nhập mã OTP tại `/dang-nhap`.
+
+6. Cấp quyền quản trị cho tài khoản đầu tiên sau khi đăng nhập:
 
    ```sql
    update public.profiles set role = 'admin' where id = (
