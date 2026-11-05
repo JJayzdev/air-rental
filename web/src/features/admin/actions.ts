@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use server'
 
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { z } from 'zod'
 import {
   adminDeliveryZoneSchema,
   adminDiscountCodeSchema,
@@ -12,7 +14,6 @@ import {
   maintenanceSchema,
 } from './admin-schema.ts'
 import { getVerifiedAppRole } from '@/lib/supabase/auth'
-
 function valueOf(formData: FormData, key: string) {
   const value = formData.get(key)
   return typeof value === 'string' ? value : ''
@@ -260,4 +261,36 @@ export async function saveAdminDeliveryZone(formData: FormData): Promise<never> 
   revalidatePath('/checkout')
   if (error) redirect('/admin/khu-vuc-giao?zone=failed')
   redirect('/admin/khu-vuc-giao?zone=saved')
+}
+
+const partnerIdSchema = z.object({
+  partnerId: z.string().uuid(),
+})
+
+export async function approvePartner(formData: FormData): Promise<never> {
+  const parsed = partnerIdSchema.safeParse({ partnerId: formData.get('partnerId') })
+  if (!parsed.success) redirect('/admin/doi-tac?error=invalid')
+  const { supabase, user, role } = await getVerifiedAppRole()
+  if (!user || role !== 'admin') redirect('/dang-nhap?next=%2Fadmin%2Fdoi-tac')
+  const { error } = await (supabase as any)
+    .from('partners')
+    .update({ status: 'active' })
+    .eq('id', parsed.data.partnerId)
+  revalidatePath('/admin/doi-tac')
+  if (error) redirect('/admin/doi-tac?error=failed')
+  redirect('/admin/doi-tac?saved=approved')
+}
+
+export async function rejectPartner(formData: FormData): Promise<never> {
+  const parsed = partnerIdSchema.safeParse({ partnerId: formData.get('partnerId') })
+  if (!parsed.success) redirect('/admin/doi-tac?error=invalid')
+  const { supabase, user, role } = await getVerifiedAppRole()
+  if (!user || role !== 'admin') redirect('/dang-nhap?next=%2Fadmin%2Fdoi-tac')
+  const { error } = await (supabase as any)
+    .from('partners')
+    .update({ status: 'rejected' })
+    .eq('id', parsed.data.partnerId)
+  revalidatePath('/admin/doi-tac')
+  if (error) redirect('/admin/doi-tac?error=failed')
+  redirect('/admin/doi-tac?saved=rejected')
 }

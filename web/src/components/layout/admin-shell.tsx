@@ -17,6 +17,7 @@ type IconName =
   | 'discount'
   | 'zones'
   | 'audit'
+  | 'partner'
 
 interface NavItem {
   href: string
@@ -42,6 +43,7 @@ const NAV_GROUPS: Array<{ label: string; items: NavItem[] }> = [
       { href: '/admin/bao-tri', label: 'Bảo trì', icon: 'maintenance' },
       { href: '/admin/ma-giam-gia', label: 'Mã giảm giá', icon: 'discount', adminOnly: true },
       { href: '/admin/khu-vuc-giao', label: 'Khu vực giao', icon: 'zones', adminOnly: true },
+      { href: '/admin/doi-tac', label: 'Đối tác', icon: 'partner', adminOnly: true },
     ],
   },
   {
@@ -232,6 +234,14 @@ function AdminNavIcon({ name }: { name: IconName | 'external' }) {
           <path d="M3 12a9 9 0 1 0 3-6.7" />
           <path d="M3 4v5h5" />
           <path d="M12 8v4l3 2" />
+        </>
+      )}
+      {name === 'partner' && (
+        <>
+          <path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16" />
+          <polyline points="17 21 17 14 7 14 7 21" />
+          <polyline points="7 9 3 9 3 15" />
+          <line x1="7" y1="9" x2="7" y2="15" />
         </>
       )}
       {name === 'external' && (
