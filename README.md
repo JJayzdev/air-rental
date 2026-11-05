@@ -229,11 +229,6 @@ GitHub Pages. Bản này chỉ là giao diện tĩnh, không có đăng nhập, 
 - Hoá đơn hiện là bản in trình duyệt, chưa phải hoá đơn VAT.
 - Dữ liệu seed phục vụ đánh giá sản phẩm, không phải hợp đồng cho thuê thực tế.
 
-## Ghi công & giấy phép
+## License
 
-Giao diện tham khảo **"Electronics Rental Website"** của **Pam** trên Figma Community, giấy phép
-[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Bản này giữ tinh thần bố cục gốc, viết
-lại logic bằng React/Next.js và bổ sung backend Supabase.
-
-- Ảnh sản phẩm tham khảo: Unsplash và Wikimedia Commons, ghi công trên từng trang.
-- Mascot robot thuộc tác phẩm gốc của Pam.
+MIT license
