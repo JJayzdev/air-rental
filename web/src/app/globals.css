@@ -3908,7 +3908,8 @@ footer {
   border-radius: 18px;
   justify-content: center;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex-direction: column;
   font-weight: 700;
   display: flex;
   text-decoration: none;
@@ -3921,8 +3922,8 @@ footer {
 .category-row .category-chip span,
 .category-row .category-chip svg {
   color: var(--blue);
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
