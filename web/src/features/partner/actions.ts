@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { getVerifiedAppRole } from '@/lib/supabase/auth'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const vndAmount = (min: number, max: number) =>
@@ -71,4 +72,63 @@ export async function savePartnerProduct(formData: FormData): Promise<never> {
   revalidatePath('/partner/san-pham')
   if (error) redirect('/partner/san-pham/them?error=failed')
   redirect('/partner/san-pham?saved=saved')
+}
+
+const registerPartnerSchema = z
+  .object({
+    fullName: z.string().trim().min(2).max(120),
+    email: z.string().email(),
+    phone: z.string().trim().min(6).max(20),
+    companyName: z.string().trim().min(2).max(120),
+    taxCode: z.string().trim().max(30).optional().default(''),
+    description: z.string().trim().max(1000).optional().default(''),
+    password: z.string().min(6).max(128),
+    acceptedTerms: z.literal('on'),
+  })
+  .strict()
+
+export async function registerPartner(formData: FormData): Promise<never> {
+  const parsed = registerPartnerSchema.safeParse({
+    fullName: formData.get('fullName'),
+    email: formData.get('email'),
+    phone: formData.get('phone'),
+    companyName: formData.get('companyName'),
+    taxCode: formData.get('taxCode'),
+    description: formData.get('description'),
+    password: formData.get('password'),
+    acceptedTerms: formData.get('acceptedTerms'),
+  })
+  if (!parsed.success) redirect('/dang-ky-doi-tac?error=invalid')
+
+  const supabase = await createSupabaseServerClient()
+  const { error: authError, data } = await supabase.auth.signUp({
+    email: parsed.data.email,
+    password: parsed.data.password,
+    options: {
+      data: {
+        full_name: parsed.data.fullName,
+        phone: parsed.data.phone,
+        role: 'partner',
+        partner_company: parsed.data.companyName,
+        partner_tax_code: parsed.data.taxCode,
+        partner_description: parsed.data.description,
+      },
+    },
+  })
+  if (authError || !data?.user) redirect('/dang-ky-doi-tac?error=auth')
+  const userId = (data.user as any).id
+
+  const { error } = await (supabase as any).from('partners').insert([
+    {
+      user_id: userId,
+      display_name: parsed.data.fullName,
+      email: parsed.data.email,
+      phone: parsed.data.phone,
+      tax_code: parsed.data.taxCode || null,
+      commission_rate: 15,
+      status: 'pending',
+    },
+  ])
+  if (error) redirect('/dang-ky-doi-tac?error=db')
+  redirect('/dang-ky-doi-tac?sent=1')
 }

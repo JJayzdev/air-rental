@@ -65,9 +65,14 @@ export async function SiteHeader({ active }: { active?: SiteSection }) {
               role={role}
             />
           ) : (
-            <Link className="site-account-link" href="/dang-nhap">
-              Đăng nhập
-            </Link>
+            <>
+              <Link className="site-account-link" href="/dang-nhap">
+                Đăng nhập
+              </Link>
+              <Link className="partner-join-link" href="/dang-ky-doi-tac">
+                Đăng ký đối tác
+              </Link>
+            </>
           )}
         </div>
       </div>
