@@ -176,11 +176,13 @@ export default async function HomePage() {
                     priority
                     sizes="(max-width: 900px) 80vw, 480px"
                   />
-                  <span className="price-chip">
-                    Chỉ từ
-                    <b>{heroProduct.pricePerDayVnd.toLocaleString('vi-VN')} ₫/ngày</b>
-                  </span>
                 </div>
+              )}
+              {heroProduct && (
+                <span className="price-chip">
+                  Chỉ từ
+                  <b>{heroProduct.pricePerDayVnd.toLocaleString('vi-VN')} ₫/ngày</b>
+                </span>
               )}
               {floatingOne && (
                 <Image

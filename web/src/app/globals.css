@@ -597,8 +597,8 @@ button {
   padding: 10px 14px;
   font-size: 11px;
   position: absolute;
-  bottom: 20px;
-  left: 20px;
+  bottom: 40px;
+  left: 55px;
 }
 .price-chip b {
   color: var(--blue);
