@@ -3834,6 +3834,7 @@ footer {
 
 /* --- Site chrome, homepage and catalog polish --- */
 .site-header-inner {
+  align-items: center;
   gap: 14px;
 }
 .site-header-actions {
