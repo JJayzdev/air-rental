@@ -4066,6 +4066,9 @@ footer {
 .account-avatar:hover {
   background: #0e4fd1;
 }
+.site-header-actions .account-avatar {
+  margin-top: 6px;
+}
 .account-dropdown {
   position: absolute;
   top: calc(100% + 8px);
