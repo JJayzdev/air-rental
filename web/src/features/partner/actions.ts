@@ -130,5 +130,8 @@ export async function registerPartner(formData: FormData): Promise<never> {
     },
   ])
   if (error) redirect('/dang-ky-doi-tac?error=db')
+
+  await (supabase as any).from('profiles').update({ role: 'partner' }).eq('id', userId)
+
   redirect('/dang-ky-doi-tac?sent=1')
 }
