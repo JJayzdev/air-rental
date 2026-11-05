@@ -11,7 +11,7 @@ insert into public.products
   (id, category_id, slug, name, description, price_per_day_vnd, deposit_vnd, state, specifications, image_urls, image_alt, sort_order, is_sample, source_url,
    image_credit_author, image_license, image_license_url, image_source_url, image_modification_note)
 select v.id::uuid, c.id, v.slug, v.name, v.description, v.price::bigint, v.deposit, 'active', v.specifications::jsonb,
-  case when img.slug is null then array['/images/catalog-placeholder.svg']::text[]
+  case when img.slug is null then array['/images/catalog/category-' || c.slug || '.svg']::text[]
     else array[img.local_path]::text[] end,
   case when img.slug is null then 'Ảnh minh hoạ catalog mẫu' else 'Ảnh tham khảo model; không phải máy bàn giao' end,
   v.sort_order, true, v.source_url, img.author, img.license, img.license_url, img.source_url,

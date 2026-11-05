@@ -501,7 +501,7 @@ export const SAMPLE_CATALOG: CatalogProduct[] = SAMPLE_ROWS.map(
           ? '/images/catalog/sony-a6400.jpg'
           : slug === 'iphone-16-pro'
             ? '/images/catalog/iphone-16-pro.jpg'
-            : CATALOG_PLACEHOLDER,
+            : `/images/catalog/category-${categorySlug}.svg`,
     ],
     imageAlt: SAMPLE_IMAGE_CREDITS[slug]
       ? `Ảnh tham khảo ${name}; không phải máy bàn giao`

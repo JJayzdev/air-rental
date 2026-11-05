@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Điện thoại">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eef5ff"/>
+      <stop offset="1" stop-color="#dfe7f4"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#g)"/>
+  <rect x="150" y="45" width="100" height="210" rx="18" fill="#08265c"/>
+  <rect x="160" y="60" width="80" height="170" rx="10" fill="#1769ff"/>
+  <circle cx="200" cy="245" r="6" fill="#dbe5f7"/>
+</svg>
