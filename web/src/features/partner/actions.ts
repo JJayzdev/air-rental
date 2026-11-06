@@ -5,10 +5,11 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { getVerifiedAppRole } from '@/lib/supabase/auth'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/database'
+import { slugifyProductName, uniqueSlug } from './slug.ts'
 
-const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const vndAmount = (min: number, max: number) =>
   z
     .string()
@@ -19,8 +20,8 @@ const vndAmount = (min: number, max: number) =>
 
 const savePartnerProductSchema = z
   .object({
-    slug: z.string().trim().min(3).max(80).regex(slugPattern),
     name: z.string().trim().min(3).max(120),
+    categoryId: z.string().trim().uuid(),
     description: z.string().trim().max(2000),
     pricePerDayVnd: vndAmount(1000, 100_000_000),
     depositVnd: vndAmount(0, 200_000_000),
@@ -31,8 +32,8 @@ const savePartnerProductSchema = z
 
 export async function savePartnerProduct(formData: FormData): Promise<never> {
   const parsed = savePartnerProductSchema.safeParse({
-    slug: formData.get('slug'),
     name: formData.get('name'),
+    categoryId: formData.get('categoryId'),
     description: formData.get('description'),
     pricePerDayVnd: formData.get('pricePerDayVnd'),
     depositVnd: formData.get('depositVnd'),
@@ -51,6 +52,14 @@ export async function savePartnerProduct(formData: FormData): Promise<never> {
     .maybeSingle()) as { data: any }
   if (!partner) redirect('/partner/san-pham/them?error=no-partner')
 
+  // Danh mục là bắt buộc ở tầng dữ liệu, nên phải xác minh trước khi ghi.
+  const { data: category } = await supabase
+    .from('categories')
+    .select('id')
+    .eq('id', parsed.data.categoryId)
+    .maybeSingle()
+  if (!category) redirect('/partner/san-pham/them?error=invalid')
+
   const imageUrls = parsed.data.imageUrls
     ? parsed.data.imageUrls
         .split(/[\r\n,]+/)
@@ -58,21 +67,52 @@ export async function savePartnerProduct(formData: FormData): Promise<never> {
         .filter(Boolean)
     : ['/images/catalog-placeholder.svg']
 
-  const payload = {
-    partner_id: partner.id,
-    slug: parsed.data.slug,
-    name: parsed.data.name,
-    description: parsed.data.description,
-    image_urls: imageUrls,
-    price_per_day_vnd: parsed.data.pricePerDayVnd,
-    deposit_vnd: parsed.data.depositVnd,
-    state: parsed.data.state,
+  const baseSlug = slugifyProductName(parsed.data.name)
+  const taken = await existingSlugs(baseSlug, supabase)
+
+  let slug = uniqueSlug(baseSlug, taken)
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const { error } = await supabase.from('products').insert({
+      partner_id: partner.id,
+      category_id: category.id,
+      slug,
+      name: parsed.data.name,
+      description: parsed.data.description,
+      image_urls: imageUrls,
+      price_per_day_vnd: parsed.data.pricePerDayVnd,
+      deposit_vnd: parsed.data.depositVnd,
+      state: parsed.data.state,
+    })
+    if (!error) {
+      revalidatePath('/partner/san-pham')
+      redirect('/partner/san-pham?saved=saved')
+    }
+    // 23505 = trùng slug (có thể do đối tác khác vừa lưu cùng tên).
+    if (error.code !== '23505') break
+    taken.push(slug)
+    slug = uniqueSlug(baseSlug, taken)
   }
 
-  const { error } = await supabase.from('products').insert(payload)
-  revalidatePath('/partner/san-pham')
-  if (error) redirect('/partner/san-pham/them?error=failed')
-  redirect('/partner/san-pham?saved=saved')
+  redirect('/partner/san-pham/them?error=failed')
+}
+
+/**
+ * Đọc các slug đã dùng để tránh trùng. Dùng service role vì RLS chỉ cho đối tác
+ * thấy sản phẩm của mình; nếu thiếu khóa thì vẫn còn vòng thử lại khi insert.
+ */
+async function existingSlugs(
+  baseSlug: string,
+  supabase: Awaited<ReturnType<typeof getVerifiedAppRole>>['supabase'],
+): Promise<string[]> {
+  const prefix = baseSlug.slice(0, 40)
+  try {
+    const service = createSupabaseServiceClient()
+    const { data } = await service.from('products').select('slug').like('slug', `${prefix}%`)
+    return (data ?? []).map((row) => row.slug)
+  } catch {
+    const { data } = await supabase.from('products').select('slug').like('slug', `${prefix}%`)
+    return (data ?? []).map((row) => row.slug)
+  }
 }
 
 const registerPartnerSchema = z

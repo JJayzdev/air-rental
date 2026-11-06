@@ -15,12 +15,17 @@ export default async function PartnerAddProductPage({
 }: {
   searchParams: Promise<{ error?: string }>
 }) {
-  const { user, role } = await getVerifiedAppRole()
+  const { user, role, supabase } = await getVerifiedAppRole()
   if (!user) redirect('/dang-nhap?next=%2Fpartner%2Fsan-pham%2Fthem')
   if (role !== 'partner') redirect('/don-thue')
 
   const params = await searchParams
   const showError = ['invalid', 'no-partner', 'failed'].includes(params.error ?? '')
+
+  const { data: categories } = await supabase
+    .from('categories')
+    .select('id, name, sort_order')
+    .order('sort_order', { ascending: true })
 
   return (
     <main className="partner-page">
@@ -47,12 +52,22 @@ export default async function PartnerAddProductPage({
       <section className="partner-block">
         <form action={savePartnerProduct} className="partner-form">
           <label>
-            Đường dẫn (slug)
-            <input name="slug" placeholder="may-anh-cua-toi" required />
+            Tên sản phẩm
+            <input name="name" required minLength={3} maxLength={120} />
+            <small>Đường dẫn sản phẩm do hệ thống tự tạo từ tên, bạn không cần nhập.</small>
           </label>
           <label>
-            Tên sản phẩm
-            <input name="name" required />
+            Danh mục
+            <select name="categoryId" defaultValue="" required>
+              <option value="" disabled>
+                Chọn danh mục
+              </option>
+              {(categories ?? []).map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
           </label>
           <label>
             Mô tả
@@ -73,7 +88,7 @@ export default async function PartnerAddProductPage({
           <label>
             Trạng thái
             <select name="state" defaultValue="draft">
-              <option value="draft">Khả draft</option>
+              <option value="draft">Bản nháp</option>
               <option value="active">Đang cho thuê</option>
               <option value="archived">Đã lưu trữ</option>
             </select>

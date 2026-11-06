@@ -5440,6 +5440,12 @@ footer {
   width: fit-content;
   padding: 9px 18px;
 }
+.partner-form label small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+}
 
 .partner-join-link {
   min-height: 40px;

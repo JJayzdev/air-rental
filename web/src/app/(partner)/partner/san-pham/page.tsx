@@ -108,7 +108,7 @@ export default async function PartnerProductsPage({
                         {p.state === 'active'
                           ? 'Đang cho thuê'
                           : p.state === 'draft'
-                            ? 'Khả draft'
+                            ? 'Bản nháp'
                             : 'Đã lưu trữ'}
                       </span>
                     </td>
