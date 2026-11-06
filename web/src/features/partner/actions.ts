@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { getVerifiedAppRole } from '@/lib/supabase/auth'
@@ -107,6 +107,7 @@ export async function savePartnerProduct(formData: FormData): Promise<never> {
         redirect('/partner/san-pham/them?error=failed')
       }
       revalidatePath('/partner/san-pham')
+      revalidateTag('catalog')
       redirect('/partner/san-pham?saved=saved')
     }
 
