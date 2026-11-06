@@ -8,7 +8,9 @@ import { getVerifiedAppRole } from '@/lib/supabase/auth'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/database'
-import { slugifyProductName, uniqueSlug } from './slug.ts'
+import { slugifyProductName, uniqueSlug, productAssetTag } from './slug.ts'
+
+type ServerSupabase = Awaited<ReturnType<typeof getVerifiedAppRole>>['supabase']
 
 const vndAmount = (min: number, max: number) =>
   z
@@ -18,6 +20,13 @@ const vndAmount = (min: number, max: number) =>
     .transform(Number)
     .refine((value) => value >= min && value <= max)
 
+const quantityAmount = z
+  .string()
+  .trim()
+  .regex(/^\d{1,3}$/)
+  .transform(Number)
+  .refine((value) => value >= 1 && value <= 100)
+
 const savePartnerProductSchema = z
   .object({
     name: z.string().trim().min(3).max(120),
@@ -25,6 +34,7 @@ const savePartnerProductSchema = z
     description: z.string().trim().max(2000),
     pricePerDayVnd: vndAmount(1000, 100_000_000),
     depositVnd: vndAmount(0, 200_000_000),
+    quantity: quantityAmount,
     imageUrls: z.string().trim().optional().default(''),
     state: z.enum(['draft', 'active', 'archived']),
   })
@@ -37,6 +47,7 @@ export async function savePartnerProduct(formData: FormData): Promise<never> {
     description: formData.get('description'),
     pricePerDayVnd: formData.get('pricePerDayVnd'),
     depositVnd: formData.get('depositVnd'),
+    quantity: formData.get('quantity'),
     imageUrls: formData.get('imageUrls'),
     state: formData.get('state'),
   })
@@ -72,23 +83,35 @@ export async function savePartnerProduct(formData: FormData): Promise<never> {
 
   let slug = uniqueSlug(baseSlug, taken)
   for (let attempt = 0; attempt < 5; attempt += 1) {
-    const { error } = await supabase.from('products').insert({
-      partner_id: partner.id,
-      category_id: category.id,
-      slug,
-      name: parsed.data.name,
-      description: parsed.data.description,
-      image_urls: imageUrls,
-      price_per_day_vnd: parsed.data.pricePerDayVnd,
-      deposit_vnd: parsed.data.depositVnd,
-      state: parsed.data.state,
-    })
-    if (!error) {
+    const { data: created, error } = await supabase
+      .from('products')
+      .insert({
+        partner_id: partner.id,
+        category_id: category.id,
+        slug,
+        name: parsed.data.name,
+        description: parsed.data.description,
+        image_urls: imageUrls,
+        price_per_day_vnd: parsed.data.pricePerDayVnd,
+        deposit_vnd: parsed.data.depositVnd,
+        state: parsed.data.state,
+      })
+      .select('id')
+      .single()
+
+    if (!error && created) {
+      const unitsCreated = await createProductUnits(created.id, slug, parsed.data.quantity)
+      if (!unitsCreated) {
+        // Không để lại sản phẩm không có thiết bị nào trong kho.
+        await supabase.from('products').delete().eq('id', created.id)
+        redirect('/partner/san-pham/them?error=failed')
+      }
       revalidatePath('/partner/san-pham')
       redirect('/partner/san-pham?saved=saved')
     }
+
     // 23505 = trùng slug (có thể do đối tác khác vừa lưu cùng tên).
-    if (error.code !== '23505') break
+    if (error?.code !== '23505') break
     taken.push(slug)
     slug = uniqueSlug(baseSlug, taken)
   }
@@ -97,13 +120,35 @@ export async function savePartnerProduct(formData: FormData): Promise<never> {
 }
 
 /**
+ * Tạo số lượng thiết bị trong kho cho sản phẩm. Đối tác không có quyền ghi
+ * product_units qua RLS nên dùng service role ở server sau khi đã xác minh
+ * sản phẩm thuộc chính đối tác đang đăng nhập.
+ */
+async function createProductUnits(
+  productId: string,
+  slug: string,
+  quantity: number,
+): Promise<boolean> {
+  const rows = Array.from({ length: quantity }, (_, index) => ({
+    product_id: productId,
+    asset_tag: productAssetTag(slug, index + 1),
+  }))
+  try {
+    const service = createSupabaseServiceClient()
+    const { error } = await service.from('product_units').insert(rows)
+    if (error) return false
+    revalidatePath('/partner/san-pham')
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
  * Đọc các slug đã dùng để tránh trùng. Dùng service role vì RLS chỉ cho đối tác
  * thấy sản phẩm của mình; nếu thiếu khóa thì vẫn còn vòng thử lại khi insert.
  */
-async function existingSlugs(
-  baseSlug: string,
-  supabase: Awaited<ReturnType<typeof getVerifiedAppRole>>['supabase'],
-): Promise<string[]> {
+async function existingSlugs(baseSlug: string, supabase: ServerSupabase): Promise<string[]> {
   const prefix = baseSlug.slice(0, 40)
   try {
     const service = createSupabaseServiceClient()

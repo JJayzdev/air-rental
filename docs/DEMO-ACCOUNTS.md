@@ -38,7 +38,8 @@ node scripts/seed-demo-accounts.mjs
 ```
 
 Script tạo/cập nhật 3 tài khoản, hồ sơ vai trò, hồ sơ đối tác đang hoạt động và 2 sản
-phẩm demo cho `partner@air.com`. Chạy lại nhiều lần vẫn an toàn.
+phẩm demo cho `partner@air.com` (mỗi sản phẩm 2 thiết bị trong kho). Chạy lại nhiều lần
+vẫn an toàn.
 
 ## Kiểm tra nhanh
 

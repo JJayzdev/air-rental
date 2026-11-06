@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { slugifyProductName, uniqueSlug } from './slug.ts'
+import { productAssetTag, slugifyProductName, uniqueSlug } from './slug.ts'
 
 test('slugifyProductName chuyển tên tiếng Việt thành slug ASCII', () => {
   assert.equal(slugifyProductName('Máy ảnh Sony A7'), 'may-anh-sony-a7')
@@ -30,4 +30,13 @@ test('uniqueSlug giữ độ dài tối đa khi phải thêm hậu tố', () => 
   const slug = uniqueSlug(base, [base])
   assert.equal(slug.length <= 80, true)
   assert.equal(slug.endsWith('-2'), true)
+})
+
+test('productAssetTag tạo mã tài sản duy nhất theo slug và thứ tự', () => {
+  assert.equal(productAssetTag('may-anh-sony-a7', 1), 'MAY-ANH-SONY-A7-001')
+  assert.equal(productAssetTag('may-anh-sony-a7', 12), 'MAY-ANH-SONY-A7-012')
+  assert.equal(
+    productAssetTag('may-anh-sony-a7', 1) === productAssetTag('may-anh-sony-a7', 2),
+    false,
+  )
 })

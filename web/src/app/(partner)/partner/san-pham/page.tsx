@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getVerifiedAppRole } from '@/lib/supabase/auth'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { money } from '@/lib/format'
 import type { Metadata } from 'next'
 
@@ -51,6 +52,7 @@ export default async function PartnerProductsPage({
     .eq('partner_id', partner.id)
     .order('name', { ascending: true })
   const products = (productsResult as any).data ?? []
+  const unitCounts = await loadUnitCounts(products.map((product: any) => product.id))
 
   return (
     <main className="partner-page">
@@ -79,13 +81,14 @@ export default async function PartnerProductsPage({
                 <th scope="col">Sản phẩm</th>
                 <th scope="col">Giá / ngày</th>
                 <th scope="col">Tiền cọc</th>
+                <th scope="col">Số lượng</th>
                 <th scope="col">Trạng thái</th>
               </tr>
             </thead>
             <tbody>
               {products.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="partner-empty-cell">
+                  <td colSpan={5} className="partner-empty-cell">
                     Chưa có sản phẩm nào.{' '}
                     <Link href="/partner/san-pham/them">Thêm sản phẩm đầu tiên</Link>
                   </td>
@@ -103,6 +106,7 @@ export default async function PartnerProductsPage({
                     </td>
                     <td>{money(p.price_per_day_vnd)}</td>
                     <td>{money(p.deposit_vnd)}</td>
+                    <td>{unitCounts.get(p.id) ?? 0} máy</td>
                     <td>
                       <span className={`partner-state is-${p.state}`}>
                         {p.state === 'active'
@@ -121,4 +125,27 @@ export default async function PartnerProductsPage({
       </section>
     </main>
   )
+}
+
+/**
+ * Đếm số thiết bị trong kho của từng sản phẩm. Đối tác không đọc được
+ * product_units qua RLS nên dùng service role sau khi đã xác minh danh sách
+ * sản phẩm thuộc chính đối tác đang đăng nhập.
+ */
+async function loadUnitCounts(productIds: string[]): Promise<Map<string, number>> {
+  const counts = new Map<string, number>()
+  if (productIds.length === 0) return counts
+  try {
+    const service = createSupabaseServiceClient()
+    const { data } = await service
+      .from('product_units')
+      .select('product_id')
+      .in('product_id', productIds)
+    for (const unit of data ?? []) {
+      counts.set(unit.product_id, (counts.get(unit.product_id) ?? 0) + 1)
+    }
+  } catch {
+    // Không có service role thì chỉ hiển thị 0 máy; không chặn trang.
+  }
+  return counts
 }

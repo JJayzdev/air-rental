@@ -86,6 +86,19 @@ export default async function PartnerAddProductPage({
             <input defaultValue="0" inputMode="numeric" name="depositVnd" required />
           </label>
           <label>
+            Số lượng thiết bị
+            <input
+              defaultValue="1"
+              inputMode="numeric"
+              min={1}
+              max={100}
+              name="quantity"
+              required
+              type="number"
+            />
+            <small>Mỗi thiết bị tương ứng một máy trong kho để khách đặt thuê.</small>
+          </label>
+          <label>
             Trạng thái
             <select name="state" defaultValue="draft">
               <option value="draft">Bản nháp</option>

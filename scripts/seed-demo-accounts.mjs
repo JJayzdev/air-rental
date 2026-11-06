@@ -47,6 +47,7 @@ const PARTNER_PRODUCTS = [
     category: 'laptop',
     price: 320_000,
     deposit: 5_000_000,
+    quantity: 2,
     specifications: { 'màn hình': '14 inch', ram: '16 GB', 'ghi chú': 'Sản phẩm demo của đối tác' },
   },
   {
@@ -55,6 +56,7 @@ const PARTNER_PRODUCTS = [
     category: 'camera',
     price: 450_000,
     deposit: 7_000_000,
+    quantity: 2,
     specifications: { 'cảm biến': 'APS-C', video: '4K', 'ghi chú': 'Sản phẩm demo của đối tác' },
   },
 ]
@@ -106,26 +108,51 @@ async function seedPartnerProducts(admin, partnerId) {
       console.warn(`- Bỏ qua ${product.slug}: thiếu danh mục ${product.category}.`)
       continue
     }
-    const { error: productError } = await admin.from('products').upsert(
-      {
-        partner_id: partnerId,
-        category_id: categoryId,
-        slug: product.slug,
-        name: product.name,
-        description: 'Sản phẩm demo thuộc tài khoản đối tác A.I.R.',
-        price_per_day_vnd: product.price,
-        deposit_vnd: product.deposit,
-        state: 'active',
-        specifications: product.specifications,
-        image_urls: ['/images/catalog-placeholder.svg'],
-        image_alt: 'Ảnh minh họa sản phẩm demo đối tác',
-        sort_order: 900,
-        is_sample: false,
-      },
-      { onConflict: 'slug' },
-    )
-    if (productError) throw new Error(`Không tạo được sản phẩm demo ${product.slug}.`)
+    const { data: saved, error: productError } = await admin
+      .from('products')
+      .upsert(
+        {
+          partner_id: partnerId,
+          category_id: categoryId,
+          slug: product.slug,
+          name: product.name,
+          description: 'Sản phẩm demo thuộc tài khoản đối tác A.I.R.',
+          price_per_day_vnd: product.price,
+          deposit_vnd: product.deposit,
+          state: 'active',
+          specifications: product.specifications,
+          image_urls: ['/images/catalog-placeholder.svg'],
+          image_alt: 'Ảnh minh họa sản phẩm demo đối tác',
+          sort_order: 900,
+          is_sample: false,
+        },
+        { onConflict: 'slug' },
+      )
+      .select('id')
+      .single()
+    if (productError || !saved) throw new Error(`Không tạo được sản phẩm demo ${product.slug}.`)
+    await seedProductUnits(admin, saved.id, product.slug, product.quantity)
   }
+}
+
+/** Tạo đủ số thiết bị trong kho, bỏ qua mã tài sản đã tồn tại (idempotent). */
+async function seedProductUnits(admin, productId, slug, quantity) {
+  const { data: existing, error } = await admin
+    .from('product_units')
+    .select('asset_tag')
+    .eq('product_id', productId)
+  if (error) throw new Error(`Không đọc được thiết bị của ${slug}.`)
+
+  const tags = new Set((existing ?? []).map((unit) => unit.asset_tag))
+  const rows = []
+  for (let index = 1; index <= quantity; index += 1) {
+    const assetTag = `${slug.toUpperCase()}-${String(index).padStart(3, '0')}`
+    if (!tags.has(assetTag)) rows.push({ product_id: productId, asset_tag: assetTag })
+  }
+  if (rows.length === 0) return
+
+  const { error: insertError } = await admin.from('product_units').insert(rows)
+  if (insertError) throw new Error(`Không tạo được thiết bị cho ${slug}.`)
 }
 
 async function main() {

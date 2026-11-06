@@ -43,3 +43,13 @@ function fitSlug(value: string): string {
   const trimmed = value.slice(0, MAX_SLUG_LENGTH).replace(/-+$/g, '')
   return trimmed.length >= 3 ? trimmed : FALLBACK_SLUG
 }
+
+/**
+ * Mã tài sản cho từng thiết bị trong kho, ví dụ slug "may-anh-sony-a7" và vị
+ * trí 2 → "MAY-ANH-SONY-A7-002". Slug là duy nhất nên mã này không trùng giữa
+ * các sản phẩm.
+ */
+export function productAssetTag(slug: string, index: number): string {
+  const prefix = slug.toUpperCase().slice(0, 48).replace(/-+$/g, '')
+  return `${prefix || 'SAN-PHAM'}-${String(index).padStart(3, '0')}`
+}
