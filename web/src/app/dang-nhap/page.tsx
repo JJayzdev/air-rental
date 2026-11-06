@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { LoginForm } from './login-form'
+import { DEMO_ACCOUNTS, demoLoginEnabled } from '@/features/auth/demo-accounts'
 import { defaultLandingPath } from '@/features/auth/landing-path'
 import { getVerifiedAppRole } from '@/lib/supabase/auth'
 import { safeInternalPath } from '@/lib/safe-internal-path'
@@ -46,6 +47,21 @@ export default async function SignInPage({
         <p>Nhập email đã đăng ký để nhận mã OTP, sau đó nhập mã để đăng nhập.</p>
         {errorMessage && <p className="rental-error">{errorMessage}</p>}
         <LoginForm next={next} phoneOtpEnabled={process.env.AIR_ENABLE_PHONE_OTP === 'true'} />
+        {demoLoginEnabled() && (
+          <aside className="rental-demo-accounts" aria-label="Tài khoản demo">
+            <p>
+              <strong>Tài khoản demo</strong> — mã OTP chung: <code>111111</code>
+            </p>
+            <ul>
+              {DEMO_ACCOUNTS.map((account) => (
+                <li key={account.email}>
+                  <span>{account.roleLabel}</span>
+                  <code>{account.email}</code>
+                </li>
+              ))}
+            </ul>
+          </aside>
+        )}
       </section>
     </main>
   )

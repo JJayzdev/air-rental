@@ -2,8 +2,10 @@
 
 import { absoluteAppUrl } from '@/features/products/catalog-seo'
 import { createSupabaseServerClient, supabaseIsConfigured } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { safeInternalPath } from '@/lib/safe-internal-path'
 import { redirect } from 'next/navigation'
+import { demoLoginEnabled, demoOtp, findDemoAccount, type DemoAccount } from './demo-accounts.ts'
 import { defaultLandingPath } from './landing-path.ts'
 import { syncRegistrationProfile } from './registration-profile.ts'
 import {
@@ -116,6 +118,16 @@ export async function requestEmailOtp(
   }
   const parsed = emailOtpRequestSchema.safeParse({ email: formData.get('email') })
   if (!parsed.success) return { error: true, message: 'Vui lòng nhập địa chỉ email hợp lệ.' }
+
+  const demo = demoLoginEnabled() ? findDemoAccount(parsed.data.email) : null
+  if (demo) {
+    return {
+      sent: true,
+      email: demo.email,
+      message: `Tài khoản demo ${demo.roleLabel}. Nhập mã ${demoOtp()} để đăng nhập (không cần mở email).`,
+    }
+  }
+
   try {
     const callback = authCallbackUrl(formData.get('next'))
     const supabase = await createSupabaseServerClient()
@@ -157,6 +169,11 @@ export async function verifyEmailOtp(
   })
   if (!parsed.success) return { error: true, message: 'Vui lòng nhập đủ 6 chữ số của mã OTP.' }
 
+  const demo = demoLoginEnabled() ? findDemoAccount(parsed.data.email) : null
+  if (demo && parsed.data.token === demoOtp()) {
+    return verifyDemoOtp(demo, formData)
+  }
+
   let verified = false
   let destination = ''
   try {
@@ -187,6 +204,56 @@ export async function verifyEmailOtp(
   }
   if (!verified || !destination) {
     return { error: true, message: 'Chưa xác minh được mã OTP. Vui lòng thử lại.' }
+  }
+  redirect(destination)
+}
+
+/**
+ * Đăng nhập tài khoản demo bằng mã OTP cố định. Mã được xác minh ở server và
+ * phiên đăng nhập thật được tạo qua Admin API, nên không cần gửi email.
+ */
+async function verifyDemoOtp(demo: DemoAccount, formData: FormData): Promise<EmailOtpActionState> {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return { error: true, message: 'Tài khoản demo chưa được cấu hình trên máy chủ.' }
+  }
+
+  let destination = ''
+  try {
+    const service = createSupabaseServiceClient()
+    const { data: link, error: linkError } = await service.auth.admin.generateLink({
+      type: 'magiclink',
+      email: demo.email,
+      options: { redirectTo: absoluteAppUrl('/auth/callback') },
+    })
+    const hashedToken = link?.properties?.hashed_token
+    if (linkError || !hashedToken) {
+      return {
+        error: true,
+        message: 'Tài khoản demo chưa sẵn sàng. Vui lòng chạy script tạo tài khoản demo.',
+      }
+    }
+
+    const supabase = await createSupabaseServerClient()
+    let result = await supabase.auth.verifyOtp({
+      token_hash: hashedToken,
+      type: 'magiclink',
+    })
+    if (result.error) {
+      result = await supabase.auth.verifyOtp({ token_hash: hashedToken, type: 'email' })
+    }
+    if (result.error || !result.data.user) {
+      return { error: true, message: 'Không đăng nhập được tài khoản demo. Vui lòng thử lại.' }
+    }
+
+    await syncRegistrationProfile(supabase, result.data.user)
+    const requested = safeInternalPath(formData.get('next'), '', appBaseUrl())
+    destination = requested || (await defaultLandingPath(supabase, result.data.user.id))
+  } catch {
+    return { error: true, message: 'Chưa xác minh được mã OTP demo. Vui lòng thử lại.' }
+  }
+
+  if (!destination) {
+    return { error: true, message: 'Chưa xác minh được mã OTP demo. Vui lòng thử lại.' }
   }
   redirect(destination)
 }
