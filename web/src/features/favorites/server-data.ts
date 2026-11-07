@@ -26,5 +26,11 @@ export async function readViewerFavorites(): Promise<ViewerFavorites> {
   if (!supabaseIsConfigured()) return { signedIn: false, productIds: new Set() }
   const { supabase, user } = await getVerifiedUser()
   if (!user) return { signedIn: false, productIds: new Set() }
-  return { signedIn: true, productIds: await listFavoriteProductIds(supabase, user.id) }
+  // Danh mục và trang sản phẩm là trang công khai: lỗi đọc yêu thích chỉ ẩn trạng thái đã lưu,
+  // không được làm sập cả trang.
+  try {
+    return { signedIn: true, productIds: await listFavoriteProductIds(supabase, user.id) }
+  } catch {
+    return { signedIn: true, productIds: new Set() }
+  }
 }

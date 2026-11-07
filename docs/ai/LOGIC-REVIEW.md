@@ -187,6 +187,19 @@ Còn mở, cần quyết định:
 "may anh" ra 5 máy ảnh, trang đăng nhập/đăng ký hiển thị bình thường. Luồng OTP thật chưa thử được
 (bản local không có Supabase).
 
+## I. Lần rà soát 6 — 08/11/2026: nội dung hiển thị và độ bền trang
+
+| #   | Vấn đề                                                                     | Hậu quả                                                                                | Sửa                                                                         |
+| --- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 1   | Trang chủ: "N+ thiết bị" và "Giá từ …K/ngày" tính cả sản phẩm mẫu          | Production ghi "34+ thiết bị" khi chỉ 10 máy thuê được; giá "từ" có thể là giá của mẫu | `app/page.tsx`: chỉ tính hàng đặt được (mẫu chỉ dùng khi chưa có hàng thật) |
+| 2   | Khung thanh toán và hoá đơn ghi "Còn lại: …" cho đơn đã huỷ/hết hạn        | Khách tưởng còn nợ tiền một đơn đã đóng                                                | `payment-panel.tsx`, `hoa-don/page.tsx`: đơn đã đóng còn lại 0              |
+| 3   | Trang tài khoản mời staff/admin đăng ký đối tác                            | Bấm vào chỉ nhận lỗi "Tài khoản nhân viên không thể đăng ký"                           | chỉ hiện cho khách                                                          |
+| 4   | Trang tài khoản luôn hiện mục giấy tờ định danh                            | Khi tính năng tắt, khách vào trang chỉ thấy thông báo "chưa bật"                       | ẩn khi `identityDocumentsEnabled()` sai                                     |
+| 5   | Lỗi đọc danh sách yêu thích làm sập cả danh mục/trang sản phẩm (trang lỗi) | Một bảng phụ lỗi kéo theo trang công khai                                              | `readViewerFavorites` trả danh sách rỗng khi lỗi                            |
+
+Vẫn chờ quyết định: B5 (đơn đã trả cọc vẫn hết hạn sau 30 phút), phí huỷ 20% chưa ghi được vào
+sổ cái, B3, C1 (tài khoản demo admin trên production).
+
 ## D. Phần đã kiểm tra và thấy đúng
 
 - Giá chỉ tính ở DB; client không gửi tiền. Làm tròn `floor` khớp giữa `domain.ts` và SQL.

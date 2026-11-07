@@ -21,10 +21,11 @@ export function PaymentPanel({ order, bank, paymentsEnabled }: PaymentPanelProps
     .filter((payment) => payment.direction === 'in' && payment.status === 'succeeded')
     .reduce((sum, payment) => sum + payment.amountVnd, 0)
   const total = order.totalVnd + order.depositVnd
-  const remaining = Math.max(total - collected, 0)
+  const closed = ['cancelled', 'expired'].includes(order.state)
+  // Đơn đã huỷ/hết hạn không còn khoản phải trả; tiền đã nhận (nếu có) được hoàn.
+  const remaining = closed ? 0 : Math.max(total - collected, 0)
   const depositDue = Math.max(order.depositVnd - collected, 0)
   const amountDueNow = depositDue > 0 ? depositDue : remaining
-  const closed = ['cancelled', 'expired'].includes(order.state)
   const showBankInstructions =
     paymentsEnabled &&
     bank !== null &&

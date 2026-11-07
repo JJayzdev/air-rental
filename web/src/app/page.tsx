@@ -139,11 +139,13 @@ const STEPS = [
 
 export default async function HomePage() {
   const catalog = await getCatalog()
-  const featured = catalog.products.filter((product) => !product.isSample).slice(0, 4)
+  // Số liệu ở hero chỉ tính hàng đặt thuê được; sản phẩm mẫu chỉ dùng khi chưa có hàng thật
+  // (bản xem trước cục bộ). Trước đây "34+ thiết bị" và "Giá từ" tính cả 24 mẫu không đặt được.
+  const bookable = catalog.products.filter((product) => !product.isSample)
+  const listed = bookable.length ? bookable : catalog.products
+  const featured = bookable.slice(0, 4)
   const showcase = featured.length ? featured : catalog.products.slice(0, 4)
-  const minPrice = catalog.products.length
-    ? Math.min(...catalog.products.map((product) => product.pricePerDayVnd))
-    : 0
+  const minPrice = listed.length ? Math.min(...listed.map((product) => product.pricePerDayVnd)) : 0
   const priceLabel = minPrice > 0 ? `${Math.round(minPrice / 1000)}K/ngày` : ''
 
   return (
@@ -161,8 +163,8 @@ export default async function HomePage() {
                 Công nghệ trong tầm tay, <em>thuê dễ dàng.</em>
               </h1>
               <p>
-                Thuê thiết bị công nghệ linh hoạt, tiết kiệm và nhanh chóng. Không cần mua, vẫn
-                luôn được trải nghiệm mới nhất.
+                Thuê thiết bị công nghệ linh hoạt, tiết kiệm và nhanh chóng. Không cần mua, vẫn luôn
+                được trải nghiệm mới nhất.
               </p>
               <div className="hero-actions">
                 <Link className="primary" href="/san-pham">
@@ -174,7 +176,7 @@ export default async function HomePage() {
               </div>
               <div className="trust">
                 <span>
-                  <b>{catalog.products.length}+</b> thiết bị
+                  <b>{listed.length}</b> thiết bị
                 </span>
                 <span>
                   <b>30 phút</b> giữ máy khi đặt
