@@ -3970,6 +3970,31 @@ footer {
 .site-header .header-search input::-webkit-search-cancel-button {
   display: none;
 }
+/* Dưới 1120px: menu desktop vẫn hiện (tới 900px) nhưng ô tìm kiếm rộng cố định 210px làm nút "Đăng nhập"
+   tràn khỏi màn hình (cuộn ngang tới 136px ở 940px). Cho ô tìm kiếm co lại và thu khoảng cách.
+   Chỉ đặt cận trên: build đổi cận dưới thành min-width: 901px, lọt khe ở màn hình scale 125%
+   (rộng 900.8px). Khối @media (max-width: 900px) ngay sau ghi đè lại cho bố cục mobile. */
+@media (max-width: 1119.98px) {
+  .site-header .site-header-inner,
+  .site-header-actions {
+    gap: 12px;
+  }
+  .site-header .desktop-nav {
+    gap: 14px;
+    margin-left: 6px;
+  }
+  .site-header-inner > .header-search-form {
+    flex: 1 1 120px;
+    min-width: 0;
+  }
+  .site-header .header-search-form .header-search {
+    min-width: 0;
+  }
+  .site-header .header-search input {
+    width: 100%;
+    min-width: 0;
+  }
+}
 @media (max-width: 900px) {
   .site-header {
     height: auto;

@@ -9,7 +9,8 @@ export const PAYMENT_STATE_LABELS: Record<OrderPaymentState, string> = {
 }
 
 export const PAYMENT_STATE_HINTS: Record<OrderPaymentState, string> = {
-  unpaid: 'Chuyển khoản tiền cọc để giữ máy, phần còn lại thanh toán khi nhận máy.',
+  unpaid:
+    'Bạn có thể chuyển khoản trước theo hướng dẫn bên dưới hoặc thanh toán khi nhận máy. Chuyển khoản không tự xác nhận đơn; nếu đơn bị huỷ hoặc hết hạn, cửa hàng hoàn lại số đã chuyển.',
   deposit_paid: 'Đã nhận tiền cọc. Phần tiền thuê còn lại thanh toán khi nhận máy.',
   paid: 'Đã nhận đủ tiền cọc và tiền thuê.',
   refund_pending:
