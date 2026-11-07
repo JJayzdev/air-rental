@@ -40,12 +40,31 @@ Cách sửa — migration `supabase/migrations/202611070001_discount_usage_from_
 
 Cần làm khi deploy: chạy `supabase db push` (hoặc SQL migration) lên Supabase Cloud.
 
-### B2. Tiền chuyển vào đơn đã huỷ/hết hạn không tạo nghĩa vụ hoàn — **Trung bình**
+### B2. Đơn đã nhận tiền bị huỷ/hết hạn không tạo nghĩa vụ hoàn tiền — **Cao — ĐÃ SỬA (chưa áp lên production)**
 
-`apply_sepay_payment` ghi nhận tiền cho mọi đơn tìm thấy mã, kể cả `cancelled`/`expired`, và có thể
-đặt `payment_state = 'paid'`, nhưng không tạo khoản hoàn nào; dashboard không cảnh báo. Trường hợp
-thực tế: khách chuyển khoản chậm sau 30 phút giữ máy. Đề xuất: với đơn đã huỷ/hết hạn, insert
-`payments(out, kind 'payment_refund', pending)` hoặc ghi `outcome` riêng để vận hành xử lý.
+Lần rà soát 2 cho thấy lỗi rộng hơn mô tả ban đầu. Trang đơn hiện thông tin chuyển khoản ngay khi
+đơn còn `pending`, nên tiền có thể vào trước khi đơn bị huỷ. Ba đường giữ tiền khách mà không ghi
+khoản phải trả:
+
+1. Khách chuyển cọc rồi tự huỷ đơn `pending` (`cancel_booking`).
+2. Đơn `pending` đã trả cọc nhưng hết 30 phút giữ máy trước khi nhân viên xác nhận (expire).
+3. Nhân viên huỷ đơn `confirmed` đã thanh toán.
+4. (B2 cũ) Tiền đến sau khi đơn đã huỷ/hết hạn — còn có thể đặt `payment_state = 'paid'`.
+
+Cách sửa — migration `supabase/migrations/202611080001_cancellation_refunds.sql`:
+
+- `payments.kind` thêm `cancellation_refund`.
+- Trigger `create_refund_on_cancellation`: khi đơn chuyển sang `cancelled`/`expired`, hoàn toàn bộ
+  số dư (`order_refundable_balance` = tiền vào thành công − các khoản hoàn đã/đang làm),
+  `payment_state = 'refund_pending'`.
+- `apply_sepay_payment`: tiền đến cho đơn đã huỷ/hết hạn được ghi nhận và tạo ngay khoản hoàn.
+- `complete_deposit_refund` xác nhận được cả hai loại; `admin_dashboard.refunds_pending` đếm cả hai.
+- Web: `/quan-ly-don` hiện nút xác nhận cho cả hoàn tiền huỷ đơn; nhãn `refund_pending`/`refunded`
+  đổi thành "Chờ hoàn tiền"/"Đã hoàn tiền" (không còn nói "đơn đã hoàn thành" với đơn bị huỷ).
+- Test: `supabase/tests/cancellation_refunds.test.sql` (17 test).
+
+Chưa mô hình hoá phí huỷ: hệ thống tạo khoản hoàn toàn bộ, nhân viên điều chỉnh ngoài hệ thống nếu
+chính sách có phí.
 
 ### B3. Hoàn cọc đủ dù khách chưa trả tiền thuê — **Trung bình (chính sách)**
 
@@ -57,6 +76,20 @@ thu. Cần quyết định: hoàn `max(0, đã trả − total)` hay chặn `→
 
 `apply_sepay_payment` `raise` khi số tiền > 10^12 hoặc `external_id` > 120 ký tự; route trả 500 →
 SePay gửi lại mãi. Nên trả về `{status: 'ignored'}` thay vì raise cho các lỗi dữ liệu.
+
+### B5. Đơn đã trả cọc vẫn hết hạn sau 30 phút nếu nhân viên chưa xác nhận — **Trung bình (chính sách)**
+
+`expires_at` cố định 30 phút từ lúc tạo; thanh toán không gia hạn và không tự xác nhận đơn. Khách
+đặt buổi tối, chuyển cọc ngay, nhưng nhân viên chưa bấm "Xác nhận" trong 30 phút → đơn hết hạn,
+máy được giải phóng cho người khác. Sau B2 tiền sẽ được ghi nhận để hoàn, nhưng khách vẫn mất lịch.
+Đề xuất (cần quyết định): khi `apply_sepay_payment` đưa đơn `pending` còn hạn lên `deposit_paid`,
+gia hạn `expires_at` (ví dụ tới cuối ngày làm việc kế tiếp) hoặc tự chuyển `confirmed`.
+
+### B6. Mở bảo trì được cho máy đang ở nhà khách khi đơn quá hạn — **Thấp**
+
+`open_unit_maintenance` chỉ chặn reservation `pending`/`confirmed` trùng cửa sổ bảo trì. Đơn
+`overdue` đã qua `blocked_period` nên máy đang ở nhà khách vẫn mở bảo trì được; đóng bảo trì sẽ đưa
+máy về `available` dù chưa trả. Nên chặn thêm khi máy thuộc đơn `delivering/active/returning/overdue`.
 
 ## C. Rủi ro bảo mật/vận hành cần quyết định
 
@@ -80,6 +113,15 @@ giá và trả đối tác cả khi chưa thu tiền. Nếu đúng chủ ý thì
   `pending` nên chưa gây lỗi). Không có thao tác "tạm ngưng" dù schema có `suspended`.
 - Đối tác bị từ chối không thể đăng ký lại (hồ sơ `rejected` vẫn còn).
 - `registerPartner` cho nhập email liên hệ tự do, không ràng buộc với email tài khoản.
+
+## E. Lần rà soát 2 — 08/11/2026: lỗi web đã sửa
+
+| #   | Vấn đề                                                                                                                      | Hậu quả                                                        | File                                                                                    |
+| --- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| 1   | Admin lưu sản phẩm chấp nhận mọi link `http(s)`, nhưng danh mục chỉ hiển thị ảnh `/images/` hoặc Supabase Storage công khai | Lưu "thành công" nhưng sản phẩm biến mất khỏi `/san-pham`      | `features/admin/actions.ts` → dùng chung `features/products/catalog-images.ts` (+ test) |
+| 2   | Form sửa sản phẩm admin nối ảnh bằng chuỗi gồm dấu gạch chéo ngược + chữ n, không phải ký tự xuống dòng                     | Sửa một sản phẩm nhiều ảnh là gộp các link thành một link hỏng | `app/(admin)/admin/san-pham/page.tsx`                                                   |
+| 3   | Ô số lượng trong giỏ: xoá trống để gõ số mới → `Number('') = 0` → xoá luôn dòng                                             | Mất sản phẩm khỏi giỏ khi đang sửa số lượng                    | `features/cart/rental-cart-panel.tsx`                                                   |
+| 4   | Kiểm tra link ảnh của đối tác nằm riêng trong action đối tác                                                                | Hai quy tắc dễ lệch nhau                                       | gộp vào `catalog-images.ts`                                                             |
 
 ## D. Phần đã kiểm tra và thấy đúng
 

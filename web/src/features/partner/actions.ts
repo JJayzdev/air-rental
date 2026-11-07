@@ -9,6 +9,7 @@ import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/database'
 import { slugifyProductName, uniqueSlug, productAssetTag } from './slug.ts'
+import { catalogImageUrlsFromInput } from '@/features/products/catalog-images'
 
 type ServerSupabase = Awaited<ReturnType<typeof getVerifiedAppRole>>['supabase']
 
@@ -73,7 +74,10 @@ export async function savePartnerProduct(formData: FormData): Promise<never> {
     .maybeSingle()
   if (!category) redirect('/partner/san-pham/them?error=invalid')
 
-  const imageUrls = partnerImageUrls(parsed.data.imageUrls)
+  const imageUrls = catalogImageUrlsFromInput(
+    parsed.data.imageUrls,
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+  )
   if (!imageUrls) redirect('/partner/san-pham/them?error=image')
 
   const baseSlug = slugifyProductName(parsed.data.name)
@@ -116,38 +120,6 @@ export async function savePartnerProduct(formData: FormData): Promise<never> {
   }
 
   redirect('/partner/san-pham/them?error=failed')
-}
-
-/**
- * Danh mục công khai chỉ hiển thị ảnh trong `/images/` của site hoặc Supabase Storage công khai
- * (xem `safeImageUrl` trong catalog-data). Chặn link ngoài ngay khi lưu để một sản phẩm đối tác
- * không thể làm hỏng trang danh mục. Trả về null nếu có link không hợp lệ.
- */
-function partnerImageUrls(raw: string): string[] | null {
-  const items = raw
-    .split(/[\r\n,]+/)
-    .map((item) => item.trim())
-    .filter(Boolean)
-  if (items.length === 0) return ['/images/catalog-placeholder.svg']
-  if (items.length > 8) return null
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const allowed = items.every((item) => {
-    if (item.length > 1000) return false
-    if (/^\/images\/[A-Za-z0-9/_.-]+$/.test(item) && !item.includes('..')) return true
-    if (!supabaseUrl) return false
-    try {
-      const candidate = new URL(item)
-      const base = new URL(supabaseUrl)
-      return (
-        candidate.origin === base.origin &&
-        candidate.pathname.startsWith('/storage/v1/object/public/') &&
-        !candidate.pathname.includes('..')
-      )
-    } catch {
-      return false
-    }
-  })
-  return allowed ? items : null
 }
 
 /**

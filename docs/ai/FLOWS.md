@@ -100,7 +100,10 @@ Ngân hàng → SePay → POST /api/webhooks/sepay (Authorization: Apikey <SEPAY
         (không ghi đè refund_pending/refunded)
 Đơn → completed: trigger create_deposit_refund_on_completion
       refund = min(cọc, tổng đã trả) > 0 → payments(out, deposit_refund, pending), payment_state = refund_pending
-Nhân viên chuyển tiền thủ công → bấm "Đã hoàn cọc" → completeDepositRefund → RPC complete_deposit_refund → refunded
+Đơn → cancelled/expired: trigger create_refund_on_cancellation
+      số dư đã nhận > 0 → payments(out, cancellation_refund, pending), payment_state = refund_pending
+      tiền đến SAU khi đơn huỷ/hết hạn → apply_sepay_payment tạo ngay cancellation_refund
+Nhân viên chuyển tiền thủ công → bấm "Xác nhận đã hoàn tiền" → completeDepositRefund → RPC complete_deposit_refund → refunded
 ```
 
 ## 6. Kho và bảo trì (admin/staff)

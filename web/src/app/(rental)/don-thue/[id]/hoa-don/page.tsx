@@ -129,7 +129,7 @@ export default async function RentalInvoicePage({ params }: { params: Promise<{ 
           </div>
           {refunded > 0 && (
             <div>
-              <dt>Đã hoàn cọc</dt>
+              <dt>Đã hoàn tiền</dt>
               <dd>{money(refunded)}</dd>
             </div>
           )}

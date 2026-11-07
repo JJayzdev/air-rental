@@ -329,11 +329,13 @@ export function RentalCartPanel({
                     min={0}
                     max={20}
                     value={item.quantity}
-                    onChange={(event) =>
-                      updateCart((current) =>
-                        setRentalQuantity(current, item.productId, Number(event.target.value)),
-                      )
-                    }
+                    onChange={(event) => {
+                      // Ô trống khi đang xoá để gõ số mới: Number('') = 0 sẽ xoá luôn dòng
+                      // khỏi giỏ. Chỉ xoá khi người dùng thật sự nhập 0.
+                      if (event.target.value.trim() === '') return
+                      const quantity = Number(event.target.value)
+                      updateCart((current) => setRentalQuantity(current, item.productId, quantity))
+                    }}
                   />
                 </label>
               </article>

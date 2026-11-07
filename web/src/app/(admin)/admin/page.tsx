@@ -156,7 +156,7 @@ export default async function AdminDashboardPage({
             <small>Giao dịch thành công trong tháng</small>
           </div>
           <div className="admin-money-card">
-            <span>Đã hoàn cọc</span>
+            <span>Đã hoàn tiền</span>
             <strong>{money(dashboard.month_refunds_vnd)}</strong>
             <small>Hoàn tiền thành công trong tháng</small>
           </div>

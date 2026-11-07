@@ -50,24 +50,24 @@ supabase test db    # pgTAP trong supabase/tests
 
 ## 3. Muốn sửa X thì đụng vào đâu
 
-| Việc                                            | File chính                                                                                                                                     |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Giá, giảm giá dài ngày, mã giảm giá, phí giao   | `quote_booking` (bản hiện tại ở `*_discount_usage_from_orders.sql`, gốc ở `*_pricing.sql`) — preview ở `web/src/features/pricing/`             |
-| Tạo đơn, giữ máy, chống trùng lịch              | RPC `create_multi_product_booking` (`*_pricing.sql`), gọi từ `web/src/features/booking/actions.ts`                                             |
-| Lịch ngày trống                                 | RPC `booking_calendar` (`*_multi_product_booking.sql`), `getBookingCalendar` trong booking/actions                                             |
-| Vòng đời đơn (xác nhận → giao → trả)            | RPC `transition_booking` (`*_multi_product_booking.sql`), UI `web/src/app/(admin)/quan-ly-don/`                                                |
-| Thanh toán / webhook SePay / hoàn cọc           | `*_payments.sql`, `*_pricing.sql` (bản mới của `apply_sepay_payment`), `web/src/app/api/webhooks/sepay/route.ts`, `web/src/features/payments/` |
-| Giỏ thuê                                        | `web/src/features/cart/` (localStorage `air-uuid-rental-cart-v1`), trang `(rental)/gio-thue`                                                   |
-| Checkout                                        | `web/src/app/(rental)/checkout/page.tsx` + `features/cart/rental-cart-panel.tsx`                                                               |
-| Danh mục sản phẩm công khai                     | `web/src/features/products/catalog-*.ts`, trang `app/san-pham/`                                                                                |
-| Đăng nhập / đăng ký / OTP / demo login          | `web/src/features/auth/`, `app/dang-nhap`, `app/dang-ky`, `app/auth/callback/route.ts`                                                         |
-| Tài khoản, địa chỉ, giấy tờ                     | `web/src/features/account/`, `app/(rental)/tai-khoan/`, `*_accounts.sql`                                                                       |
-| Quản trị (dashboard, kho, bảo trì, mã, khu vực) | `web/src/features/admin/`, `app/(admin)/admin/*`, `*_admin.sql`                                                                                |
-| Đối tác (đăng ký, duyệt, sản phẩm, doanh thu)   | `web/src/features/partner/`, `app/(partner)/`, `app/dang-ky-doi-tac/`, `app/(admin)/admin/doi-tac/`, `*_partner*.sql`                          |
-| Trợ lý chat                                     | `web/src/app/api/chat/route.ts`, `web/src/features/chat/`, `components/chat/`                                                                  |
-| Biến môi trường                                 | `web/src/lib/env.ts`, `web/.env.example`                                                                                                       |
-| Kiểu dữ liệu DB cho TypeScript                  | `web/src/lib/supabase/database.ts` (viết tay — cập nhật khi đổi schema)                                                                        |
-| Nhãn trạng thái tiếng Việt                      | `features/orders/state-labels.ts`, `features/payments/state-labels.ts`, `features/admin/labels.ts`                                             |
+| Việc                                            | File chính                                                                                                                                                                                  |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Giá, giảm giá dài ngày, mã giảm giá, phí giao   | `quote_booking` (bản hiện tại ở `*_discount_usage_from_orders.sql`, gốc ở `*_pricing.sql`) — preview ở `web/src/features/pricing/`                                                          |
+| Tạo đơn, giữ máy, chống trùng lịch              | RPC `create_multi_product_booking` (`*_pricing.sql`), gọi từ `web/src/features/booking/actions.ts`                                                                                          |
+| Lịch ngày trống                                 | RPC `booking_calendar` (`*_multi_product_booking.sql`), `getBookingCalendar` trong booking/actions                                                                                          |
+| Vòng đời đơn (xác nhận → giao → trả)            | RPC `transition_booking` (`*_multi_product_booking.sql`), UI `web/src/app/(admin)/quan-ly-don/`                                                                                             |
+| Thanh toán / webhook SePay / hoàn cọc           | `*_payments.sql`, `*_cancellation_refunds.sql` (bản hiện tại của `apply_sepay_payment`, `complete_deposit_refund`), `web/src/app/api/webhooks/sepay/route.ts`, `web/src/features/payments/` |
+| Giỏ thuê                                        | `web/src/features/cart/` (localStorage `air-uuid-rental-cart-v1`), trang `(rental)/gio-thue`                                                                                                |
+| Checkout                                        | `web/src/app/(rental)/checkout/page.tsx` + `features/cart/rental-cart-panel.tsx`                                                                                                            |
+| Danh mục sản phẩm công khai                     | `web/src/features/products/catalog-*.ts`, trang `app/san-pham/`                                                                                                                             |
+| Đăng nhập / đăng ký / OTP / demo login          | `web/src/features/auth/`, `app/dang-nhap`, `app/dang-ky`, `app/auth/callback/route.ts`                                                                                                      |
+| Tài khoản, địa chỉ, giấy tờ                     | `web/src/features/account/`, `app/(rental)/tai-khoan/`, `*_accounts.sql`                                                                                                                    |
+| Quản trị (dashboard, kho, bảo trì, mã, khu vực) | `web/src/features/admin/`, `app/(admin)/admin/*`, `*_admin.sql`                                                                                                                             |
+| Đối tác (đăng ký, duyệt, sản phẩm, doanh thu)   | `web/src/features/partner/`, `app/(partner)/`, `app/dang-ky-doi-tac/`, `app/(admin)/admin/doi-tac/`, `*_partner*.sql`                                                                       |
+| Trợ lý chat                                     | `web/src/app/api/chat/route.ts`, `web/src/features/chat/`, `components/chat/`                                                                                                               |
+| Biến môi trường                                 | `web/src/lib/env.ts`, `web/.env.example`                                                                                                                                                    |
+| Kiểu dữ liệu DB cho TypeScript                  | `web/src/lib/supabase/database.ts` (viết tay — cập nhật khi đổi schema)                                                                                                                     |
+| Nhãn trạng thái tiếng Việt                      | `features/orders/state-labels.ts`, `features/payments/state-labels.ts`, `features/admin/labels.ts`                                                                                          |
 
 ## 4. Bất biến KHÔNG được phá
 

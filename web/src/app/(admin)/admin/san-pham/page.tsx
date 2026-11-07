@@ -46,6 +46,12 @@ export default async function AdminProductsPage({
           Chưa lưu được sản phẩm. Kiểm tra đường dẫn, giá và danh mục.
         </p>
       )}
+      {params.product === 'image' && (
+        <p className="rental-error" role="alert">
+          Link ảnh không hợp lệ. Chỉ dùng ảnh trong /images/ của site hoặc Supabase Storage công
+          khai (tối đa 8 ảnh); link ngoài sẽ làm sản phẩm bị ẩn khỏi danh mục.
+        </p>
+      )}
 
       <section className="rental-panel rental-admin-panel" aria-labelledby="admin-new-product">
         <h2 id="admin-new-product">Thêm sản phẩm</h2>
@@ -81,7 +87,7 @@ export default async function AdminProductsPage({
             Link ảnh (mỗi link một dòng)
             <textarea
               name="imageUrls"
-              placeholder="/images/catalog/may-anh.jpg&#10;https://..."
+              placeholder="/images/catalog/may-anh.jpg&#10;https://<project>.supabase.co/storage/v1/object/public/..."
               rows={3}
             />
           </label>
@@ -168,7 +174,7 @@ export default async function AdminProductsPage({
                     <label>
                       Link ảnh (mỗi link một dòng)
                       <textarea
-                        defaultValue={product.imageUrls.join('\\n')}
+                        defaultValue={product.imageUrls.join('\n')}
                         name="imageUrls"
                         rows={3}
                       />
