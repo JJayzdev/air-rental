@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 import { requestEmailOtp, verifyEmailOtp, type EmailOtpActionState } from '@/features/auth/actions'
 import { PhoneOtpForm } from './phone-otp-form'
 
@@ -14,9 +14,37 @@ export function LoginForm({
   next: string
   phoneOtpEnabled?: boolean
 }) {
+  // "Đổi email" trỏ về đúng URL đang mở nên Next giữ nguyên state; đổi key để làm mới form.
+  const [attempt, setAttempt] = useState(0)
+  return (
+    <EmailOtpFlow
+      key={attempt}
+      next={next}
+      phoneOtpEnabled={phoneOtpEnabled}
+      onChangeEmail={() => setAttempt((value) => value + 1)}
+    />
+  )
+}
+
+function EmailOtpFlow({
+  next,
+  phoneOtpEnabled,
+  onChangeEmail,
+}: {
+  next: string
+  phoneOtpEnabled: boolean
+  onChangeEmail: () => void
+}) {
   const [sendState, sendAction, sending] = useActionState(requestEmailOtp, initialState)
   const [verifyState, verifyAction, verifying] = useActionState(verifyEmailOtp, initialState)
-  const sentEmail = sendState.sent && sendState.email ? sendState.email : null
+  // Nhớ email đã gửi mã thành công: nếu "Gửi lại mã" bị từ chối (ví dụ phải chờ 60 giây), khách
+  // vẫn ở bước nhập mã và dùng được mã đã nhận thay vì bị đưa về bước nhập email.
+  const [sentEmail, setSentEmail] = useState<string | null>(null)
+  const [seenState, setSeenState] = useState(sendState)
+  if (seenState !== sendState) {
+    setSeenState(sendState)
+    if (sendState.sent && sendState.email) setSentEmail(sendState.email)
+  }
   const nextQuery = next ? `?next=${encodeURIComponent(next)}` : ''
 
   if (!sentEmail) {
@@ -95,7 +123,9 @@ export function LoginForm({
             {sending ? 'Đang gửi lại…' : 'Gửi lại mã'}
           </button>
         </form>
-        <Link href={`/dang-nhap${nextQuery}`}>Đổi email</Link>
+        <button className="rental-link-button" type="button" onClick={onChangeEmail}>
+          Đổi email
+        </button>
       </div>
       {sendState.message && (
         <p aria-live="polite" className={sendState.error ? 'rental-error' : 'rental-message'}>

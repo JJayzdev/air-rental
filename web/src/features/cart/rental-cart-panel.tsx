@@ -108,7 +108,14 @@ export function RentalCartPanel({
   useEffect(() => {
     if (!hydrated) return
     try {
-      localStorage.setItem(RENTAL_CART_STORAGE_KEY, JSON.stringify(cart))
+      // Chỉ ghi và báo khi nội dung thật sự đổi: sự kiện này cũng kích hoạt `sync` ở trên, nên
+      // ghi vô điều kiện sẽ tạo vòng lặp setCart → ghi → sync → setCart.
+      const serialized = JSON.stringify(cart)
+      if (localStorage.getItem(RENTAL_CART_STORAGE_KEY) !== serialized) {
+        localStorage.setItem(RENTAL_CART_STORAGE_KEY, serialized)
+        // Số trên biểu tượng giỏ ở header nghe sự kiện này; `storage` chỉ bắn ở tab khác.
+        window.dispatchEvent(new Event('air-rental-cart-change'))
+      }
     } catch {
       queueMicrotask(() => setStorageError('Trình duyệt chưa lưu được thay đổi trong giỏ thuê.'))
     }
@@ -240,6 +247,7 @@ export function RentalCartPanel({
     if (actionState.orderId) {
       try {
         localStorage.removeItem(RENTAL_CART_STORAGE_KEY)
+        window.dispatchEvent(new Event('air-rental-cart-change'))
       } catch {
         /* Still open the saved order. */
       }

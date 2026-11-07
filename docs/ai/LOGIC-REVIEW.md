@@ -168,7 +168,24 @@ Còn mở, cần quyết định:
   và sửa được trước khi đặt, nhưng nên để người dùng xác nhận thông tin ở lần đăng nhập đầu.
 - **Chat LLM không thể kiểm tra lịch hợp lệ — Thấp.** Công cụ `checkAvailability` cần UUID sản phẩm
   và ngày, nhưng model không được cung cấp UUID hay ngày hôm nay → gần như luôn bị từ chối hoặc đoán.
-- `robots.ts` không chặn `/partner` và `/dang-ky-doi-tac` (các trang này đã `noindex` nên ảnh hưởng nhỏ).
+- ~~`robots.ts` không chặn `/partner` và `/dang-ky-doi-tac`~~ — đã sửa ở lần 5.
+
+## H. Lần rà soát 5 — 08/11/2026: lỗi trải nghiệm và cải thiện
+
+| #   | Vấn đề                                                                                 | Hậu quả                                                                                                                      | Sửa                                                                                                        |
+| --- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| 1   | Giỏ thuê ghi localStorage nhưng không phát sự kiện `air-rental-cart-change`            | Số trên biểu tượng giỏ ở header không đổi khi sửa số lượng; sau khi đặt đơn thành công giỏ đã xoá nhưng badge vẫn hiện số cũ | `rental-cart-panel.tsx`: phát sự kiện khi lưu/xoá, chỉ ghi khi nội dung đổi để không lặp vô hạn với `sync` |
+| 2   | Đăng nhập: "Gửi lại mã" bị từ chối (phải chờ 60 giây) thì form quay về bước nhập email | Khách mất ô nhập mã dù đã có mã hợp lệ                                                                                       | `login-form.tsx`: nhớ email đã gửi thành công                                                              |
+| 3   | Đăng nhập: "Đổi email" là link tới đúng URL đang mở                                    | Next giữ nguyên state nên bấm không có tác dụng                                                                              | nút đổi `key` để làm mới form                                                                              |
+| 4   | Đăng ký xong, nút "Nhập mã OTP" chuyển sang `/dang-nhap` buộc gửi mã mới               | Gần như luôn bị Supabase chặn "chờ 60 giây" vì vừa gửi mã đăng ký                                                            | `register-form.tsx`: nhập mã ngay trên trang đăng ký                                                       |
+| 5   | Đăng ký đối tác xong không có lối vào khu vực đối tác; header vẫn là của khách         | Phải tự tải lại trang                                                                                                        | link `/partner` + `revalidatePath('/', 'layout')`                                                          |
+| 6   | Danh mục: 24 sản phẩm mẫu (không đặt được) đứng trước 10 sản phẩm thật                 | Khách phải cuộn qua hết mẫu mới thấy hàng thuê được                                                                          | thứ tự mặc định đưa hàng đặt được lên trước (có test)                                                      |
+| 7   | Tìm kiếm phân biệt dấu: "may anh" không ra "Máy ảnh"                                   | Gõ không dấu trên điện thoại ra 0 kết quả                                                                                    | `searchText` bỏ dấu tiếng Việt (có test)                                                                   |
+| 8   | `robots.ts` không chặn `/partner`, `/dang-ky-doi-tac`                                  | Bot vẫn thu thập (các trang đã `noindex`)                                                                                    | thêm vào disallow                                                                                          |
+
+Đã kiểm tra trên bản local: badge 1 → 3 khi đổi số lượng, xoá trống ô số lượng giữ nguyên dòng,
+"may anh" ra 5 máy ảnh, trang đăng nhập/đăng ký hiển thị bình thường. Luồng OTP thật chưa thử được
+(bản local không có Supabase).
 
 ## D. Phần đã kiểm tra và thấy đúng
 
