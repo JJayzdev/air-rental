@@ -120,7 +120,9 @@ export default async function RentalOrderDetailPage({
             <li key={`${event.createdAt}-${index}`}>
               <span>{ORDER_STATE_LABELS[event.state]}</span>
               <time dateTime={event.createdAt}>
-                {new Date(event.createdAt).toLocaleString('vi-VN')}
+                {new Date(event.createdAt).toLocaleString('vi-VN', {
+                  timeZone: 'Asia/Ho_Chi_Minh',
+                })}
               </time>
             </li>
           ))}

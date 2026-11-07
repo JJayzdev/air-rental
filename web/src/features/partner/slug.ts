@@ -46,10 +46,11 @@ function fitSlug(value: string): string {
 
 /**
  * Mã tài sản cho từng thiết bị trong kho, ví dụ slug "may-anh-sony-a7" và vị
- * trí 2 → "MAY-ANH-SONY-A7-002". Slug là duy nhất nên mã này không trùng giữa
- * các sản phẩm.
+ * trí 2 → "MAY-ANH-SONY-A7-002". Giữ nguyên toàn bộ slug (tối đa 80 ký tự): slug là
+ * duy nhất nên mã không trùng giữa các sản phẩm. Cắt ngắn slug sẽ làm hai slug dài
+ * chung tiền tố sinh cùng mã và insert product_units thất bại (asset_tag unique).
  */
 export function productAssetTag(slug: string, index: number): string {
-  const prefix = slug.toUpperCase().slice(0, 48).replace(/-+$/g, '')
+  const prefix = slug.toUpperCase().replace(/-+$/g, '')
   return `${prefix || 'SAN-PHAM'}-${String(index).padStart(3, '0')}`
 }

@@ -42,8 +42,8 @@ export default async function PartnerAddProductPage({
           <p className="partner-eyebrow">Sản phẩm của tôi</p>
           <h1>Thêm sản phẩm mới</h1>
           <p className="partner-page-sub">
-            Nhập thông tin thiết bị bạn muốn cho thuê. Sản phẩm sẽ hiển thị trên trang khách sau khi
-            duyệt.
+            Nhập thông tin thiết bị bạn muốn cho thuê. Chọn trạng thái “Đang cho thuê” để sản phẩm
+            hiển thị ngay trên trang khách; “Bản nháp” để lưu lại mà chưa hiển thị.
           </p>
         </div>
         <Link className="partner-button" href="/partner/san-pham">

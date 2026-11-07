@@ -353,6 +353,10 @@ export interface Database {
         Returns: Json
       }
       complete_deposit_refund: { Args: { p_payment_id: string }; Returns: undefined }
+      discount_code_usage: {
+        Args: Record<PropertyKey, never>
+        Returns: Array<{ discount_code_id: string; active_uses: number }>
+      }
       admin_dashboard: { Args: Record<PropertyKey, never>; Returns: AdminDashboardRow[] }
       open_unit_maintenance: {
         Args: {

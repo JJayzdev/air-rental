@@ -40,3 +40,11 @@ test('productAssetTag tạo mã tài sản duy nhất theo slug và thứ tự',
     false,
   )
 })
+
+test('productAssetTag không trùng giữa hai slug dài chung tiền tố', () => {
+  const base = slugifyProductName('Máy ảnh mirrorless Sony Alpha A7 IV kèm ống kính zoom 28-70mm')
+  const first = uniqueSlug(base, [])
+  const second = uniqueSlug(base, [first])
+  assert.notEqual(first, second)
+  assert.notEqual(productAssetTag(first, 1), productAssetTag(second, 1))
+})
