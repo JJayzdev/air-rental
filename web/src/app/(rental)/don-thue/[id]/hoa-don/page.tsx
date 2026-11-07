@@ -33,6 +33,9 @@ export default async function RentalInvoicePage({ params }: { params: Promise<{ 
     .filter((payment) => payment.direction === 'out' && payment.status === 'succeeded')
     .reduce((sum, payment) => sum + payment.amountVnd, 0)
   const total = order.totalVnd + order.depositVnd
+  // Đơn đã huỷ/hết hạn không còn khoản phải trả; tiền đã nhận (nếu có) được hoàn.
+  const closed = order.state === 'cancelled' || order.state === 'expired'
+  const remaining = closed ? 0 : Math.max(total - collected, 0)
 
   return (
     <main className="shell rental-page rental-invoice">
@@ -135,7 +138,7 @@ export default async function RentalInvoicePage({ params }: { params: Promise<{ 
           )}
           <div>
             <dt>Còn lại</dt>
-            <dd>{money(Math.max(total - collected, 0))}</dd>
+            <dd>{money(remaining)}</dd>
           </div>
         </dl>
 

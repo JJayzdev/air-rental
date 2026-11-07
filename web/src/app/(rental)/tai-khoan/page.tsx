@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { requireVerifiedUser } from '@/lib/supabase/auth'
 import { updateOwnProfile } from '@/features/account/actions'
+import { identityDocumentsEnabled } from '@/lib/supabase/service'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -24,6 +25,9 @@ export default async function AccountPage({
   const params = await searchParams
 
   const isPartner = profile?.role === 'partner'
+  // Nhân viên/quản trị không được đăng ký đối tác (registerPartner từ chối), nên không mời họ.
+  const canBecomePartner = !profile?.role || profile.role === 'customer'
+  const showIdentityDocuments = identityDocumentsEnabled()
 
   return (
     <main className="shell rental-page">
@@ -81,7 +85,7 @@ export default async function AccountPage({
           </button>
         </form>
       </section>
-      {!isPartner && (
+      {canBecomePartner && (
         <section className="rental-panel rental-account-panel">
           <h2>Trở thành đối tác A.I.R</h2>
           <p>
@@ -103,11 +107,13 @@ export default async function AccountPage({
         <p>Xem thiết bị đã lưu.</p>
         <Link href="/yeu-thich">Mở danh sách yêu thích</Link>
       </section>
-      <section className="rental-panel rental-account-panel">
-        <h2>Giấy tờ định danh (tùy chọn)</h2>
-        <p>Chỉ tải giấy tờ lên nếu nhân viên cửa hàng yêu cầu. Không bắt buộc để đặt thuê.</p>
-        <Link href="/tai-khoan/giay-to">Quản lý giấy tờ định danh</Link>
-      </section>
+      {showIdentityDocuments && (
+        <section className="rental-panel rental-account-panel">
+          <h2>Giấy tờ định danh (tùy chọn)</h2>
+          <p>Chỉ tải giấy tờ lên nếu nhân viên cửa hàng yêu cầu. Không bắt buộc để đặt thuê.</p>
+          <Link href="/tai-khoan/giay-to">Quản lý giấy tờ định danh</Link>
+        </section>
+      )}
       <section className="rental-panel rental-account-panel">
         <h2>Đơn thuê</h2>
         <p>Xem trạng thái và lịch sử các yêu cầu của bạn.</p>
