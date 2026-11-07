@@ -4,6 +4,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database, OrderPaymentState, OrderState } from '@/lib/supabase/database'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 
+export { formatRentalPeriod, formatVietnamDate, vietnamMonthKey } from './dates.ts'
+
 export interface PartnerOrderItem {
   orderId: string
   productId: string
@@ -19,9 +21,11 @@ export interface PartnerOrder {
   paymentState: OrderPaymentState
   customerName: string
   customerPhone: string
-  totalVnd: number
-  depositVnd: number
+  /** Chỉ phần tiền thuê của thiết bị thuộc đối tác; không lộ tổng đơn có hàng của bên khác. */
+  partnerTotalVnd: number
   createdAt: string
+  /** Thời điểm đơn chuyển sang `completed` (từ order_events), null nếu chưa hoàn thành. */
+  completedAt: string | null
   items: PartnerOrderItem[]
 }
 
@@ -50,6 +54,7 @@ export async function loadPartnerOrders(
 
   let itemRows: any[] = []
   let orderRows: any[] = []
+  const completedAtByOrder = new Map<string, string>()
   try {
     const service = createSupabaseServiceClient()
     const { data: items, error: itemError } = await service
@@ -64,13 +69,24 @@ export async function loadPartnerOrders(
 
     const { data: orders, error: orderError } = await service
       .from('orders')
-      .select(
-        'id, code, state, payment_state, customer_name, customer_phone, total_vnd, deposit_vnd, created_at',
-      )
+      .select('id, code, state, payment_state, customer_name, customer_phone, created_at')
       .in('id', orderIds)
       .order('created_at', { ascending: false })
     if (orderError) return { orders: [], unavailable: true }
     orderRows = orders ?? []
+
+    const { data: events, error: eventError } = await service
+      .from('order_events')
+      .select('order_id, created_at')
+      .in('order_id', orderIds)
+      .eq('to_state', 'completed')
+    if (eventError) return { orders: [], unavailable: true }
+    for (const event of events ?? []) {
+      const previous = completedAtByOrder.get(event.order_id)
+      if (!previous || event.created_at > previous) {
+        completedAtByOrder.set(event.order_id, event.created_at)
+      }
+    }
   } catch {
     return { orders: [], unavailable: true }
   }
@@ -90,30 +106,22 @@ export async function loadPartnerOrders(
 
   return {
     unavailable: false,
-    orders: orderRows.map((order) => ({
-      id: order.id,
-      code: order.code,
-      state: order.state,
-      paymentState: order.payment_state,
-      customerName: order.customer_name,
-      customerPhone: order.customer_phone,
-      totalVnd: Number(order.total_vnd ?? 0),
-      depositVnd: Number(order.deposit_vnd ?? 0),
-      createdAt: order.created_at,
-      items: itemsByOrder.get(order.id) ?? [],
-    })),
+    orders: orderRows.map((order) => {
+      const items = itemsByOrder.get(order.id) ?? []
+      return {
+        id: order.id,
+        code: order.code,
+        state: order.state,
+        paymentState: order.payment_state,
+        customerName: order.customer_name,
+        customerPhone: order.customer_phone,
+        partnerTotalVnd: items.reduce((sum, item) => sum + item.lineTotalVnd, 0),
+        createdAt: order.created_at,
+        completedAt: completedAtByOrder.get(order.id) ?? null,
+        items,
+      }
+    }),
   }
-}
-
-/** Hiển thị khoảng thuê từ daterange của Postgres, ví dụ `[2026-11-10,2026-11-13)`. */
-export function formatRentalPeriod(period: string): string {
-  const match = period.match(/^\[([^,]+),([^)]+)\)$/)
-  if (!match) return period
-  const format = (value: string) => {
-    const date = new Date(`${value}T00:00:00+07:00`)
-    return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('vi-VN')
-  }
-  return `${format(match[1])} → ${format(match[2])}`
 }
 
 export function partnerGrossTotal(orders: PartnerOrder[]): number {

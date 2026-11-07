@@ -121,7 +121,7 @@ export default async function PartnerDonThuePage() {
                   <th scope="col">Thiết bị</th>
                   <th scope="col">Thời gian thuê</th>
                   <th scope="col">Trạng thái</th>
-                  <th scope="col">Tổng đơn</th>
+                  <th scope="col">Phần của bạn</th>
                 </tr>
               </thead>
               <tbody>
@@ -148,7 +148,7 @@ export default async function PartnerDonThuePage() {
                         {ORDER_STATE_LABELS[order.state]}
                       </span>
                     </td>
-                    <td>{money(order.totalVnd)}</td>
+                    <td>{money(order.partnerTotalVnd)}</td>
                   </tr>
                 ))}
               </tbody>

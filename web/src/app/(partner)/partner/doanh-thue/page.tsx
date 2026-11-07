@@ -4,8 +4,10 @@ import { redirect } from 'next/navigation'
 import { getVerifiedAppRole } from '@/lib/supabase/auth'
 import {
   formatRentalPeriod,
+  formatVietnamDate,
   loadPartnerOrders,
   partnerGrossTotal,
+  vietnamMonthKey,
 } from '@/features/partner/server-data'
 import { ORDER_STATE_LABELS } from '@/features/orders/state-labels'
 import { money } from '@/lib/format'
@@ -15,11 +17,6 @@ export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
   title: 'Doanh thu',
-}
-
-function formatDate(value: string) {
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('vi-VN')
 }
 
 export default async function PartnerDoanhThuPage() {
@@ -60,9 +57,12 @@ export default async function PartnerDoanhThuPage() {
   const platformFee = Math.round((grossRevenue * commissionRate) / 100)
   const netRevenue = grossRevenue - platformFee
 
-  const currentMonth = new Date().toISOString().slice(0, 7)
+  // Doanh thu được ghi nhận theo tháng hoàn thành đơn, tính theo giờ Việt Nam.
+  const currentMonth = vietnamMonthKey(new Date())
   const monthRevenue = partnerGrossTotal(
-    completedOrders.filter((order) => order.createdAt.slice(0, 7) === currentMonth),
+    completedOrders.filter(
+      (order) => vietnamMonthKey(order.completedAt ?? order.createdAt) === currentMonth,
+    ),
   )
 
   return (
@@ -145,7 +145,7 @@ export default async function PartnerDoanhThuPage() {
               <thead>
                 <tr>
                   <th scope="col">Mã đơn</th>
-                  <th scope="col">Ngày đặt</th>
+                  <th scope="col">Hoàn thành</th>
                   <th scope="col">Thiết bị</th>
                   <th scope="col">Thời gian thuê</th>
                   <th scope="col">Doanh thu gộp</th>
@@ -163,7 +163,7 @@ export default async function PartnerDoanhThuPage() {
                         <br />
                         <small>{ORDER_STATE_LABELS[order.state]}</small>
                       </td>
-                      <td>{formatDate(order.createdAt)}</td>
+                      <td>{formatVietnamDate(order.completedAt ?? order.createdAt)}</td>
                       <td>{order.items.map((item) => item.productName).join(', ')}</td>
                       <td>
                         {order.items[0] ? formatRentalPeriod(order.items[0].rentalPeriod) : '—'}
