@@ -56,6 +56,23 @@ test('filtering and sorting operate on URL-backed catalog state', () => {
   assert.equal(findCatalogProduct(results, 'not-here'), null)
 })
 
+test('default order puts bookable devices before samples; search ignores Vietnamese accents', () => {
+  const bookable = { ...SAMPLE_CATALOG[0], slug: 'that-may', isSample: false, sortOrder: 999 }
+  const ordered = filterCatalogProducts([...SAMPLE_CATALOG, bookable], parseCatalogFilters({}))
+  assert.equal(ordered[0].slug, 'that-may')
+  assert.ok(ordered.slice(1).every((product) => product.isSample))
+
+  const camera = { ...SAMPLE_CATALOG[0], slug: 'may-anh', name: 'Máy ảnh Đẹp', specifications: {} }
+  assert.deepEqual(
+    filterCatalogProducts([camera], parseCatalogFilters({ q: 'may anh dep' })).map((p) => p.slug),
+    ['may-anh'],
+  )
+  assert.deepEqual(
+    filterCatalogProducts([camera], parseCatalogFilters({ q: 'MÁY ẢNH' })).map((p) => p.slug),
+    ['may-anh'],
+  )
+})
+
 test('catalog mapper validates fields and only allows local placeholders or its Supabase storage', () => {
   assert.equal(mapSupabaseCatalogRow(row, 'https://catalog.example').slug, 'sample-camera')
   assert.equal(mapSupabaseCatalogRow(row, 'https://catalog.example').sourceUrl, row.source_url)

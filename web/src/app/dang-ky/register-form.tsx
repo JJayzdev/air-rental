@@ -2,12 +2,13 @@
 
 import Link from 'next/link'
 import { useActionState } from 'react'
-import { registerAccount, type EmailOtpActionState } from '@/features/auth/actions'
+import { registerAccount, verifyEmailOtp, type EmailOtpActionState } from '@/features/auth/actions'
 
 const initialState: EmailOtpActionState = { message: '' }
 
 export function RegisterForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState(registerAccount, initialState)
+  const [verifyState, verifyAction, verifying] = useActionState(verifyEmailOtp, initialState)
   const nextQuery = next ? `?next=${encodeURIComponent(next)}` : ''
 
   if (state.sent && state.email) {
@@ -18,13 +19,38 @@ export function RegisterForm({ next }: { next: string }) {
           Đã gửi email xác nhận tới <strong>{state.email}</strong>.
         </p>
         <p>
-          Mở email xác nhận từ <strong>A.I.R</strong> và bấm nút xác nhận, hoặc dùng mã OTP 6 chữ số
-          trong email để đăng nhập.
+          Mở email xác nhận từ <strong>A.I.R</strong> và bấm nút xác nhận, hoặc nhập mã OTP 6 chữ số
+          trong email ngay bên dưới.
         </p>
-        <p className="rental-auth-actions">
-          <Link className="primary" href={`/dang-nhap${nextQuery}`}>
-            Nhập mã OTP để hoàn tất
-          </Link>
+        {/* Nhập mã ngay tại đây: chuyển sang /dang-nhap buộc khách gửi mã mới, thường bị Supabase
+            chặn "chờ 60 giây" vì vừa gửi mã đăng ký. */}
+        <form className="rental-form" action={verifyAction}>
+          <input type="hidden" name="email" value={state.email} />
+          <input type="hidden" name="next" value={next} />
+          <label htmlFor="register-otp">Mã OTP</label>
+          <input
+            id="register-otp"
+            type="text"
+            name="token"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            pattern="[0-9]{6}"
+            placeholder="123456"
+            required
+            minLength={6}
+            maxLength={6}
+          />
+          <button className="primary" type="submit" disabled={verifying}>
+            {verifying ? 'Đang xác minh…' : 'Xác nhận và đăng nhập'}
+          </button>
+          {verifyState.message && (
+            <p aria-live="polite" className={verifyState.error ? 'rental-error' : 'rental-message'}>
+              {verifyState.message}
+            </p>
+          )}
+        </form>
+        <p className="rental-auth-switch">
+          Mã hết hạn? <Link href={`/dang-nhap${nextQuery}`}>Gửi mã mới ở trang đăng nhập</Link>
         </p>
         <small>
           Không thấy email? Kiểm tra thư mục Spam hoặc Quảng cáo, sau đó đánh dấu “Không phải thư

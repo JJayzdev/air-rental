@@ -20,6 +20,8 @@ export default function robots(): MetadataRoute.Robots {
           '/quan-ly-don',
           '/quan-ly-giay-to',
           '/admin',
+          '/partner',
+          '/dang-ky-doi-tac',
           '/demo',
         ],
       },

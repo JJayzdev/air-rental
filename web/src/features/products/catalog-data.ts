@@ -73,18 +73,32 @@ export function filterCatalogProducts(
   products: CatalogProduct[],
   filters: CatalogFilters,
 ): CatalogProduct[] {
-  const query = filters.query.toLocaleLowerCase('vi')
+  const query = searchText(filters.query)
   const result = products.filter((product) => {
     if (filters.category !== 'all' && product.categorySlug !== filters.category) return false
     if (!query) return true
-    return `${product.name} ${product.categoryName} ${Object.values(product.specifications).join(' ')}`
-      .toLocaleLowerCase('vi')
-      .includes(query)
+    return searchText(
+      `${product.name} ${product.categoryName} ${Object.values(product.specifications).join(' ')}`,
+    ).includes(query)
   })
   if (filters.sort === 'price-asc') result.sort((a, b) => a.pricePerDayVnd - b.pricePerDayVnd)
   if (filters.sort === 'price-desc') result.sort((a, b) => b.pricePerDayVnd - a.pricePerDayVnd)
-  if (filters.sort === 'popular') result.sort((a, b) => a.sortOrder - b.sortOrder)
+  // Thứ tự mặc định: thiết bị đặt thuê được lên trước sản phẩm mẫu (chỉ để tham khảo), sau đó
+  // theo sort_order. Trước đây 24 mẫu đứng trước toàn bộ hàng cho thuê thật trên production.
+  if (filters.sort === 'popular')
+    result.sort((a, b) => Number(a.isSample) - Number(b.isSample) || a.sortOrder - b.sortOrder)
   return result
+}
+
+/** Chữ thường, bỏ dấu tiếng Việt: "Máy ảnh" và "may anh" khớp nhau khi tìm kiếm. */
+export function searchText(value: string): string {
+  return value
+    .toLocaleLowerCase('vi')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .replace(/đ/g, 'd')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 export function findCatalogProduct(

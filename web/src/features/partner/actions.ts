@@ -250,5 +250,7 @@ export async function registerPartner(
     return { success: false, error: 'Lưu hồ sơ đối tác không thành công. Vui lòng thử lại sau.' }
   }
 
+  // Vai trò vừa đổi sang partner: làm mới header/menu tài khoản để hiện lối vào khu vực đối tác.
+  revalidatePath('/', 'layout')
   return { success: true, error: null }
 }

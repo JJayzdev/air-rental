@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useActionState } from 'react'
 import { registerPartner } from '@/features/partner/actions'
 
@@ -14,7 +15,8 @@ export function PartnerRegisterForm() {
       {state?.success && (
         <p className="rental-message" role="status">
           Đã gửi yêu cầu đăng ký đối tác. Chúng tôi sẽ duyệt hồ sơ và liên hệ bạn qua email trong
-          thời gian sớm nhất.
+          thời gian sớm nhất. <Link href="/partner">Mở khu vực đối tác</Link> để theo dõi trạng thái
+          duyệt.
         </p>
       )}
 
