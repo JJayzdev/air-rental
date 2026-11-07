@@ -8,7 +8,14 @@ import {
   RENTAL_CART_STORAGE_KEY,
 } from './rental-cart.ts'
 
-export function AddRentalButton({ productId }: { productId: string }) {
+export function AddRentalButton({
+  productId,
+  testId = 'add-to-rental-cart',
+}: {
+  productId: string
+  /** Trang chi tiết có thêm nút trong thanh đặt thuê điện thoại; giữ test id gốc là duy nhất. */
+  testId?: string
+}) {
   const [added, setAdded] = useState(false)
   const [full, setFull] = useState(false)
   const [storageError, setStorageError] = useState('')
@@ -39,7 +46,7 @@ export function AddRentalButton({ productId }: { productId: string }) {
   }
   return (
     <div className="rental-add-control">
-      <button type="button" className="primary" onClick={add} data-testid="add-to-rental-cart">
+      <button type="button" className="primary" onClick={add} data-testid={testId}>
         {added ? 'Đã thêm vào giỏ thuê' : 'Thêm vào giỏ thuê'}
       </button>
       {added && <Link href="/gio-thue">Mở giỏ thuê</Link>}

@@ -10,6 +10,7 @@ import {
   parseCatalogFilters,
   type CatalogSearchParams,
 } from '@/features/products/catalog-data'
+import { money } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
@@ -207,7 +208,7 @@ export default async function CatalogPage({
                       .join(' · ')}
                   </p>
                   <div className="product-price">
-                    <strong>{product.pricePerDayVnd.toLocaleString('vi-VN')} ₫</strong>
+                    <strong>{money(product.pricePerDayVnd)}</strong>
                     <span>/ ngày</span>
                   </div>
                 </div>

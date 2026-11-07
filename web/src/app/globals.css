@@ -5557,3 +5557,135 @@ footer {
     display: none;
   }
 }
+
+/* Khung chờ chuyển trang (components/ui/PageSkeleton.tsx) */
+.page-skeleton {
+  min-height: 60vh;
+  padding-top: 48px;
+  padding-bottom: 48px;
+}
+.page-skeleton-line,
+.page-skeleton-card {
+  background: linear-gradient(90deg, #eef2f9 0%, #f7f9fd 50%, #eef2f9 100%);
+  background-size: 200% 100%;
+  border-radius: 12px;
+  animation: page-skeleton-shimmer 1.2s ease-in-out infinite;
+}
+.page-skeleton-eyebrow {
+  width: 140px;
+  height: 14px;
+  margin-bottom: 14px;
+}
+.page-skeleton-title {
+  width: min(420px, 80%);
+  height: 34px;
+  margin-bottom: 28px;
+}
+.page-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+}
+.page-skeleton-card {
+  height: 220px;
+  border-radius: 18px;
+}
+@keyframes page-skeleton-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-skeleton-line,
+  .page-skeleton-card {
+    animation: none;
+  }
+}
+
+/* Thanh đặt thuê cố định trên điện thoại (trang chi tiết sản phẩm) */
+.mobile-book-bar {
+  display: none;
+}
+@media (max-width: 760px) {
+  .mobile-book-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    background: #fff;
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -8px 24px #08265c14;
+  }
+  .mobile-book-bar > div:first-child {
+    display: grid;
+    min-width: 0;
+  }
+  .mobile-book-bar b {
+    color: var(--navy);
+    font-size: 17px;
+  }
+  .mobile-book-bar small {
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .mobile-book-bar .rental-add-control {
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+  }
+  .mobile-book-bar .rental-add-control > button {
+    min-height: 44px;
+    padding-inline: 16px;
+    white-space: nowrap;
+  }
+  /* Các dòng phụ (link mở giỏ, cảnh báo) đã hiện ở khu nút chính trong trang. */
+  .mobile-book-bar .rental-add-control > :not(button) {
+    display: none;
+  }
+  /* Chừa chỗ cho thanh ở cuối trang và đẩy nút chat lên trên thanh. */
+  body:has(.mobile-book-bar) footer {
+    padding-bottom: 88px;
+  }
+  body:has(.mobile-book-bar) .assistant-fab {
+    bottom: 84px;
+  }
+}
+
+/* Dải ảnh nhỏ ở trang chi tiết (features/products/product-gallery.tsx) */
+.catalog-gallery-thumbs {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.catalog-gallery-thumb {
+  position: relative;
+  flex: 0 0 56px;
+  height: 56px;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid #ffffffcc;
+  border-radius: 12px;
+  background: #eaf0f9;
+  box-shadow: 0 4px 12px #08265c29;
+  cursor: pointer;
+}
+.catalog-gallery-thumb[aria-pressed='true'] {
+  border-color: var(--blue);
+}
+.catalog-gallery-thumb img {
+  object-fit: cover;
+}

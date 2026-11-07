@@ -26,21 +26,27 @@ export default async function CheckoutPage() {
   const catalog = await getCatalog()
   const [profileResult, addressResult, deliveryZones] = await Promise.all([
     supabase.from('profiles').select('full_name,phone').eq('id', user.id).maybeSingle(),
-    // Sổ địa chỉ (/tai-khoan/dia-chi): ưu tiên địa chỉ mặc định, sau đó địa chỉ cũ nhất.
+    // Sổ địa chỉ (/tai-khoan/dia-chi): địa chỉ mặc định đứng đầu, sau đó theo thứ tự tạo.
     supabase
       .from('customer_addresses')
-      .select('recipient_name,phone,address_line,ward,district,province')
+      .select('id,label,recipient_name,phone,address_line,ward,district,province')
       .eq('user_id', user.id)
       .order('is_default', { ascending: false })
       .order('created_at', { ascending: true })
-      .limit(1)
-      .maybeSingle(),
+      .limit(20),
     listActiveDeliveryZones(supabase),
   ])
   const { data: profile, error: profileError } = profileResult
   if (profileError) throw new Error('Không tải được thông tin liên hệ đã lưu. Vui lòng thử lại.')
   // Địa chỉ chỉ dùng để điền sẵn; lỗi đọc không chặn việc đặt thuê.
-  const savedAddress = addressResult.error ? null : addressResult.data
+  const savedAddresses = (addressResult.error ? [] : (addressResult.data ?? [])).map((row) => ({
+    id: row.id,
+    label: row.label,
+    name: row.recipient_name,
+    phone: row.phone,
+    address: [row.address_line, row.ward, row.district, row.province].join(', '),
+  }))
+  const savedAddress = savedAddresses[0] ?? null
   return (
     <main className="shell rental-page">
       <nav className="rental-breadcrumb">
@@ -64,17 +70,11 @@ export default async function CheckoutPage() {
         checkout
         deliveryZones={deliveryZones}
         contactPrefill={{
-          name: profile?.full_name || savedAddress?.recipient_name || '',
+          name: profile?.full_name || savedAddress?.name || '',
           phone: profile?.phone || savedAddress?.phone || '',
-          address: savedAddress
-            ? [
-                savedAddress.address_line,
-                savedAddress.ward,
-                savedAddress.district,
-                savedAddress.province,
-              ].join(', ')
-            : '',
+          address: savedAddress?.address ?? '',
         }}
+        savedAddresses={savedAddresses}
       />
     </main>
   )

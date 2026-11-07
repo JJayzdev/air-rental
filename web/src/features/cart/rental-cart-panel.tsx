@@ -32,16 +32,27 @@ const INITIAL_ACTION: BookingActionState = {}
 
 type CurrentQuote = RentalQuotePreview & { pricingKey: string }
 
+export interface SavedAddressOption {
+  id: string
+  label: string
+  name: string
+  phone: string
+  address: string
+}
+
 export function RentalCartPanel({
   products,
   checkout = false,
   deliveryZones = [],
   contactPrefill = { name: '', phone: '', address: '' },
+  savedAddresses = [],
 }: {
   products: CatalogProduct[]
   checkout?: boolean
   deliveryZones?: DeliveryZoneView[]
   contactPrefill?: { name: string; phone: string; address: string }
+  /** Sổ địa chỉ của khách; địa chỉ mặc định đứng đầu. */
+  savedAddresses?: SavedAddressOption[]
 }) {
   const router = useRouter()
   const [cart, setCart] = useState<RentalCart>(EMPTY_RENTAL_CART)
@@ -62,6 +73,12 @@ export function RentalCartPanel({
   const [discountCode, setDiscountCode] = useState('')
   const [quoteResult, setQuoteResult] = useState<CurrentQuote | null>(null)
   const [quoteError, setQuoteError] = useState<{ pricingKey: string; message: string } | null>(null)
+  // Thông tin liên hệ là input có kiểm soát: React 19 tự đặt lại form không kiểm soát sau mỗi
+  // lần gửi action, nên khi đặt thất bại (ví dụ máy vừa hết lịch) khách mất hết nội dung đã sửa.
+  const [contactName, setContactName] = useState(contactPrefill.name)
+  const [contactPhone, setContactPhone] = useState(contactPrefill.phone)
+  const [contactAddress, setContactAddress] = useState(contactPrefill.address)
+  const [selectedAddressId, setSelectedAddressId] = useState(savedAddresses[0]?.id ?? '')
 
   useEffect(() => {
     let active = true
@@ -326,7 +343,7 @@ export function RentalCartPanel({
                   <p>
                     {sample
                       ? 'Mẫu tham khảo — không nhận đặt thuê'
-                      : `${product?.pricePerDayVnd.toLocaleString('vi-VN')} ₫ / ngày · giá tham khảo`}
+                      : `${money(product?.pricePerDayVnd ?? 0)} / ngày · giá tham khảo`}
                   </p>
                 </div>
                 <label>
@@ -473,6 +490,34 @@ export function RentalCartPanel({
               name="deliveryZoneId"
               value={fulfillment === 'delivery' ? deliveryZoneId : ''}
             />
+            {savedAddresses.length > 0 && (
+              <>
+                <label htmlFor="rental-saved-address">Dùng địa chỉ đã lưu</label>
+                <select
+                  id="rental-saved-address"
+                  value={selectedAddressId}
+                  onChange={(event) => {
+                    setSelectedAddressId(event.target.value)
+                    const chosen = savedAddresses.find((item) => item.id === event.target.value)
+                    if (!chosen) return
+                    setContactName(chosen.name)
+                    setContactPhone(chosen.phone)
+                    setContactAddress(chosen.address)
+                  }}
+                  data-testid="rental-saved-address"
+                >
+                  {savedAddresses.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.label} — {item.name}, {item.address}
+                    </option>
+                  ))}
+                  <option value="">Nhập thông tin khác</option>
+                </select>
+                <small>
+                  <Link href="/tai-khoan/dia-chi">Quản lý sổ địa chỉ</Link>
+                </small>
+              </>
+            )}
             <label htmlFor="rental-name">Họ và tên</label>
             <input
               id="rental-name"
@@ -481,7 +526,8 @@ export function RentalCartPanel({
               required
               minLength={2}
               maxLength={120}
-              defaultValue={contactPrefill.name}
+              value={contactName}
+              onChange={(event) => setContactName(event.target.value)}
             />
             <label htmlFor="rental-phone">Số điện thoại</label>
             <input
@@ -490,7 +536,8 @@ export function RentalCartPanel({
               type="tel"
               autoComplete="tel"
               required
-              defaultValue={contactPrefill.phone}
+              value={contactPhone}
+              onChange={(event) => setContactPhone(event.target.value)}
             />
             <label htmlFor="rental-fulfillment">Nhận thiết bị</label>
             <select
@@ -574,7 +621,8 @@ export function RentalCartPanel({
               required
               minLength={5}
               maxLength={500}
-              defaultValue={contactPrefill.address}
+              value={contactAddress}
+              onChange={(event) => setContactAddress(event.target.value)}
             />
             <button
               className="primary"

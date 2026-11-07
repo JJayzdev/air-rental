@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { CatalogProduct } from './catalog-data'
+import { money } from '@/lib/format'
 
 function specsSummary(product: CatalogProduct) {
   return Object.entries(product.specifications)
@@ -29,7 +30,7 @@ export function CatalogProductCard({ product }: { product: CatalogProduct }) {
         </h3>
         <p>{specsSummary(product)}</p>
         <div className="product-price">
-          <strong>{product.pricePerDayVnd.toLocaleString('vi-VN')} ₫</strong>
+          <strong>{money(product.pricePerDayVnd)}</strong>
           <span>/ ngày</span>
         </div>
       </div>
