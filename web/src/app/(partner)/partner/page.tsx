@@ -23,11 +23,15 @@ export default async function PartnerDashboardPage() {
     .maybeSingle()
   const partner = (partnerResult as any).data
 
-  const productsResult = await supabase
-    .from('products')
-    .select('id, name, state, price_per_day_vnd, deposit_vnd')
-    .eq('partner_id', partner?.id ?? '')
-    .order('name', { ascending: true })
+  // Tài khoản có role partner nhưng chưa có (hoặc mất) hồ sơ đối tác: không truy vấn sản phẩm
+  // bằng partner_id rỗng (không phải uuid hợp lệ) và không đọc thuộc tính của null.
+  const productsResult = partner
+    ? await supabase
+        .from('products')
+        .select('id, name, state, price_per_day_vnd, deposit_vnd')
+        .eq('partner_id', partner.id)
+        .order('name', { ascending: true })
+    : { data: [] }
   const products = (productsResult as any).data ?? []
 
   const productCount = products.length
@@ -50,10 +54,17 @@ export default async function PartnerDashboardPage() {
         </div>
       </header>
 
-      {partner?.status !== 'active' && (
+      {!partner && (
         <p className="partner-notice partner-notice-wait">
-          Hồ sơ đối tác của bạn đang trạng thái “{partner.status ?? 'chờ duyệt'}”. Vui lòng đợi quản
-          trị viên duyệt trước khi thêm sản phẩm.
+          Bạn chưa có hồ sơ đối tác. <Link href="/dang-ky-doi-tac">Đăng ký trở thành đối tác</Link>{' '}
+          để bắt đầu cho thuê.
+        </p>
+      )}
+      {partner && partner.status !== 'active' && (
+        <p className="partner-notice partner-notice-wait">
+          Hồ sơ đối tác của bạn đang ở trạng thái “
+          {PARTNER_STATUS_LABELS[partner.status] ?? 'Chờ duyệt'}”. Vui lòng đợi quản trị viên duyệt
+          trước khi thêm sản phẩm.
         </p>
       )}
 
@@ -111,7 +122,7 @@ export default async function PartnerDashboardPage() {
                         {p.state === 'active'
                           ? 'Đang cho thuê'
                           : p.state === 'draft'
-                            ? 'Khả draft'
+                            ? 'Bản nháp'
                             : 'Đã lưu trữ'}
                       </span>
                     </td>
@@ -124,6 +135,13 @@ export default async function PartnerDashboardPage() {
       </section>
     </main>
   )
+}
+
+const PARTNER_STATUS_LABELS: Record<string, string> = {
+  pending: 'Chờ duyệt',
+  active: 'Đang hoạt động',
+  suspended: 'Tạm ngưng',
+  rejected: 'Bị từ chối',
 }
 
 function Stat({

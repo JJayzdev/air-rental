@@ -46,6 +46,14 @@ update public.discount_codes
   set starts_on = current_date - 10, ends_on = current_date - 1
 where code = 'EXPIRED';
 update public.discount_codes set starts_on = current_date + 5 where code = 'FUTURE';
+-- The usage limit counts live orders (202611070001), so EXHAUSTED needs a real confirmed order.
+insert into public.orders(id, code, user_id, state, fulfillment, customer_name, customer_phone,
+    delivery_address, subtotal_vnd, discount_code_id, discount_code, discount_vnd, deposit_vnd,
+    idempotency_key, request_hash)
+values ('a1700000-0000-4000-8000-000000000001', 'AIR-EXHAUSTED-HOLDER',
+  'a1300000-0000-4000-8000-000000000002', 'confirmed', 'pickup', 'Exhausted Holder', '0912345678',
+  'Pricing address 123', 100000, 'a1400000-0000-4000-8000-000000000007', 'EXHAUSTED', 10000, 0,
+  'a1700000-0000-4000-8000-000000000002', 'exhausted-holder');
 
 select ok(has_table_privilege('authenticated', 'public.delivery_zones', 'SELECT')
   and has_table_privilege('anon', 'public.delivery_zones', 'SELECT')

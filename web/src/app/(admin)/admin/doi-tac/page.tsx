@@ -2,7 +2,6 @@
 import { redirect } from 'next/navigation'
 import { approvePartner, rejectPartner } from '@/features/admin/actions'
 import { getVerifiedAppRole } from '@/lib/supabase/auth'
-import { money } from '@/lib/format'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -21,12 +20,13 @@ export default async function AdminPartnersPage({
   if (role !== 'admin') redirect('/admin?denied=admin')
   const params = await searchParams
 
-  const { data: partners } = (await supabase
+  const { data, error: loadError } = (await supabase
     .from('partners')
     .select(
       'id, display_name, contact_name, description, email, phone, tax_code, commission_rate, status, created_at',
     )
-    .order('created_at', { ascending: false })) as { data: any[] }
+    .order('created_at', { ascending: false })) as { data: any[] | null; error: unknown }
+  const partners = data ?? []
 
   return (
     <main className="admin-page rental-admin">
@@ -57,7 +57,11 @@ export default async function AdminPartnersPage({
 
       <section aria-labelledby="admin-partners" className="rental-admin-section">
         <h2 id="admin-partners">Danh sách đối tác</h2>
-        {partners.length === 0 ? (
+        {loadError ? (
+          <p className="rental-error" role="alert">
+            Không tải được danh sách đối tác. Vui lòng thử lại.
+          </p>
+        ) : partners.length === 0 ? (
           <p className="rental-panel">Chưa có đối tác nào đăng ký.</p>
         ) : (
           <div className="rental-admin-list" data-testid="admin-partners">
@@ -73,18 +77,20 @@ export default async function AdminPartnersPage({
                     </p>
                   </div>
                   <span
-                    className={`rental-payment-badge is-${partner.status === 'active' ? 'active' : partner.status === 'rejected' ? 'archived' : 'draft'}`}
+                    className={`rental-payment-badge is-${partner.status === 'active' ? 'active' : partner.status === 'pending' ? 'draft' : 'archived'}`}
                   >
                     {partner.status === 'active'
                       ? 'Đang hoạt động'
                       : partner.status === 'rejected'
                         ? 'Từ chối'
-                        : 'Chờ duyệt'}
+                        : partner.status === 'suspended'
+                          ? 'Tạm ngưng'
+                          : 'Chờ duyệt'}
                   </span>
                 </header>
                 {partner.description ? <p>{partner.description}</p> : null}
                 <p>
-                  Hoa hồng hệ thống: {money(partner.commission_rate)}% · Đối tác nhận{' '}
+                  Hoa hồng hệ thống: {Number(partner.commission_rate)}% · Đối tác nhận{' '}
                   {100 - Number(partner.commission_rate)}%
                 </p>
                 <div className="rental-admin-actions">

@@ -70,7 +70,10 @@ export interface AdminDiscountCodeView {
   value: number
   minSubtotalVnd: number
   maxUses: number | null
+  /** Số đơn đang giữ/đã dùng mã (trừ đơn huỷ, hết hạn) — con số được so với maxUses. */
   usedCount: number
+  /** Tổng số lần mã từng được áp vào đơn, kể cả đơn đã huỷ/hết hạn. */
+  totalApplied: number
   startsOn: string | null
   endsOn: string | null
   active: boolean
@@ -239,6 +242,12 @@ export async function listAdminDiscountCodes(
     .order('active', { ascending: false })
     .order('code', { ascending: true })
   if (error || !data) throw new Error('Không tải được mã giảm giá. Vui lòng thử lại.')
+  // discount_code_usage có từ migration 202611070001. Nếu DB chưa áp migration, dùng tạm
+  // used_count (bộ đếm lịch sử) để trang không hỏng.
+  const { data: usage, error: usageError } = await supabase.rpc('discount_code_usage')
+  const activeUses = new Map(
+    usageError ? [] : (usage ?? []).map((row) => [row.discount_code_id, Number(row.active_uses)]),
+  )
   return data.map((row) => ({
     id: row.id,
     code: row.code,
@@ -247,7 +256,8 @@ export async function listAdminDiscountCodes(
     value: Number(row.value),
     minSubtotalVnd: Number(row.min_subtotal_vnd),
     maxUses: row.max_uses === null ? null : Number(row.max_uses),
-    usedCount: Number(row.used_count),
+    usedCount: activeUses.get(row.id) ?? Number(row.used_count),
+    totalApplied: Number(row.used_count),
     startsOn: row.starts_on,
     endsOn: row.ends_on,
     active: row.active,

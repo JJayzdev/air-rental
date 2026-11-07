@@ -42,9 +42,13 @@ export default async function MyRentalOrdersPage() {
                 </span>
               </span>
               <span>
-                {order.items.length} máy · {money(order.subtotalVnd)}
+                {order.items.length} máy · {money(order.totalVnd)}
               </span>
-              <small>{new Date(order.createdAt).toLocaleDateString('vi-VN')}</small>
+              <small>
+                {new Date(order.createdAt).toLocaleDateString('vi-VN', {
+                  timeZone: 'Asia/Ho_Chi_Minh',
+                })}
+              </small>
             </Link>
           ))}
         </div>

@@ -116,8 +116,10 @@ export default async function AdminDiscountsPage({
                       <p className="rental-admin-meta">
                         {DISCOUNT_KIND_LABELS[code.kind]} ·{' '}
                         {code.kind === 'percent' ? `${code.value}%` : money(code.value)} · đơn từ{' '}
-                        {money(code.minSubtotalVnd)} · đã dùng {code.usedCount}/
+                        {money(code.minSubtotalVnd)} · đang dùng {code.usedCount}/
                         {code.maxUses ?? '∞'}
+                        {code.totalApplied > code.usedCount &&
+                          ` (đã áp ${code.totalApplied} lượt, ${code.totalApplied - code.usedCount} lượt đã hoàn do đơn huỷ/hết hạn)`}
                       </p>
                     </div>
                     <span className={`rental-payment-badge is-${state.tone}`}>{state.label}</span>
