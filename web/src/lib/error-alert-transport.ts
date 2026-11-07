@@ -33,19 +33,25 @@ export function createErrorAlertDispatcher(options: DispatcherOptions = {}) {
     // Start the cooldown before awaiting so concurrent failures in this process coalesce.
     lastAttemptAt = startedAt
 
+    // Dùng timer thường thay cho AbortSignal.timeout: timer của AbortSignal.timeout không giữ
+    // event loop, nên một request treo có thể bị bỏ dở mà không bao giờ trả về 'failed'.
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), timeoutMs)
     try {
       const safeEvent = sanitizeSafeErrorEvent(event)
       const response = await fetcher(endpoint, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(safeEvent),
-        signal: AbortSignal.timeout(timeoutMs),
+        signal: controller.signal,
         redirect: 'error',
         cache: 'no-store',
       })
       return response.ok ? 'sent' : 'failed'
     } catch {
       return 'failed'
+    } finally {
+      clearTimeout(timer)
     }
   }
 }
