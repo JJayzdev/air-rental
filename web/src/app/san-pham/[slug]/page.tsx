@@ -149,14 +149,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 : 'Thiết bị được kiểm tra tình trạng trước khi bàn giao. Lịch và tồn kho được xác nhận lại khi bạn hoàn tất đơn thuê.'}
             </div>
             <div className="detail-actions">
-              <Link className="secondary" href="/san-pham">
-                Quay lại danh mục
-              </Link>
+              {/* Nút chính đứng trước: trên điện thoại các nút xếp dọc, nút phụ "Quay lại" từng
+                  nằm trên và đẩy "Thêm vào giỏ thuê" xuống dưới. */}
               {product.isSample && !previewMode ? (
                 <span className="sample-booking-disabled">Chưa mở nhận đặt thuê</span>
               ) : (
                 <AddRentalButton productId={product.id} />
               )}
+              <Link className="secondary" href="/san-pham">
+                Quay lại danh mục
+              </Link>
               <FavoriteToggle
                 productId={product.id}
                 next={detailHref}
