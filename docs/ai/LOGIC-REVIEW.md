@@ -85,7 +85,7 @@ máy được giải phóng cho người khác. Sau B2 tiền sẽ được ghi 
 Đề xuất (cần quyết định): khi `apply_sepay_payment` đưa đơn `pending` còn hạn lên `deposit_paid`,
 gia hạn `expires_at` (ví dụ tới cuối ngày làm việc kế tiếp) hoặc tự chuyển `confirmed`.
 
-### B6. Mở bảo trì được cho máy đang ở nhà khách khi đơn quá hạn — **Thấp**
+### B6. Mở bảo trì được cho máy đang ở nhà khách khi đơn quá hạn — **Thấp — ĐÃ SỬA (lần 4)**
 
 `open_unit_maintenance` chỉ chặn reservation `pending`/`confirmed` trùng cửa sổ bảo trì. Đơn
 `overdue` đã qua `blocked_period` nên máy đang ở nhà khách vẫn mở bảo trì được; đóng bảo trì sẽ đưa
@@ -142,6 +142,33 @@ Ghi nhận chưa sửa (thấp):
   `identity_document_settings`) nhưng không có UI bật cái thứ hai; ảnh đã duyệt không có hạn xoá.
 - Chưa kiểm tra được luồng cần đăng nhập (đặt đơn, quản trị, đối tác) trên trình duyệt: bản local
   không có Supabase và không đăng nhập tài khoản trên production.
+
+## G. Lần rà soát 4 — 08/11/2026
+
+Đã sửa:
+
+| #   | Vấn đề                                                                                                                              | Hậu quả                                                                              | Sửa                                                                                                     |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| 1   | Checkout không dùng sổ địa chỉ: ô địa chỉ luôn trống dù khách đã lưu địa chỉ mặc định (`saveOwnAddress` còn revalidate `/checkout`) | Sổ địa chỉ gần như vô dụng; khách gõ lại mỗi lần                                     | `(rental)/checkout/page.tsx` điền sẵn từ địa chỉ mặc định (tên/SĐT lấy hồ sơ, thiếu thì lấy từ địa chỉ) |
+| 2   | `order_events.actor_id` khi expire = người đang chạy câu lệnh; đơn hết hạn bị expire hàng loạt trong lượt đặt của một khách khác    | `/admin/nhat-ky` ghi một khách lạ là "người thao tác" làm hết hạn đơn của người khác | migration `202611080002`: expire luôn ghi actor = null ("Hệ thống")                                     |
+| 3   | B6: bảo trì mở được cho máy của đơn `overdue` đã qua `blocked_period`                                                               | Đóng bảo trì đưa máy về `available` dù khách chưa trả                                | migration `202611080002`: chặn khi máy thuộc đơn `delivering/active/returning/overdue`                  |
+
+Test: `supabase/tests/audit_custody.test.sql` (5 test).
+
+Còn mở, cần quyết định:
+
+- **Phí huỷ trong chính sách không ghi được vào hệ thống — Trung bình.** `/chinh-sach/huy-don-hoan-coc`
+  nói huỷ trong vòng 24 giờ trước giờ nhận máy bị phí 20% tiền thuê, nhưng khoản hoàn tạo tự động
+  luôn là toàn bộ số đã nhận và `complete_deposit_refund` chỉ đánh dấu đủ số tiền đó → sổ cái ghi
+  sai nếu nhân viên thực tế giữ lại phí. Đề xuất: thêm tham số số tiền thực hoàn (≤ khoản chờ) hoặc
+  tự tính phí theo giờ nhận máy. Chính sách cũng hứa "đổi lịch" nhưng hệ thống chưa có chức năng này.
+- **Đăng ký hộ email người khác — Thấp.** `registerAccount` lưu họ tên/SĐT/địa chỉ vào metadata của
+  một email chưa có tài khoản; khi chủ email đăng nhập lần đầu, `syncRegistrationProfile` chép các
+  thông tin đó vào hồ sơ và sổ địa chỉ của họ (giờ còn được điền sẵn ở checkout). Chủ email vẫn thấy
+  và sửa được trước khi đặt, nhưng nên để người dùng xác nhận thông tin ở lần đăng nhập đầu.
+- **Chat LLM không thể kiểm tra lịch hợp lệ — Thấp.** Công cụ `checkAvailability` cần UUID sản phẩm
+  và ngày, nhưng model không được cung cấp UUID hay ngày hôm nay → gần như luôn bị từ chối hoặc đoán.
+- `robots.ts` không chặn `/partner` và `/dang-ky-doi-tac` (các trang này đã `noindex` nên ảnh hưởng nhỏ).
 
 ## D. Phần đã kiểm tra và thấy đúng
 
