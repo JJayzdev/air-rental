@@ -687,7 +687,7 @@ button {
 }
 .section-head {
   justify-content: space-between;
-  align-items: end;
+  align-items: flex-end;
   margin-bottom: 30px;
   display: flex;
 }
@@ -793,7 +793,7 @@ button {
   line-height: 1.5;
 }
 .product-price {
-  align-items: end;
+  align-items: flex-end;
   gap: 5px;
   margin-top: 14px;
   display: flex;
@@ -919,7 +919,7 @@ button {
 }
 .page-heading {
   justify-content: space-between;
-  align-items: end;
+  align-items: flex-end;
   margin-bottom: 28px;
   display: flex;
 }
@@ -1347,7 +1347,7 @@ footer {
 }
 .footer-grid > div {
   flex-direction: column;
-  align-items: start;
+  align-items: flex-start;
   gap: 8px;
   display: flex;
 }
@@ -2156,6 +2156,14 @@ footer {
   overflow: visible;
   box-shadow: 0 14px 40px #08265c47;
 }
+/* Điện thoại: nút 76px chiếm ~20% bề ngang và che nội dung/footer; thu về cỡ nút nổi thông thường. */
+@media (max-width: 560px) {
+  .assistant-fab {
+    width: 58px;
+    height: 58px;
+    padding: 4px;
+  }
+}
 .assistant-fab .mascot {
   border-radius: 50%;
   width: 100%;
@@ -2621,6 +2629,9 @@ footer {
   }
   .catalog-detail .detail-actions {
     grid-template-columns: 1fr;
+  }
+  .catalog-detail .detail-actions .rental-add-control > button {
+    width: 100%;
   }
 }
 .guide-site-nav {

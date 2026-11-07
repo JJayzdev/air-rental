@@ -200,6 +200,43 @@ Còn mở, cần quyết định:
 Vẫn chờ quyết định: B5 (đơn đã trả cọc vẫn hết hạn sau 30 phút), phí huỷ 20% chưa ghi được vào
 sổ cái, B3, C1 (tài khoản demo admin trên production).
 
+## J. Lần rà soát 7 — 08/11/2026: frontend
+
+Quét tự động 9 trang công khai trên production (alt ảnh, nhãn form, tên nút/link, id trùng, số h1,
+thứ tự heading, lang, meta description, canonical): **không có lỗi** (chỉ các trang `noindex` không có
+canonical — đúng). Focus bàn phím có viền 3px toàn cục. Tải trang (cache ấm): TTFB ~60ms, DOM xong
+0,5–0,7s, ảnh danh mục lazy-load.
+
+Đã sửa:
+
+| #   | Vấn đề                                                                                                | Sửa                                                                                       |
+| --- | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 1   | 404 là trang mặc định tiếng Anh của Next, không header, không lối về (gặp khi mở link sản phẩm đã gỡ) | `app/not-found.tsx` (có header/footer) và `app/san-pham/not-found.tsx` riêng cho thiết bị |
+| 2   | Không có `app/error.tsx`: lỗi ở trang chủ, quản trị, đối tác, nội dung rơi vào trang lỗi tiếng Anh    | thêm trang lỗi chung tiếng Việt có "Thử lại"                                              |
+| 3   | Điện thoại: nút phụ "Quay lại danh mục" nằm trên nút chính "Thêm vào giỏ thuê"; hai nút khác bề ngang | đưa nút chính lên trước, cùng bề ngang                                                    |
+| 4   | Điện thoại: nút chat 76×76px che nội dung/footer                                                      | 58px dưới 560px                                                                           |
+| 5   | 4 cảnh báo autoprefixer (`align-items: end/start` trong flex) mỗi lần build                           | đổi sang `flex-end`/`flex-start` (cùng kết quả); build không còn cảnh báo                 |
+
+### Đề xuất cải thiện frontend (chưa làm)
+
+1. **Trạng thái đang tải:** không có `loading.tsx` nào; mọi trang là `force-dynamic` gọi Supabase nên
+   khi bấm chuyển trang không có phản hồi. Thêm skeleton cho `/san-pham`, `/don-thue`, `/gio-thue`,
+   `/admin`, `/partner`.
+2. **Thanh đặt thuê cố định trên điện thoại:** giá/ngày + "Thêm vào giỏ" dính đáy màn hình ở trang
+   chi tiết; hiện nút nằm sau toàn bộ bảng thông số.
+3. **Header điện thoại chiếm ~150px** (logo, menu, ô tìm kiếm, đều sticky) ≈ 18% màn hình: thu ô tìm
+   kiếm thành biểu tượng hoặc ẩn khi cuộn xuống.
+4. **Chọn ngày bằng lịch** thay cho hai `<select>` 63 mục ở giỏ thuê; hiện cả ngày hết máy (mờ).
+5. **Thư viện ảnh sản phẩm:** trang chi tiết chỉ hiện ảnh đầu dù đối tác/admin lưu được 8 ảnh.
+6. **Checkout chọn địa chỉ** trong sổ địa chỉ (hiện chỉ điền địa chỉ mặc định).
+7. **Ảnh mascot 73KB** tải ở mọi trang cho nút 58–76px: xuất bản ~160px (≈10KB) hoặc dùng
+   `next/image`; xoá `public/air-robot-mascot.png` (1,3MB, không còn dùng).
+8. **Thống nhất định dạng tiền:** nhiều chỗ `toLocaleString('vi-VN') + " ₫"`, chỗ khác `money()`.
+9. **Gỡ prototype `/demo`** (`views/`, `app-shell.tsx`, `data/products.ts`, `lib/storage.ts`,
+   `lib/pricing.ts`) để giảm mã phải bảo trì, nếu đồ án không còn cần.
+10. **Kiểm tra a11y tự động trong CI** (axe-core qua Playwright, đã có sẵn script Playwright), gồm
+    độ tương phản màu — lần quét này chưa đo tương phản.
+
 ## D. Phần đã kiểm tra và thấy đúng
 
 - Giá chỉ tính ở DB; client không gửi tiền. Làm tròn `floor` khớp giữa `domain.ts` và SQL.
