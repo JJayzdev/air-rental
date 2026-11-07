@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 import { AddRentalButton } from '@/features/cart/add-rental-button'
 import { FavoriteToggle } from '@/features/favorites/favorite-toggle'
@@ -8,6 +7,8 @@ import { notFound } from 'next/navigation'
 import { getCatalog } from '@/features/products/catalog-server'
 import { findCatalogProduct, jsonLdScript } from '@/features/products/catalog-data'
 import { absoluteAppUrl } from '@/features/products/catalog-seo'
+import { ProductGallery } from '@/features/products/product-gallery'
+import { money } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,7 +24,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const { product } = await findProduct(slug)
   if (!product) return { title: 'Không tìm thấy sản phẩm', robots: { index: false, follow: true } }
   const url = `/san-pham/${encodeURIComponent(product.slug)}`
-  const description = `${product.name} — thuê ${product.pricePerDayVnd.toLocaleString('vi-VN')} ₫/ngày. ${product.description}`
+  const description = `${product.name} — thuê ${money(product.pricePerDayVnd)}/ngày. ${product.description}`
   return {
     title: `${product.name}`,
     description,
@@ -94,16 +95,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </aside>
         )}
         <div className="catalog-detail">
-          <div className="catalog-detail-image">
-            <Image
-              src={product.imageUrls[0]}
-              alt={product.imageAlt || product.name}
-              fill
-              priority
-              sizes="(max-width: 760px) 100vw, 55vw"
-            />
-            {product.isSample && <span className="catalog-sample-badge">Ảnh tham khảo</span>}
-          </div>
+          <ProductGallery
+            images={product.imageUrls}
+            alt={product.imageAlt || product.name}
+            isSample={product.isSample}
+          />
           {product.imageCredit && (
             <p className="catalog-image-credit">
               Ảnh tham khảo © {product.imageCredit.author} ·{' '}
@@ -129,11 +125,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </p>
             )}
             <div className="detail-price">
-              {product.pricePerDayVnd.toLocaleString('vi-VN')} ₫ <small>/ ngày</small>
+              {money(product.pricePerDayVnd)} <small>/ ngày</small>
             </div>
-            <p className="catalog-deposit">
-              Tiền cọc: {product.depositVnd.toLocaleString('vi-VN')} ₫
-            </p>
+            <p className="catalog-deposit">Tiền cọc: {money(product.depositVnd)}</p>
             <h2>Thông số</h2>
             <dl className="catalog-spec-list">
               {Object.entries(product.specifications).map(([key, value]) => (
@@ -168,6 +162,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </div>
           </article>
         </div>
+        {!(product.isSample && !previewMode) && (
+          // Điện thoại: nút thêm vào giỏ nằm sau cả bảng thông số; thanh này giữ giá và nút luôn
+          // trong tầm tay. Chỉ hiện dưới 760px (xem .mobile-book-bar trong globals.css).
+          <div className="mobile-book-bar" aria-label="Đặt thuê nhanh">
+            <div>
+              <b>{money(product.pricePerDayVnd)}</b>
+              <small>/ ngày · cọc {money(product.depositVnd)}</small>
+            </div>
+            <AddRentalButton productId={product.id} testId="add-to-rental-cart-mobile-bar" />
+          </div>
+        )}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: jsonLdScript(structuredData) }}

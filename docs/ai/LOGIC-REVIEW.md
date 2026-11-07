@@ -219,23 +219,44 @@ canonical — đúng). Focus bàn phím có viền 3px toàn cục. Tải trang 
 
 ### Đề xuất cải thiện frontend (chưa làm)
 
-1. **Trạng thái đang tải:** không có `loading.tsx` nào; mọi trang là `force-dynamic` gọi Supabase nên
+1. ✅ **Trạng thái đang tải:** không có `loading.tsx` nào; mọi trang là `force-dynamic` gọi Supabase nên
    khi bấm chuyển trang không có phản hồi. Thêm skeleton cho `/san-pham`, `/don-thue`, `/gio-thue`,
    `/admin`, `/partner`.
-2. **Thanh đặt thuê cố định trên điện thoại:** giá/ngày + "Thêm vào giỏ" dính đáy màn hình ở trang
+2. ✅ **Thanh đặt thuê cố định trên điện thoại:** giá/ngày + "Thêm vào giỏ" dính đáy màn hình ở trang
    chi tiết; hiện nút nằm sau toàn bộ bảng thông số.
 3. **Header điện thoại chiếm ~150px** (logo, menu, ô tìm kiếm, đều sticky) ≈ 18% màn hình: thu ô tìm
    kiếm thành biểu tượng hoặc ẩn khi cuộn xuống.
 4. **Chọn ngày bằng lịch** thay cho hai `<select>` 63 mục ở giỏ thuê; hiện cả ngày hết máy (mờ).
-5. **Thư viện ảnh sản phẩm:** trang chi tiết chỉ hiện ảnh đầu dù đối tác/admin lưu được 8 ảnh.
-6. **Checkout chọn địa chỉ** trong sổ địa chỉ (hiện chỉ điền địa chỉ mặc định).
-7. **Ảnh mascot 73KB** tải ở mọi trang cho nút 58–76px: xuất bản ~160px (≈10KB) hoặc dùng
+5. ✅ **Thư viện ảnh sản phẩm:** trang chi tiết chỉ hiện ảnh đầu dù đối tác/admin lưu được 8 ảnh.
+6. ✅ **Checkout chọn địa chỉ** trong sổ địa chỉ (hiện chỉ điền địa chỉ mặc định).
+7. ✅ **Ảnh mascot 73KB** tải ở mọi trang cho nút 58–76px: xuất bản ~160px (≈10KB) hoặc dùng
    `next/image`; xoá `public/air-robot-mascot.png` (1,3MB, không còn dùng).
-8. **Thống nhất định dạng tiền:** nhiều chỗ `toLocaleString('vi-VN') + " ₫"`, chỗ khác `money()`.
+8. ✅ **Thống nhất định dạng tiền:** nhiều chỗ `toLocaleString('vi-VN') + " ₫"`, chỗ khác `money()`.
 9. **Gỡ prototype `/demo`** (`views/`, `app-shell.tsx`, `data/products.ts`, `lib/storage.ts`,
    `lib/pricing.ts`) để giảm mã phải bảo trì, nếu đồ án không còn cần.
 10. **Kiểm tra a11y tự động trong CI** (axe-core qua Playwright, đã có sẵn script Playwright), gồm
     độ tương phản màu — lần quét này chưa đo tương phản.
+
+## K. Cải thiện frontend đã làm (08/11/2026)
+
+Các mục đánh dấu ✅ ở danh sách đề xuất của mục J:
+
+- **Khung chờ khi chuyển trang:** `components/ui/PageSkeleton.tsx` + `loading.tsx` cho `/san-pham`,
+  nhóm `(rental)`, `(admin)`, `(partner)`; tắt hiệu ứng khi người dùng bật giảm chuyển động.
+- **Thanh đặt thuê trên điện thoại** (`.mobile-book-bar`, dưới 760px): giá/ngày, cọc và nút thêm vào
+  giỏ dính đáy màn hình; footer chừa chỗ, nút chat dời lên trên thanh. Nút trong thanh có test id
+  riêng `add-to-rental-cart-mobile-bar` để các script Playwright dùng `add-to-rental-cart` không bị
+  trùng.
+- **Thư viện ảnh:** `features/products/product-gallery.tsx` hiện dải ảnh nhỏ khi sản phẩm có từ 2 ảnh.
+- **Checkout chọn từ sổ địa chỉ** (tối đa 20, mặc định đứng đầu, có "Nhập thông tin khác"). Tên, SĐT,
+  địa chỉ giờ là input có kiểm soát: trước đây React 19 tự đặt lại form sau mỗi lần gửi, nên đặt thất
+  bại (ví dụ máy vừa hết lịch) làm mất những gì khách đã sửa.
+- **Ảnh mascot** 1254px/73KB → 256px/7,5KB; xoá `web/public/air-robot-mascot.png` (1,3MB, không dùng;
+  bản Vite ở gốc có file riêng).
+- **Định dạng tiền:** 7 chỗ `toLocaleString('vi-VN') + " ₫"` chuyển sang `money()`.
+
+Còn lại: 3 (header điện thoại gọn hơn), 4 (lịch chọn ngày), 9 (gỡ `/demo`, cần bạn quyết định),
+10 (a11y tự động trong CI).
 
 ## D. Phần đã kiểm tra và thấy đúng
 

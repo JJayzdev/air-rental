@@ -5,6 +5,7 @@ import { FavoriteToggle } from '@/features/favorites/favorite-toggle'
 import { listFavoriteProductIds } from '@/features/favorites/server-data'
 import { getCatalog } from '@/features/products/catalog-server'
 import { requireVerifiedUser } from '@/lib/supabase/auth'
+import { money } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
@@ -77,8 +78,7 @@ export default async function FavoritesPage({
                   <Link href={`/san-pham/${encodeURIComponent(product.slug)}`}>{product.name}</Link>
                 </h2>
                 <p>
-                  {product.pricePerDayVnd.toLocaleString('vi-VN')} ₫ / ngày · cọc{' '}
-                  {product.depositVnd.toLocaleString('vi-VN')} ₫
+                  {money(product.pricePerDayVnd)} / ngày · cọc {money(product.depositVnd)}
                 </p>
                 <div className="rental-favorite-actions">
                   <Link
