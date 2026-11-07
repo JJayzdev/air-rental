@@ -85,23 +85,24 @@ components/ui, views/, app-shell.tsx, client-app.tsx, data/products.ts   → pro
 
 ## 3. Cơ sở dữ liệu (`supabase/migrations`, theo thứ tự áp)
 
-| Migration                                 | Nội dung chính                                                                                                                                                                                          |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `202611010001_booking_foundation`         | enum, `profiles`, `categories`, `products`, `product_units`, `price_tiers`, `orders`, `order_items`, `reservations` (exclusion constraint chống trùng), `order_events` (trigger ghi lịch sử), RLS gốc   |
-| `202611010002_catalog`                    | cột catalog công khai: specs, ảnh, `is_sample`, nguồn/giấy phép ảnh                                                                                                                                     |
-| `202611010003_multi_product_booking`      | `product_units.ready_on`, `booking_calendar`, `transition_booking` (bản dùng hiện tại)                                                                                                                  |
-| `202611010004_product_name_snapshot`      | `order_items.product_name_snapshot` + trigger                                                                                                                                                           |
-| `202611010005_accounts`                   | `customer_addresses`, `user_favorites`, giấy tờ định danh (bảng + Storage policy)                                                                                                                       |
-| `202611010006_payments`                   | `payment_state`, `payments` (sổ cái), `payment_webhook_events`, trigger tạo hoàn cọc khi `completed`, `complete_deposit_refund`                                                                         |
-| `202611010007_admin`                      | `unit_maintenance`, `admin_dashboard`, `open/close_unit_maintenance`                                                                                                                                    |
-| `202611010008_pricing`                    | `discount_codes`, `delivery_zones`, cột giảm giá/phí giao/`total_vnd` trên `orders`, `quote_booking` (bản đầu), **`create_multi_product_booking` (bản hiện tại)**, `apply_sepay_payment` (bản hiện tại) |
-| `202611020009_chat_rate_limits`           | quota chat theo IP/user (hash HMAC)                                                                                                                                                                     |
-| `202611020010_academic_correctness`       | `preview_booking_quote` (anon được gọi), trigger chặn đổi trạng thái máy khi còn đơn/bảo trì                                                                                                            |
-| `202611030001_partners` … `202611060004`  | bảng `partners`, `products.partner_id`, role `partner`, siết RLS đối tác, cột hồ sơ đối tác                                                                                                             |
-| `202611070001_discount_usage_from_orders` | giới hạn lượt mã giảm giá tính theo đơn còn sống, **`quote_booking` (bản hiện tại)**, `discount_code_usage` cho admin                                                                                   |
+| Migration                                 | Nội dung chính                                                                                                                                                                                        |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `202611010001_booking_foundation`         | enum, `profiles`, `categories`, `products`, `product_units`, `price_tiers`, `orders`, `order_items`, `reservations` (exclusion constraint chống trùng), `order_events` (trigger ghi lịch sử), RLS gốc |
+| `202611010002_catalog`                    | cột catalog công khai: specs, ảnh, `is_sample`, nguồn/giấy phép ảnh                                                                                                                                   |
+| `202611010003_multi_product_booking`      | `product_units.ready_on`, `booking_calendar`, `transition_booking` (bản dùng hiện tại)                                                                                                                |
+| `202611010004_product_name_snapshot`      | `order_items.product_name_snapshot` + trigger                                                                                                                                                         |
+| `202611010005_accounts`                   | `customer_addresses`, `user_favorites`, giấy tờ định danh (bảng + Storage policy)                                                                                                                     |
+| `202611010006_payments`                   | `payment_state`, `payments` (sổ cái), `payment_webhook_events`, trigger tạo hoàn cọc khi `completed`, `complete_deposit_refund`                                                                       |
+| `202611010007_admin`                      | `unit_maintenance`, `admin_dashboard`, `open/close_unit_maintenance`                                                                                                                                  |
+| `202611010008_pricing`                    | `discount_codes`, `delivery_zones`, cột giảm giá/phí giao/`total_vnd` trên `orders`, `quote_booking` (bản đầu), **`create_multi_product_booking` (bản hiện tại)**, `apply_sepay_payment` (bản cũ)     |
+| `202611020009_chat_rate_limits`           | quota chat theo IP/user (hash HMAC)                                                                                                                                                                   |
+| `202611020010_academic_correctness`       | `preview_booking_quote` (anon được gọi), trigger chặn đổi trạng thái máy khi còn đơn/bảo trì                                                                                                          |
+| `202611030001_partners` … `202611060004`  | bảng `partners`, `products.partner_id`, role `partner`, siết RLS đối tác, cột hồ sơ đối tác                                                                                                           |
+| `202611070001_discount_usage_from_orders` | giới hạn lượt mã giảm giá tính theo đơn còn sống, **`quote_booking` (bản hiện tại)**, `discount_code_usage` cho admin                                                                                 |
+| `202611080001_cancellation_refunds`       | hoàn tiền khi đơn đã nhận tiền bị huỷ/hết hạn; **`apply_sepay_payment`, `complete_deposit_refund`, `admin_dashboard` (bản hiện tại)**                                                                 |
 
 > Hàm bị `create or replace`/`drop` + tạo lại ở migration sau: **bản có hiệu lực là bản ở migration
-> mới nhất**. Ví dụ `create_multi_product_booking` và `apply_sepay_payment` thật nằm ở `_pricing.sql`.
+> mới nhất**. Ví dụ `create_multi_product_booking` thật nằm ở `_pricing.sql`, `quote_booking` ở `_discount_usage_from_orders.sql`, `apply_sepay_payment` ở `_cancellation_refunds.sql`.
 
 ### Bảng chính
 

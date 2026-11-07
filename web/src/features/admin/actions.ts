@@ -14,32 +14,12 @@ import {
   maintenanceSchema,
 } from './admin-schema.ts'
 import { getVerifiedAppRole } from '@/lib/supabase/auth'
+import { catalogImageUrlsFromInput } from '@/features/products/catalog-images'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/database'
 function valueOf(formData: FormData, key: string) {
   const value = formData.get(key)
   return typeof value === 'string' ? value : ''
-}
-
-function parseAdminProductImages(value: string): string[] {
-  const urls = value
-    .split(/[\r\n,]+/)
-    .map((item) => item.trim())
-    .filter(Boolean)
-  const result = urls.length > 0 ? urls : ['/images/catalog-placeholder.svg']
-  for (const url of result) {
-    if (url.startsWith('/images/') && !url.includes('..')) continue
-    let parsedUrl: URL
-    try {
-      parsedUrl = new URL(url)
-    } catch {
-      throw new Error('invalid image url')
-    }
-    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
-      throw new Error('invalid image url')
-    }
-  }
-  return result
 }
 
 async function requireRole(roles: Array<'staff' | 'admin'>, next: string) {
@@ -80,12 +60,12 @@ export async function saveAdminProduct(formData: FormData): Promise<never> {
   if (!role) redirect('/admin?denied=admin')
   if (!parsed.success) redirect('/admin/san-pham?product=invalid')
 
-  let imageUrls: string[]
-  try {
-    imageUrls = parseAdminProductImages(parsed.data.imageUrls)
-  } catch {
-    redirect('/admin/san-pham?product=invalid')
-  }
+  // Cùng quy tắc với danh mục công khai: link ảnh ngoài sẽ làm sản phẩm bị ẩn khỏi /san-pham.
+  const imageUrls = catalogImageUrlsFromInput(
+    parsed.data.imageUrls,
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+  )
+  if (!imageUrls) redirect('/admin/san-pham?product=image')
 
   const payload = {
     category_id: parsed.data.categoryId,

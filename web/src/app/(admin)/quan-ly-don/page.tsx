@@ -8,7 +8,7 @@ import {
 } from '@/features/orders/server-data'
 import { ORDER_STATE_LABELS } from '@/features/orders/state-labels'
 import { completeDepositRefund } from '@/features/payments/actions'
-import { PAYMENT_STATE_LABELS } from '@/features/payments/state-labels'
+import { PAYMENT_KIND_LABELS, PAYMENT_STATE_LABELS } from '@/features/payments/state-labels'
 import { getVerifiedAppRole } from '@/lib/supabase/auth'
 import { money } from '@/lib/format'
 import type { OrderState } from '@/lib/supabase/database'
@@ -110,12 +110,12 @@ export default async function StaffOrdersPage({
       )}
       {params.refund === 'paid' && (
         <p className="rental-message" role="status">
-          Đã ghi nhận hoàn cọc cho khách.
+          Đã ghi nhận hoàn tiền cho khách.
         </p>
       )}
       {(params.refund === 'failed' || params.refund === 'invalid') && (
         <p className="rental-error" role="alert">
-          Không hoàn cọc được. Khoản hoàn có thể đã được xử lý hoặc không còn chờ.
+          Không ghi nhận được hoàn tiền. Khoản hoàn có thể đã được xử lý hoặc không còn chờ.
         </p>
       )}
       {identityDocsEnabled && (
@@ -192,14 +192,19 @@ export default async function StaffOrdersPage({
               </p>
               {(() => {
                 const pendingRefund = order.payments.find(
-                  (payment) => payment.kind === 'deposit_refund' && payment.status === 'pending',
+                  (payment) =>
+                    (payment.kind === 'deposit_refund' || payment.kind === 'cancellation_refund') &&
+                    payment.status === 'pending',
                 )
                 return pendingRefund ? (
                   <form action={completeDepositRefund} className="rental-refund-form">
                     <input type="hidden" name="paymentId" value={pendingRefund.id} />
-                    <span>Hoàn cọc {money(pendingRefund.amountVnd)} cho khách</span>
+                    <span>
+                      {PAYMENT_KIND_LABELS[pendingRefund.kind]} {money(pendingRefund.amountVnd)} cho
+                      khách
+                    </span>
                     <button className="secondary" type="submit">
-                      Xác nhận đã hoàn cọc
+                      Xác nhận đã hoàn tiền
                     </button>
                   </form>
                 ) : null

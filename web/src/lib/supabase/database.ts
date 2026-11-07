@@ -20,7 +20,7 @@ export type OrderState =
 
 export type OrderPaymentState = 'unpaid' | 'deposit_paid' | 'paid' | 'refund_pending' | 'refunded'
 
-export type PaymentKind = 'payment' | 'deposit_refund'
+export type PaymentKind = 'payment' | 'deposit_refund' | 'cancellation_refund'
 
 export type MaintenanceReason = 'scheduled' | 'repair' | 'inspection'
 
