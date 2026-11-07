@@ -58,10 +58,12 @@ export async function savePartnerProduct(formData: FormData): Promise<never> {
 
   const { data: partner } = (await supabase
     .from('partners')
-    .select('id')
+    .select('id, status')
     .eq('user_id', user.id)
     .maybeSingle()) as { data: any }
   if (!partner) redirect('/partner/san-pham/them?error=no-partner')
+  // Chỉ đối tác đã được duyệt mới được đăng sản phẩm (RLS cũng chặn ở tầng dữ liệu).
+  if (partner.status !== 'active') redirect('/partner/san-pham/them?error=not-active')
 
   // Danh mục là bắt buộc ở tầng dữ liệu, nên phải xác minh trước khi ghi.
   const { data: category } = await supabase
@@ -71,12 +73,8 @@ export async function savePartnerProduct(formData: FormData): Promise<never> {
     .maybeSingle()
   if (!category) redirect('/partner/san-pham/them?error=invalid')
 
-  const imageUrls = parsed.data.imageUrls
-    ? parsed.data.imageUrls
-        .split(/[\r\n,]+/)
-        .map((item) => item.trim())
-        .filter(Boolean)
-    : ['/images/catalog-placeholder.svg']
+  const imageUrls = partnerImageUrls(parsed.data.imageUrls)
+  if (!imageUrls) redirect('/partner/san-pham/them?error=image')
 
   const baseSlug = slugifyProductName(parsed.data.name)
   const taken = await existingSlugs(baseSlug, supabase)
@@ -118,6 +116,38 @@ export async function savePartnerProduct(formData: FormData): Promise<never> {
   }
 
   redirect('/partner/san-pham/them?error=failed')
+}
+
+/**
+ * Danh mục công khai chỉ hiển thị ảnh trong `/images/` của site hoặc Supabase Storage công khai
+ * (xem `safeImageUrl` trong catalog-data). Chặn link ngoài ngay khi lưu để một sản phẩm đối tác
+ * không thể làm hỏng trang danh mục. Trả về null nếu có link không hợp lệ.
+ */
+function partnerImageUrls(raw: string): string[] | null {
+  const items = raw
+    .split(/[\r\n,]+/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+  if (items.length === 0) return ['/images/catalog-placeholder.svg']
+  if (items.length > 8) return null
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const allowed = items.every((item) => {
+    if (item.length > 1000) return false
+    if (/^\/images\/[A-Za-z0-9/_.-]+$/.test(item) && !item.includes('..')) return true
+    if (!supabaseUrl) return false
+    try {
+      const candidate = new URL(item)
+      const base = new URL(supabaseUrl)
+      return (
+        candidate.origin === base.origin &&
+        candidate.pathname.startsWith('/storage/v1/object/public/') &&
+        !candidate.pathname.includes('..')
+      )
+    } catch {
+      return false
+    }
+  })
+  return allowed ? items : null
 }
 
 /**
@@ -195,6 +225,10 @@ export async function registerPartner(
   if (role === 'partner') {
     return { success: false, error: 'Bạn đã là đối tác.' }
   }
+  if (role === 'staff' || role === 'admin') {
+    // Không hạ quyền nhân viên/quản trị thành đối tác.
+    return { success: false, error: 'Tài khoản nhân viên không thể đăng ký làm đối tác.' }
+  }
 
   // Dùng service role key để viết database (bypass RLS)
   const serviceUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -217,7 +251,9 @@ export async function registerPartner(
   const { error } = await (serviceSupabase as any).from('partners').insert([
     {
       user_id: user.id,
-      display_name: parsed.data.fullName,
+      display_name: parsed.data.companyName,
+      contact_name: parsed.data.fullName,
+      description: parsed.data.description || null,
       email: parsed.data.email,
       phone: parsed.data.phone,
       tax_code: parsed.data.taxCode || null,
@@ -229,7 +265,18 @@ export async function registerPartner(
     return { success: false, error: 'Lưu hồ sơ đối tác không thành công. Vui lòng thử lại sau.' }
   }
 
-  await (serviceSupabase as any).from('profiles').update({ role: 'partner' }).eq('id', user.id)
+  // Role 'partner' chỉ mở khu vực đối tác (hiển thị trạng thái chờ duyệt). Quyền đăng sản phẩm
+  // còn phụ thuộc partners.status = 'active', được kiểm tra ở server action và RLS.
+  const { error: roleError } = await (serviceSupabase as any)
+    .from('profiles')
+    .update({ role: 'partner' })
+    .eq('id', user.id)
+    .eq('role', 'customer')
+  if (roleError) {
+    // Không để lại hồ sơ đối tác "mồ côi" khiến người dùng không đăng ký lại được.
+    await (serviceSupabase as any).from('partners').delete().eq('user_id', user.id)
+    return { success: false, error: 'Lưu hồ sơ đối tác không thành công. Vui lòng thử lại sau.' }
+  }
 
   return { success: true, error: null }
 }

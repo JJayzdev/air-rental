@@ -297,7 +297,12 @@ export async function approvePartner(formData: FormData): Promise<never> {
     .eq('id', parsed.data.partnerId)
   if (error) redirect('/admin/doi-tac?error=failed')
 
-  await serviceSupabase.from('profiles').update({ role: 'partner' }).eq('id', partner.user_id)
+  // Không hạ quyền staff/admin nếu họ có hồ sơ đối tác.
+  await serviceSupabase
+    .from('profiles')
+    .update({ role: 'partner' })
+    .eq('id', partner.user_id)
+    .eq('role', 'customer')
 
   revalidatePath('/admin/doi-tac')
   redirect('/admin/doi-tac?saved=approved')
@@ -316,11 +321,31 @@ export async function rejectPartner(formData: FormData): Promise<never> {
   }
   const serviceSupabase = createClient<Database>(serviceUrl, serviceKey)
 
-  const { error } = await (serviceSupabase as any)
+  const { data: partner, error } = (await (serviceSupabase as any)
     .from('partners')
     .update({ status: 'rejected' })
     .eq('id', parsed.data.partnerId)
+    .select('user_id')
+    .maybeSingle()) as { data: { user_id: string } | null; error: unknown }
+  if (error || !partner) {
+    revalidatePath('/admin/doi-tac')
+    redirect('/admin/doi-tac?error=failed')
+  }
+
+  // Gỡ sản phẩm đang hiển thị và thu hồi quyền khu vực đối tác.
+  const { error: archiveError } = await serviceSupabase
+    .from('products')
+    .update({ state: 'archived' })
+    .eq('partner_id', parsed.data.partnerId)
+    .eq('state', 'active')
+  await serviceSupabase
+    .from('profiles')
+    .update({ role: 'customer' })
+    .eq('id', partner.user_id)
+    .eq('role', 'partner')
+
   revalidatePath('/admin/doi-tac')
-  if (error) redirect('/admin/doi-tac?error=failed')
+  revalidateTag('catalog')
+  if (archiveError) redirect('/admin/doi-tac?error=failed')
   redirect('/admin/doi-tac?saved=rejected')
 }

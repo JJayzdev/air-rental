@@ -20,7 +20,15 @@ export default async function PartnerAddProductPage({
   if (role !== 'partner') redirect('/don-thue')
 
   const params = await searchParams
-  const showError = ['invalid', 'no-partner', 'failed'].includes(params.error ?? '')
+  const errorMessages: Record<string, string> = {
+    invalid: 'Chưa lưu được sản phẩm. Vui lòng kiểm tra lại thông tin.',
+    'no-partner': 'Bạn chưa có hồ sơ đối tác.',
+    failed: 'Chưa lưu được sản phẩm. Vui lòng thử lại.',
+    'not-active': 'Hồ sơ đối tác chưa được duyệt nên chưa thể đăng sản phẩm.',
+    image:
+      'Link ảnh không hợp lệ. Chỉ dùng ảnh trong kho ảnh của A.I.R (Supabase Storage) hoặc để trống để dùng ảnh mặc định.',
+  }
+  const errorMessage = params.error ? errorMessages[params.error] : undefined
 
   const { data: categories } = await supabase
     .from('categories')
@@ -43,9 +51,9 @@ export default async function PartnerAddProductPage({
         </Link>
       </header>
 
-      {showError && (
-        <p className="partner-message partner-message-error">
-          Chưa lưu được sản phẩm. Vui lòng kiểm tra lại thông tin.
+      {errorMessage && (
+        <p className="partner-message partner-message-error" role="alert">
+          {errorMessage}
         </p>
       )}
 
@@ -76,6 +84,10 @@ export default async function PartnerAddProductPage({
           <label>
             Link ảnh (mỗi link một dòng)
             <textarea name="imageUrls" rows={3} />
+            <small>
+              Chỉ nhận ảnh đã tải lên kho ảnh của A.I.R. Để trống nếu chưa có, hệ thống dùng ảnh mặc
+              định.
+            </small>
           </label>
           <label>
             Giá thuê / ngày (VND)

@@ -57,12 +57,26 @@ export async function fetchSupabaseCatalog(
   }
   if (!Array.isArray(payload))
     throw new CatalogSourceError('Supabase catalog returned an invalid response.')
-  try {
-    return payload.map((row) => mapSupabaseCatalogRow(row, base))
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'unknown catalog data error'
-    throw new CatalogSourceError(`Supabase catalog data is invalid: ${message}`)
+  // Một dòng sai (ví dụ sản phẩm đối tác có ảnh ngoài) chỉ bị ẩn, không được làm hỏng cả danh mục.
+  const products: CatalogProduct[] = []
+  for (const row of payload) {
+    try {
+      products.push(mapSupabaseCatalogRow(row, base))
+    } catch (error) {
+      const slug =
+        row && typeof row === 'object' && typeof (row as { slug?: unknown }).slug === 'string'
+          ? (row as { slug: string }).slug.slice(0, 80)
+          : 'unknown'
+      const message = error instanceof Error ? error.message : 'unknown catalog data error'
+      console.warn(`[catalog] skipped invalid product "${slug}": ${message}`)
+    }
   }
+  if (payload.length > 0 && products.length === 0) {
+    throw new CatalogSourceError(
+      'Supabase catalog data is invalid: every product row was rejected.',
+    )
+  }
+  return products
 }
 
 export async function readCatalog(config: {

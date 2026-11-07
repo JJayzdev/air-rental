@@ -23,7 +23,9 @@ export default async function AdminPartnersPage({
 
   const { data: partners } = (await supabase
     .from('partners')
-    .select('id, display_name, email, phone, tax_code, commission_rate, status, created_at')
+    .select(
+      'id, display_name, contact_name, description, email, phone, tax_code, commission_rate, status, created_at',
+    )
     .order('created_at', { ascending: false })) as { data: any[] }
 
   return (
@@ -65,6 +67,7 @@ export default async function AdminPartnersPage({
                   <div>
                     <h3>{partner.display_name}</h3>
                     <p className="rental-admin-meta">
+                      {partner.contact_name ? `${partner.contact_name} · ` : ''}
                       {partner.email} · {partner.phone ?? '—'}
                       {partner.tax_code ? ` · MST: ${partner.tax_code}` : ''}
                     </p>
@@ -79,6 +82,7 @@ export default async function AdminPartnersPage({
                         : 'Chờ duyệt'}
                   </span>
                 </header>
+                {partner.description ? <p>{partner.description}</p> : null}
                 <p>
                   Hoa hồng hệ thống: {money(partner.commission_rate)}% · Đối tác nhận{' '}
                   {100 - Number(partner.commission_rate)}%

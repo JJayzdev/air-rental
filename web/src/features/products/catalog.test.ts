@@ -169,3 +169,37 @@ test('Supabase reader uses only anon credentials and selects public catalog fiel
   assert.equal(request.headers.get('apikey'), anonKey)
   assert.equal(request.headers.get('Authorization'), `Bearer ${anonKey}`)
 })
+
+test('one invalid backend row is skipped instead of breaking the whole catalog', async () => {
+  const badRow = {
+    ...row,
+    id: 'bad',
+    slug: 'partner-bad-image',
+    image_urls: ['https://evil.example/x.jpg'],
+  }
+  const fetcher: typeof fetch = async () =>
+    new Response(JSON.stringify([badRow, row]), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  const originalWarn = console.warn
+  console.warn = () => {}
+  try {
+    const result = await fetchSupabaseCatalog('https://project.example', 'public-anon-key', fetcher)
+    assert.deepEqual(
+      result.map((product) => product.slug),
+      ['sample-camera'],
+    )
+    const allBad: typeof fetch = async () =>
+      new Response(JSON.stringify([badRow]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    await assert.rejects(
+      () => fetchSupabaseCatalog('https://project.example', 'public-anon-key', allBad),
+      /every product row was rejected/,
+    )
+  } finally {
+    console.warn = originalWarn
+  }
+})
