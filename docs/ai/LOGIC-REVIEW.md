@@ -123,6 +123,26 @@ giá và trả đối tác cả khi chưa thu tiền. Nếu đúng chủ ý thì
 | 3   | Ô số lượng trong giỏ: xoá trống để gõ số mới → `Number('') = 0` → xoá luôn dòng                                             | Mất sản phẩm khỏi giỏ khi đang sửa số lượng                    | `features/cart/rental-cart-panel.tsx`                                                   |
 | 4   | Kiểm tra link ảnh của đối tác nằm riêng trong action đối tác                                                                | Hai quy tắc dễ lệch nhau                                       | gộp vào `catalog-images.ts`                                                             |
 
+## F. Lần rà soát 3 — 08/11/2026: frontend, backend, luồng thật
+
+Đã chạy: `npm run build` (sạch, không cảnh báo); CI PR #3 — pgTAP 12 file / 333 test pass; trên
+production (chỉ đọc, không đăng nhập): trang chủ, danh mục, chi tiết, giỏ thuê → lịch trống (63
+ngày) → báo giá (7 ngày Lenovo Yoga 7 14 = 1.624.000 ₫, cọc 4.500.000 ₫), chat (tìm sản phẩm, FAQ,
+kiểm tra lịch, hỏi đơn khi chưa đăng nhập) — đều đúng, không lỗi console.
+
+| #   | Vấn đề                                                     | Hậu quả                                                                           | Sửa                                                                                           |
+| --- | ---------------------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 1   | Header 901–1079px: ô tìm kiếm cố định 210px, menu không co | Mọi trang cuộn ngang tới 136px (đo ở 940px), nút "Đăng nhập" bị cắt               | `globals.css`: ô tìm kiếm co giãn dưới 1120px; đo lại 4 trang × 9 khổ màn hình không còn tràn |
+| 2   | Gợi ý thanh toán "Chuyển khoản tiền cọc để giữ máy"        | Sai: chuyển khoản không giữ máy (B5), mâu thuẫn với chat ("cọc thu khi bàn giao") | `payments/state-labels.ts`: nói đúng hành vi hiện tại và việc hoàn tiền khi huỷ               |
+
+Ghi nhận chưa sửa (thấp):
+
+- Mobile: nút trợ lý chat nổi che một phần thẻ giá ở hero và ô "Sắp xếp" trên `/san-pham`.
+- Giấy tờ định danh có hai công tắc (env `AIR_ENABLE_IDENTITY_DOCUMENTS` và bảng
+  `identity_document_settings`) nhưng không có UI bật cái thứ hai; ảnh đã duyệt không có hạn xoá.
+- Chưa kiểm tra được luồng cần đăng nhập (đặt đơn, quản trị, đối tác) trên trình duyệt: bản local
+  không có Supabase và không đăng nhập tài khoản trên production.
+
 ## D. Phần đã kiểm tra và thấy đúng
 
 - Giá chỉ tính ở DB; client không gửi tiền. Làm tròn `floor` khớp giữa `domain.ts` và SQL.
