@@ -44,7 +44,7 @@ app/                              App Router
 │  ├─ quan-ly-don/[id]/phieu-ban-giao/  Phiếu bàn giao in
 │  └─ quan-ly-giay-to/            Duyệt giấy tờ định danh
 ├─ (partner)/                     layout chặn: role = partner
-│  └─ partner/ (+ san-pham, san-pham/them, don-thue, doanh-thue)
+│  └─ partner/ (+ san-pham, san-pham/them, don-thue, doanh-thu)
 ├─ api/chat/route.ts              Trợ lý chat (POST JSON ≤ 8KB, cùng origin, rate limit)
 ├─ api/webhooks/sepay/route.ts    Webhook chuyển khoản
 ├─ demo/                          Prototype localStorage (KHÔNG phải luồng thật)

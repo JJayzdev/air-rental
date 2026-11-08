@@ -124,7 +124,7 @@ Admin /admin/doi-tac → approvePartner (status 'active') | rejectPartner (statu
    insert products (RLS is_active_partner_owner; trigger guard_partner_product_columns ép is_sample=false…)
    → service role tạo N product_units (asset_tag từ slug) → lỗi thì xoá product
    → revalidateTag('catalog')  (state 'active' = hiện ngay trên catalog)
-/partner/don-thue, /partner/doanh-thue → loadPartnerOrders()  features/partner/server-data.ts
+/partner/don-thue, /partner/doanh-thu → loadPartnerOrders()  features/partner/server-data.ts
    service role đọc order_items theo product_id của đối tác (chỉ phần của họ)
    doanh thu = Σ line_total_vnd của đơn completed; phí = commission_rate%; tháng theo giờ VN (ngày completed)
 ```
